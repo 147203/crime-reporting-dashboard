@@ -65,3 +65,10 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Deviation: validation V1 to V7 including the PII guard was built here with the form (planned for Phase 4).
 - Result: gate G3 passed (TEST_LOG). Commit `41861cd` on `phase/3-skeleton`.
 - Requirement IDs: FR-01 to FR-06, FR-12, NFR-01, NFR-02, NFR-07, NFR-08.
+
+## 2026-09-24 Phase 4 Build P1: data quality
+- Built: duplicate detector (V8) on the form and import paths, duplicate review queue, CSV import (upload, dry run, per-row error report without cell values, commit, discard, error report download), data-quality summary, deterministic sample-data generator with ground-truth files, `sample:generate` and `sample:clear`, the independent oracle script and its expected values for eight filter cases.
+- Commands: `php artisan sample:generate --size=1000 --seed=20260924 --end=2026-08`, `php scripts/oracle.php --input <dir> --filters tests/Fixtures/oracle/filters.json --out tests/Fixtures/oracle/expected_metrics_1000.json`, `DB_DATABASE=crime_dashboard_e2e php artisan sample:generate --size=10000 --load`.
+- Deviation: a defect was found by the accuracy test before commit: the import read `Validator::failed()` without running the rules, so V2, V3, V5 and V6 were skipped; the database CHECK constraint stopped the first bad row. Fixed (`passes()` before `failed()`).
+- Result: gate G4 passed (TEST_LOG). Commit `8e50bc6` on `phase/4-quality`.
+- Requirement IDs: FR-07, FR-08, FR-13, FR-14, NFR-04 (import), NFR-05 (data quality).
