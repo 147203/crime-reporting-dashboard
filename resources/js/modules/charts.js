@@ -54,19 +54,20 @@ function build(canvas, spec) {
 
     const text = cssVar('--chart-text');
     const grid = cssVar('--chart-grid');
-    const percent = spec.percent === true;
-    const scales = isCircular
-        ? {}
-        : {
-              x: { stacked: spec.stacked === true, ticks: { color: text }, grid: { display: spec.horizontal === true, color: grid } },
-              y: {
-                  stacked: spec.stacked === true,
-                  beginAtZero: true,
-                  ticks: { color: text, precision: 0, callback: percent ? (v) => `${v}%` : undefined },
-                  grid: { color: grid, display: spec.horizontal !== true },
-                  title: spec.yLabel ? { display: true, text: spec.yLabel, color: text } : undefined,
-              },
-          };
+    const horizontal = spec.horizontal === true;
+
+    // The value axis is y for vertical charts and x for horizontal ones; the other axis keeps Chart.js's default
+    // labels (a tick callback set to undefined would replace them with index numbers).
+    const valueTicks = { color: text, precision: 0 };
+    if (spec.percent === true) {
+        valueTicks.callback = (v) => `${v}%`;
+    }
+    const valueAxis = { stacked: spec.stacked === true, beginAtZero: true, ticks: valueTicks, grid: { color: grid } };
+    if (spec.yLabel && !horizontal) {
+        valueAxis.title = { display: true, text: spec.yLabel, color: text };
+    }
+    const categoryAxis = { stacked: spec.stacked === true, ticks: { color: text, autoSkip: !horizontal }, grid: { display: false } };
+    const scales = isCircular ? {} : horizontal ? { x: valueAxis, y: categoryAxis } : { x: categoryAxis, y: valueAxis };
 
     return new Chart(canvas, {
         type: isCircular ? 'doughnut' : 'bar',

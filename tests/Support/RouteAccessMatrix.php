@@ -55,6 +55,10 @@ final class RouteAccessMatrix
             'PUT incidents.status' => self::signedIn($writers),
             'DELETE incidents.destroy' => self::signedIn($adminOnly),
 
+            'GET reports.index' => self::signedIn($everyone),
+            'GET reports.csv' => self::signedIn($everyone),
+            'GET reports.pdf' => self::signedIn($everyone),
+
             'GET duplicates.index' => self::signedIn($reviewers),
             'PUT duplicates.resolve' => self::signedIn($reviewers),
             'GET quality.index' => self::signedIn($reviewers),

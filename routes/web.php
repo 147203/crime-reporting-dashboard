@@ -12,6 +12,7 @@ use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentStatusController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\QualityController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 // Every route below requires an authenticated, active account; each also carries its own authorization (project rule).
@@ -34,6 +35,10 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/duplicates', [DuplicateController::class, 'index'])->middleware('can:reviewDuplicates,App\Models\Incident')->name('duplicates.index');
     Route::put('/duplicates/{incident}', [DuplicateController::class, 'resolve'])->middleware(['can:reviewDuplicates,App\Models\Incident', 'can:view,incident'])->name('duplicates.resolve');
+
+    Route::get('/reports', [ReportController::class, 'index'])->middleware('can:export,App\Models\Incident')->name('reports.index');
+    Route::get('/reports/csv', [ReportController::class, 'csv'])->middleware(['can:export,App\Models\Incident', 'throttle:exports'])->name('reports.csv');
+    Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware(['can:export,App\Models\Incident', 'throttle:exports'])->name('reports.pdf');
 
     Route::get('/quality', [QualityController::class, 'index'])->middleware('can:viewDataQuality,App\Models\Incident')->name('quality.index');
 

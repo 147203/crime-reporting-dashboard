@@ -72,3 +72,10 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Deviation: a defect was found by the accuracy test before commit: the import read `Validator::failed()` without running the rules, so V2, V3, V5 and V6 were skipped; the database CHECK constraint stopped the first bad row. Fixed (`passes()` before `failed()`).
 - Result: gate G4 passed (TEST_LOG). Commit `8e50bc6` on `phase/4-quality`.
 - Requirement IDs: FR-07, FR-08, FR-13, FR-14, NFR-04 (import), NFR-05 (data quality).
+
+## 2026-09-24 Phase 5 Build P2: analytics and reports
+- Built: analytics service A1 to A10 (one role-scoped, filtered base query; aggregates in SQL; nearest-rank percentiles with PERCENTILE_DISC), dashboard with KPI row, charts with table alternatives and captions, hotspot table, sub-county by month heat grid, shared filter bar with period presets, reports page, streamed CSV export with formula neutralisation, PDF summary (barryvdh/laravel-dompdf), export records and audit entries.
+- Dependency added: `barryvdh/laravel-dompdf` (server-side PDF, no browser needed).
+- Browser check: two chart defects found in screenshots and fixed (horizontal bar labels showed index numbers; heat-grid shading hidden by Bootstrap table variables).
+- Result: gate G5 passed except performance, which is measured in Phase 6 (TEST_LOG). Commit `a38ca30` on `phase/5-analytics`.
+- Requirement IDs: FR-09, FR-10, FR-11, NFR-05, NFR-07, NFR-08.

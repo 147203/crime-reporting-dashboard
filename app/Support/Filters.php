@@ -59,6 +59,16 @@ final readonly class Filters
             ->when($this->status, fn (Builder $q, string $status) => $q->where('incidents.status', $status));
     }
 
+    public function withPeriod(CarbonImmutable $from, CarbonImmutable $to): self
+    {
+        return new self($from, $to, $this->categoryId, $this->subCountyId, $this->wardId, $this->stationId, $this->status);
+    }
+
+    public function withoutWard(): self
+    {
+        return new self($this->from, $this->to, $this->categoryId, $this->subCountyId, null, $this->stationId, $this->status);
+    }
+
     /**
      * @return array<string, int|string>
      */

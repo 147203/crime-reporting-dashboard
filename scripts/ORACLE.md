@@ -50,4 +50,4 @@ Output is deterministic: two runs on the same input are byte-identical (checked 
 2. Case `all` covers the whole generated period, so A1 = 1030 = `rows_accepted` (no accepted row falls outside it), and A4 `previous` is 0, so `change_pct` is `null`.
 3. For every case, the counts in A2, A3, A5, A6, A10 status, A7 sub-counties and A9 each sum to A1. Without a ward filter the A7 ward counts also sum to A1.
 4. Case `closed` has A1 = 511, which equals the `closed` status count in case `all`; closure rate in `all` is 100 x 511 / 1030 = 49.61.
-5. Case `all` A8 flags Laini Saba (57) and Kwa Njenga (34), two of the three planted ward hotspots in `truth/hotspots.json`; Woodley/Kenyatta Golf Course (23) ranks third in A7 but stays below z = 1.5.
+5. Case `all` A8 flags all three planted ward hotspots in `truth/hotspots.json`: Laini Saba (58, z 5.9079), Kwa Njenga (36, z 3.0751) and Woodley/Kenyatta Golf Course (24, z 1.53, just above the 1.5 threshold). These figures are for the dataset regenerated on 2026-09-24 after the generator's duplicate copies were made more realistic; rerun the oracle whenever the generator's pinned hash changes.
