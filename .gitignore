@@ -49,6 +49,11 @@ docs/~*
 Homestead.json
 Homestead.yaml
 
+# Test runner output
+/test-results/
+/playwright-report/
+/blob-report/
+
 # Editor and OS
 .vscode/*
 !.vscode/extensions.json

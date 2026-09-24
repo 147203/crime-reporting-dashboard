@@ -1,0 +1,28 @@
+@import "tokens";
+
+// Bootstrap variable overrides (must precede the Bootstrap import)
+$primary: $brand-blue;
+$secondary: $slate-500;
+$success: $success-tone;
+$warning: $warning-tone;
+$danger: $danger-tone;
+$info: $info-tone;
+$font-family-sans-serif: $font-stack;
+$border-radius: $radius;
+$border-radius-sm: $radius-sm;
+$border-radius-lg: $radius-lg;
+$body-bg: $slate-50;
+$body-color: $slate-900;
+$link-decoration: none;
+$link-hover-decoration: underline;
+$card-border-color: $slate-200;
+$card-cap-bg: transparent;
+$table-cell-padding-y: 0.6rem;
+$input-btn-focus-width: 0.2rem;
+$enable-negative-margins: true;
+
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+
+@import "shell";
+@import "components";

@@ -24,6 +24,9 @@ final class EnsurePreflightPasses
             // Built directly: abort() and the response() helper both resolve the encrypted session, which fails without APP_KEY.
             return new Response('The application is not configured. The operator must run php artisan app:preflight.', 503, [
                 'Content-Type' => 'text/plain; charset=UTF-8',
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Frame-Options' => 'DENY',
+                'Content-Security-Policy' => "default-src 'none'; frame-ancestors 'none'",
             ]);
         }
 

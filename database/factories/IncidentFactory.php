@@ -22,6 +22,7 @@ class IncidentFactory extends Factory
         $occurred = fake()->dateTimeBetween('-11 months', '-2 days');
 
         return [
+            'reference_no' => fake()->unique()->numerify('NRB-TEST-######'),
             'category_id' => CrimeCategory::factory(),
             'occurred_at' => $occurred,
             'reported_at' => (clone $occurred)->modify('+'.fake()->numberBetween(0, 48).' hours'),

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\DisableRememberMe;
 use Laravel\Fortify\Features;
 
 return [
@@ -104,7 +105,7 @@ return [
     */
 
     // Every Fortify route, including password confirmation, is rate limited; login also has its own per-e-mail limiter.
-    'middleware' => ['web', 'throttle:auth-actions'],
+    'middleware' => ['web', 'throttle:auth-actions', DisableRememberMe::class],
 
     /*
     |--------------------------------------------------------------------------

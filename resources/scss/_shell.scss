@@ -1,0 +1,192 @@
+// Application shell: fixed sidebar on large screens, offcanvas below the lg breakpoint.
+
+:root,
+[data-bs-theme="light"] {
+    --app-sidebar-bg: #{$brand-navy};
+    --app-sidebar-fg: #e6ecf7;
+    --app-sidebar-muted: #a9b8d3;
+    --app-sidebar-active-bg: rgba(255, 255, 255, 0.12);
+    --app-surface: #ffffff;
+    --app-border: #{$slate-200};
+    --app-muted: #{$slate-500};
+    @each $key, $colour in $chart-palette {
+        --chart-#{$key}: #{$colour};
+    }
+    --chart-grid: #{$slate-200};
+    --chart-text: #{$slate-700};
+}
+
+[data-bs-theme="dark"] {
+    --bs-body-bg: #0d1422;
+    --bs-body-bg-rgb: 13, 20, 34;
+    --bs-tertiary-bg: #131c2e;
+    --app-sidebar-bg: #0a1020;
+    --app-sidebar-fg: #dbe4f3;
+    --app-sidebar-muted: #8fa1c1;
+    --app-sidebar-active-bg: rgba(255, 255, 255, 0.08);
+    --app-surface: #131c2e;
+    --app-border: #24314a;
+    --app-muted: #9aa8bf;
+    --chart-8: #b0b0b0;
+    --chart-grid: #24314a;
+    --chart-text: #c9d3e3;
+    .card {
+        --bs-card-bg: var(--app-surface);
+        --bs-card-border-color: var(--app-border);
+    }
+}
+
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    z-index: 2000;
+    padding: 0.5rem 1rem;
+    background: var(--bs-primary);
+    color: #fff;
+    border-radius: $radius-sm;
+    &:focus {
+        top: 1rem;
+    }
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    --bs-offcanvas-width: #{$sidebar-width};
+    background: var(--app-sidebar-bg);
+    color: var(--app-sidebar-fg);
+
+    @include media-breakpoint-up(lg) {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: $sidebar-width;
+        overflow-y: auto;
+        // Bootstrap makes .offcanvas-lg transparent from lg up; the sidebar keeps its own surface.
+        &.offcanvas-lg {
+            background-color: var(--app-sidebar-bg) !important;
+        }
+    }
+
+    .offcanvas-header .btn-close {
+        filter: invert(1) grayscale(1) brightness(2);
+    }
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    &:hover {
+        color: #fff;
+        text-decoration: none;
+    }
+    .app-brand-mark {
+        display: inline-grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: $radius-sm;
+        background: rgba(255, 255, 255, 0.14);
+    }
+}
+
+.app-nav {
+    .nav-section {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--app-sidebar-muted);
+        padding: 1rem 1rem 0.35rem;
+    }
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--app-sidebar-fg);
+        border-radius: $radius-sm;
+        padding: 0.55rem 0.9rem;
+        margin: 0.1rem 0.5rem;
+        &:hover {
+            background: var(--app-sidebar-active-bg);
+            text-decoration: none;
+        }
+        &.active {
+            background: var(--app-sidebar-active-bg);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: inset 3px 0 0 #7fb2ff;
+        }
+        &:focus-visible {
+            outline: 2px solid #7fb2ff;
+            outline-offset: 1px;
+        }
+        .bi {
+            font-size: 1.05rem;
+            opacity: 0.9;
+        }
+    }
+}
+
+.app-main {
+    @include media-breakpoint-up(lg) {
+        margin-left: $sidebar-width;
+    }
+}
+
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    min-height: $topbar-height;
+    background: color-mix(in srgb, var(--bs-body-bg) 88%, transparent);
+    backdrop-filter: saturate(160%) blur(8px);
+    border-bottom: 1px solid var(--app-border);
+}
+
+.sample-banner {
+    font-size: 0.8125rem;
+    background: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    border-bottom: 1px solid var(--bs-warning-border-subtle);
+}
+
+.app-content {
+    padding: 1.25rem 1rem 3rem;
+    @include media-breakpoint-up(md) {
+        padding: 1.75rem 2rem 3rem;
+    }
+    max-width: 1440px;
+}
+
+.auth-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem 1rem;
+    background:
+        radial-gradient(1200px 500px at 10% -10%, rgba($brand-blue, 0.16), transparent 60%),
+        radial-gradient(900px 500px at 110% 110%, rgba($brand-teal, 0.14), transparent 60%),
+        var(--bs-body-bg);
+}
+
+.auth-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: $radius;
+    background: var(--bs-primary);
+    color: #fff;
+    font-size: 1.4rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 26rem;
+}

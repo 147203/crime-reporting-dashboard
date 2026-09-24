@@ -24,6 +24,7 @@ This is the contract for what is built and how every number is computed. Require
 | Manage reference data (categories, sub-counties, wards, stations) | Yes | No | No |
 | Create incident | Yes (any station) | Yes (own station only) | No |
 | Edit incident | Yes | Own incidents while status is Reported | No |
+| Change incident status (Reported, Under investigation, Closed) | Yes | Own station (D-40, proposed) | No |
 | Delete incident (soft delete) | Yes | No | No |
 | View incident list and detail | All | Own station | All |
 | Review and resolve suspected duplicates | Yes | No | Yes |
@@ -82,7 +83,7 @@ Every chart and KPI shows the period, active filters, and n. Percentages state t
 | V3 | `reported_at` not before `occurred_at`, not in the future | Reject |
 | V4 | Ward must belong to the chosen sub-county | Reject |
 | V5 | Location description at most 150 characters; description at most 1,000 characters, both stripped of HTML | Reject or sanitise |
-| V6 | **PII guard:** description and location must not contain Kenyan phone numbers or national ID number patterns | Reject with a message that explains why |
+| V6 | **PII guard:** description and location must not contain Kenyan phone numbers or national ID number patterns. Patterns (D-36): phone = `+254`, `254` or `0`, then `7` or `1`, then 8 digits, with optional spaces, dots or hyphens; national ID = a stand-alone run of 7 or 8 digits, or 6 to 9 digits after "ID", "ID no" or "ID number" | Reject with a message that explains why |
 | V7 | Reference number unique | Reject |
 | V8 | **Duplicate candidate:** same category and ward, `occurred_at` within `DUPLICATE_WINDOW_MINUTES` (default 120), and normalised location similarity at least `DUPLICATE_SIMILARITY` (default 0.8, normalised Levenshtein) | Save as `suspected`, add to review queue; never auto-delete |
 
