@@ -47,3 +47,14 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Author ran key:generate, app:preflight (passed), migrate (created `crime_dashboard`, 3 migrations), test (32 passed). Details in TEST_LOG.
 - Gate G0: tests on the database pass; preflight with tests pass; Pint and Larastan clean; push pending (GitHub account setup).
 
+
+## 2026-09-24 Phase 0 gate closed
+- First commit `044e26b` pushed by the author to the private repository; `main` tracks `origin/main`.
+- Gate G0: database tests pass (32), preflight with tests, Pint and Larastan clean, push done. D-03, D-05, D-06 awaiting confirmation.
+
+## 2026-09-25 Phase 2 Requirements and design (schema)
+- Commands: `php artisan migrate`, `php artisan migrate:rollback --step=4`, `php artisan migrate`, `php artisan db:seed`; tests in a clean worktree of the commit.
+- Built: migrations for sub_counties, wards, stations, crime_categories, users security columns, incidents, import_batches, audit_logs (append-only triggers), report_exports; enums Role, IncidentStatus, DuplicateStatus; models with station and countable scopes; factories; reference data seeder with 17 sub-counties and 85 wards (VERIFY, D-28) and 17 sample stations; Mermaid design diagrams in `docs/diagrams/`.
+- Deviation: validation V1 to V7 including the PII guard moves into Phase 3 with the incident form; Phase 4 keeps duplicates, import, generator and oracle.
+- Result: gate G2 passed (see TEST_LOG). Commit `2ec8b96` on `phase/2-design`.
+- Requirement IDs: FR-02 (scope), FR-04 (reference data), FR-12 (audit table), NFR-02 (no identifiers), NFR-06 (reversible migrations).
