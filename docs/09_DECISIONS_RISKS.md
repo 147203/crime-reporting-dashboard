@@ -1,0 +1,72 @@
+# 09. Decisions, risks, and open questions
+
+Status: DECIDED, PROPOSED (default in force, needs sign-off), OPEN. Proposal corrections are tracked in the author's local revision checklist.
+
+## 1. Decision log
+
+| ID | Decision | Status | Default and rationale | Sign-off |
+|---|---|---|---|---|
+| D-01 | Own GitHub account `147203`, private repo `crime-reporting-dashboard` | DECIDED (author) | Keeps this project's history under the author's own account | n/a |
+| D-02 | No GIS in any form; "hotspot" is a statistical area or time flag | DECIDED (panel) | Panel judged GIS too complex; recorded as future work | n/a |
+| D-03 | PHP with the Laravel 12 framework | PROPOSED | Proposal names PHP, not a framework; Laravel gives tested defaults for auth, CSRF, validation, hashing, migrations, throttling, so security work is about configuration and tests rather than reinvention | Supervisor informed |
+| D-04 | Database: XAMPP MariaDB 10.4 (MySQL-compatible) on 127.0.0.1:3306 for the app and the tests, not SQLite | DECIDED (author, 2026-09-24; revised the same day from MySQL 8 on 3307) | Already installed, so nothing to set up for a local presentation; tests use the same engine as the app, so date functions behave the same in both. Trade-offs accepted: MariaDB 10.4 is end-of-life, and the proposal's "MySQL" wording needs a note that MariaDB is a MySQL-compatible server (VERIFY with the supervisor) | Author |
+| D-05 | Frontend: Blade templates, Bootstrap 5, Chart.js, plain JavaScript, Vite; no SPA framework | PROPOSED | Matches "HTML, CSS, JavaScript" in 3.5 with less to explain at the defence | Author |
+| D-06 | Three roles: Administrator, Reporting Officer, Analyst (proposal 3.4 lists Administrator and Authorized User) | PROPOSED | The conceptual framework already names officers, analysts, and administrators; separate roles make access control demonstrable | Supervisor |
+| D-07 | Synthetic data only; the generator plants hotspots, trends, errors, and duplicates so accuracy can be tested against ground truth | DECIDED | Real records are confidential; the generator doubles as the evaluation instrument | n/a |
+| D-08 | No personal identifiers of victims, suspects, or witnesses in the schema; PII guard on free text | DECIDED | Data minimisation under the Kenya Data Protection Act, 2019; reduces risk | n/a |
+| D-09 | Final title | OPEN | Options in the local proposal revision checklist | Supervisor |
+| D-10 | Five single-action objectives including a design objective | PROPOSED | Marker feedback; doc 02 section 8 | Supervisor |
+| D-11 | Hotspot rule A8: ward z score at least 1.5 and at least 10 incidents; sensitivity reported | PROPOSED | Simple, explainable, testable against planted hotspots | Author |
+| D-12 | Exports: CSV and PDF required; Excel optional | PROPOSED | Proposal figure lists PDF, Excel, CSV; Excel is first to cut under time pressure | Author |
+| D-13 | Time zone Africa/Nairobi, local time stored | DECIDED | Kenya has no daylight saving; hour-of-day analytics stay simple | n/a |
+| D-14 | Usability measured with SUS and task metrics, small n reported honestly | PROPOSED | Standard, cheap, comparable | Supervisor |
+| D-15 | Instruments split by data type with analysis plans | DECIDED | Marker comment | n/a |
+| D-16 | The author writes all thesis prose; AI assistance is logged and disclosed per policy | DECIDED | Assessment guide lists AI-generated content as a reject reason | n/a |
+| D-17 | `docs/` tracked in the repo except `docs/reference/` (proposal, marks, faculty material) | DECIDED | Reference material contains personal and assessment details | n/a |
+| D-26 | Private working material stays local and is excluded from git through the repository's local exclude file: assistant instruction files and tool folders, the AI assistance log, defence notes, the proposal-feedback digests (docs 00, 08) and the planning docs (01, 07) | DECIDED (author, 2026-09-24) | Only files relevant to the system and its evidence are published; private notes and assessment feedback are not deliverables | Author |
+| D-18 | Demo runs locally on a clean checkout; an optional private demo host is not part of scope | PROPOSED | Keeps deployment risk low; proposal does not require hosting | Author |
+| D-19 | Authentication with Laravel Fortify (headless) and own Bootstrap 5 Blade views; registration, e-mail reset, 2FA and passkeys disabled | DECIDED (author, 2026-09-24; revised from Breeze) | Breeze views are built on Tailwind, which conflicts with D-05; Fortify supplies tested login, logout, throttling and password confirmation without any styling to strip out | Author |
+| D-20 | Population-based rates (A7) only if an official ward population table is available | OPEN | VERIFY KNBS 2019 census by ward before promising it | Author |
+| D-21 | Caching only if performance targets are missed, with invalidation tested first | PROPOSED | Avoids stale-data bugs | Author |
+| D-22 | PHP 8.4 instead of 8.3 | DECIDED (author, 2026-09-24) | 8.4 is the machine's installed runtime and is supported by Laravel 12; `composer.json` pins the platform to 8.4 so dependencies resolve the same on any machine. The proposal names PHP without a version, so it needs no change | Author |
+| D-23 | Preflight scope: `app:preflight` checks APP_KEY, app DB settings, test DB separation and ADMIN_INITIAL_PASSWORD; the web middleware checks only APP_KEY and app DB settings on every request | DECIDED (author, 2026-09-24) | The initial admin password is only needed when seeding; not requiring it at runtime lets the operator remove it from `.env` after the first seed instead of keeping a live admin password on disk | Author |
+| D-25 | Local database account: `root` with a blank password for the app and test schemas, shipped in `.env.example`; preflight relaxes the DB password and separate-user rules only when `APP_ENV` is not `production` | DECIDED (author, 2026-09-24) | Local presentation project on the author's own machine; removes password setup. Kept: placeholder rejection, separate `*_test` schema, APP_KEY and admin password checks, full rules under production. Recorded as a deliberate exception to the project security rules | Author |
+| D-24 | No public routes except the login form: the `/up` health route and the local-disk `storage/{path}` route are removed | DECIDED (author, 2026-09-24) | Neither is needed for a local demo; every remaining route has an entry in the route access matrix test | Author |
+
+## 2. Risk register
+
+| ID | Risk | L | I | Mitigation | Trigger |
+|---|---|---|---|---|---|
+| R-01 | Corrected proposal is late or not approved | M | H | Do phase 1 first, follow the revision checklist line by line, supervisor check before submission | No draft by Oct 1 |
+| R-02 | Project seen as plain CRUD (the faculty topic guide warns against CRUD-analysis topics) | M | H | Put the weight on the analytics catalogue, data-quality engine, oracle-based accuracy evaluation, statistical hotspot rule, usability study | Supervisor or panel raises it |
+| R-03 | Fieldwork permissions or participants unavailable | H | M | Ask in W1; proxy user groups; report limits honestly; keep n small but real | No permission by W3 |
+| R-04 | Synthetic data criticised as unrealistic | M | M | Anchor to published statistics; document assumptions; use as evaluation instrument; state what cannot be claimed | Panel question |
+| R-05 | Compressed schedule to a November demo | H | H | Critical path in the local master plan; cut list: Excel export, population rates, PDF styling; feature freeze W7 | A gate slips more than 4 days |
+| R-06 | Scope creep back to maps | M | H | Project rule: no GIS; any spatial idea needs a logged decision | "Just a small map" request |
+| R-07 | Machine lacks PHP, Composer, or MySQL, or wrong versions | H | M | Phase 0 verification found no MySQL 8 and PHP 8.4 without bcmath; install commands in doc 10 section 1 | Preflight fails |
+| R-08 | Security defects in a system holding sensitive-type data | M | H | Security tests, role matrix, review checklist, no credential defaults, startup validation | Any failing SE test |
+| R-09 | Integrity: text or work judged AI-generated or not the author's | M | H | Author writes prose, dated drafts, AI log, defence notes, walkthroughs, similarity checks | Similarity or panel questions |
+| R-10 | Citation defects carried into later chapters | H | M | Reference hygiene rules; reconcile lists | Duplicates or missing entries found |
+| R-11 | Engine mismatch hides SQL bugs | L | M | Tests on the same XAMPP MariaDB server as the app | Any SQLite-only pass |
+| R-12 | Author cannot explain the system at the defence | M | H | Defence notes per phase; explain-as-you-build; author performs the demo run-through | Cannot answer notes questions |
+| R-13 | Demo failure on the day | M | H | Clean-clone rehearsal, seeded data, backup recording, offline-capable local run | Any rehearsal failure |
+| R-14 | Anchor statistics wrong or misquoted | M | M | VERIFY each against the source, record page and table | Discrepancy found |
+| R-15 | Too few usability participants | M | M | Aim for 5 to 8; report n and limits | Under 5 participants |
+| R-16 | A commit or push made under the wrong GitHub account | M | M | Account settings are local to this repository and checked before the first push | Wrong author on a commit |
+| R-17 | Data loss of local-only reference material | L | M | Back up `docs/reference/` and `fieldwork-data/` to the author's own storage | Disk issue |
+| R-18 | XAMPP MariaDB listens on all interfaces with a passwordless root (D-25), so anyone on the same network can read or change the data | M | M | Data is synthetic only; recommended: `bind-address=127.0.0.1` in `/opt/lampp/etc/my.cnf`; never run the demo on an untrusted network with 3306 open | Demo on a shared or public network |
+| R-19 | MariaDB 10.4 is end-of-life and not MySQL 8; the panel may query the engine choice | L | M | Tests and app run on the same engine; defence notes explain the choice; migrating to MySQL 8 later needs only `.env` and the driver name | Panel question |
+
+(L = likelihood, I = impact; H, M, L.)
+
+## 3. Open questions for the author
+
+| # | Question | Needed by |
+|---|---|---|
+| Q1 | What are the real demo date and final submission date? | Phase 0 |
+| Q2 | What is the deadline and format for resubmitting the corrected proposal, and to whom? | Phase 0 |
+| Q3 | What does the university's AI-use policy require you to disclose? | Phase 1 |
+| Q4 | Does fieldwork need ethics clearance or a research permit, and who signs? | Phase 1 |
+| Q5 | Which title, and which abstract length (180 to 210 or 200 to 250)? | Phase 1 |
+| Q6 | Which machine is the performance-test machine, and does it have at least 16 GB RAM? (Development machine checked 2026-09-24: 14 GB RAM, 12 cores, Ubuntu 24.04) | Phase 6 |
+| Q7 | Which participant groups can you realistically reach? | Phase 1 |

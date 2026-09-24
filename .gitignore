@@ -1,0 +1,57 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+auth.json
+
+# PHP / Laravel
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/public/storage
+/storage/*.key
+# storage/ subfolders are handled by their own .gitignore files so the empty folders survive a fresh clone
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.phpstan.cache
+
+# Database dumps, exports, and generated reports (may contain sensitive or sample data)
+*.sql
+*.sqlite
+*.dump
+/storage/app/exports/
+/storage/app/imports/
+/reports/
+
+# Fieldwork data (interviews, questionnaires, usability sessions) never enters the repo
+/docs/fieldwork/raw/
+/fieldwork-data/
+
+# Reference material (proposal, marks, faculty guides) stays local; the rest of docs/ is tracked
+docs/reference/
+
+# Review and scratch docs (may name unfixed gaps)
+pr_*.md
+docs/~*
+*.tmp
+
+# Tooling caches and logs
+*.log
+/storage/pail
+/.phpactor.json
+/.fleet
+/.nova
+/.zed
+Homestead.json
+Homestead.yaml
+
+# Editor and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,49 @@
+# Implementation run log (as executed)
+
+Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.4. Never paste secrets, tokens, or passwords.
+
+## Template
+
+```
+## <date> Phase <n> <short title>
+- Commands:
+- Output (trimmed):
+- Result and any deviation from plan:
+- Files changed:
+- Evidence captured (figure IDs):
+- Requirement IDs covered:
+```
+
+## Entries
+
+## 2026-09-24 Phase 0 Setup (scaffold, preflight, quality tools, test harness)
+- Environment check: PHP 8.4.25 (8.2 also present, no 8.3), extension bcmath missing on 8.4; Composer 2.8.9; Node 22.18, npm 11.9; git 2.43; no MySQL 8 (XAMPP MariaDB 10.4.32 listening on *:3306); Ubuntu 24.04, 14 GB RAM, 12 cores. Decisions D-04, D-22 taken by the author.
+- Commands:
+  - `composer create-project laravel/laravel:^12.0 <temp-dir>/skeleton --no-scripts --no-install` (v12.12.2), copied into the repo with rsync excluding `.env*`, `.gitignore`, `README.md`, the project rules, `docs/`
+  - `composer require laravel/fortify` (^1.40), `composer require --dev larastan/larastan` (^3.12); removed `laravel/sail`, `laravel/pail`; `composer audit`: no advisories
+  - `php artisan vendor:publish --tag=fortify-config` (no `--force`)
+  - `npm install --save-dev bootstrap@^5.3 @popperjs/core@^2.11`, removed Tailwind and axios; `npm run build` OK; `npm audit`: 0 vulnerabilities
+  - `vendor/bin/pint` (added `declare(strict_types=1)` to skeleton files), `vendor/bin/phpstan analyse` (level 8)
+  - `php artisan app:preflight` without `.env`: exit 1, five failures named (APP_KEY, DB_DATABASE, DB_USERNAME, DB_PASSWORD, ADMIN_INITIAL_PASSWORD)
+- Deviations from the skeleton, with reason:
+  - Composer scripts `setup` (ran `migrate --force`) and `post-update-cmd` (ran `vendor:publish --force`) removed: project rule against `--force` on migration-related commands.
+  - `config/database.php`: default connection `mysql`; no default database, user or password (skeleton defaulted to `root` with an empty password); `DB_URL` override removed from `mysql`; session time zone `+03:00`; new `mysql_testing` connection.
+  - `DatabaseSeeder` no longer creates `test@example.com` with password `password`.
+  - Public routes `/up` and `storage/{path}` removed (D-24).
+  - rsync exclusion also skipped nested `.gitignore` placeholders in `storage/`, `bootstrap/cache/`, `database/`; restored from the skeleton, and root `.gitignore` rules that ignored whole storage folders were removed so a fresh clone keeps them.
+  - Larastan findings fixed at the cause: `rtrim(env(...))` in `config/filesystems.php` could receive a bool under strict types; tests switched from `artisan()` to `Artisan::call`.
+- Result: scaffold, preflight (command, middleware, tests), Fortify login and logout with Bootstrap views, route access matrix harness, Pint and Larastan clean. MySQL-backed tests blocked until MySQL 8 is installed (see TEST_LOG).
+- Files changed: see the session report; key files `app/Support/Preflight.php`, `app/Http/Middleware/EnsurePreflightPasses.php`, `app/Console/Commands/PreflightCommand.php`, `app/Providers/AppServiceProvider.php`, `bootstrap/app.php`, `routes/web.php`, `config/{database,fortify,filesystems,admin,security,app}.php`, `phpunit.xml`, `tests/**`, `resources/views/**`, `.env.example`, `.gitignore`, `composer.json`, `package.json`, `pint.json`, `phpstan.neon`, docs 03, 09, 10, README.
+- Independent review (`pr_review_phase-0-setup.md`, gitignored): verdict REQUEST CHANGES. Fixed in this session: unused mariadb, pgsql, sqlsrv and sqlite connections with `root` defaults removed (blocker); preflight now fails when `DB_CONNECTION` is not mysql and when the test schema does not end in `_test`; all Fortify routes throttled (`auth-actions`); CSRF test added; route-matrix "allowed" assertion tightened; session defaults hardened (encrypt true, SameSite strict); tests log to the null channel; unused Fortify passkeys config removed (it crashed every artisan command under strict types when APP_URL was empty); middleware 503 built without the session. Deferred to Phase 3 with the feature they belong to: account lockout (LOGIN_LOCKOUT_MINUTES), security-headers middleware, role columns of the route matrix, deterministic Faker seed, rate-limiting the preflight critical log line.
+- Evidence captured (figure IDs): none yet; capture after MySQL is up (green test run, preflight output, login page at 360 px and desktop).
+- Requirement IDs covered: FR-01 (login and logout only, no registration), NFR-01 (startup validation, fail-closed routes), NFR-09 (Pint, Larastan).
+
+## 2026-09-24 Phase 0 change: XAMPP MariaDB with the local root account (D-04 revised, D-25)
+- Author's decision: use XAMPP MariaDB 10.4 on 3306 with `root` and a blank password for a local presentation project, and document it in the project rules. MySQL 8 was never installed.
+- Changes: both connections use the `mariadb` driver, default port 3306; `.env.example` ships `DB_USERNAME=root`, blank `DB_PASSWORD`, the same for the test schema; `Preflight` enforces the DB password length and separate-user rules only when `APP_ENV=production`, and still rejects `changeme` placeholders and a test schema that does not end in `_test` or equals the app schema; TC-FT-00 now asserts MariaDB and a `*_test` schema; new TC-UT-10, TC-UT-11. project rules, README, docs 00, 01, 02 (NFR-01), 03, 06, 09 (D-04, D-25, R-11, R-18, R-19), 10 updated.
+- Checks: Pint passed; Larastan level 8 no errors; unit suite 11 tests OK. MariaDB was stopped at the time, so the database tests are not yet run.
+
+## 2026-09-24 Phase 0 gate run
+- Author ran key:generate, app:preflight (passed), migrate (created `crime_dashboard`, 3 migrations), test (32 passed). Details in TEST_LOG.
+- Gate G0: tests on the database pass; preflight with tests pass; Pint and Larastan clean; push pending (GitHub account setup).
+
