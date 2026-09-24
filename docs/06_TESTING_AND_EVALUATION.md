@@ -71,7 +71,16 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 | NFR-01 Security | TC-SE-01 to 11, TC-FT-01 to 02 (preflight), TC-UT-01 to 11 (`Unit/PreflightTest`) |
 | NFR-02 Privacy | TC-FT-10, 16 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-25, 28 (no secrets in audit) |
 | NFR-06 Reliability (reversible migrations) | Rollback and re-migrate logged in TEST_LOG (Phase 2 gate) |
-| FR-07 to FR-11, FR-13, FR-14, NFR-03 to 05 | Phases 4 to 6 |
+| FR-07 Data quality (PII guard, duplicates, review) | TC-UT-13, 15, TC-FT-43, 48, 49, TC-AC-02, 03 (`Quality/*`) |
+| FR-08 CSV import | TC-FT-40 to 42, 45 to 47, 53, TC-SE-17, 18 (`Quality/ImportAndReviewTest`, `Quality/ReviewRegressionPhase4Test`) |
+| FR-09 Analytics A1 to A10 | TC-AC-01 (`Quality/AnalyticsOracleTest`, exact match with the independent oracle) |
+| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-BB-06 |
+| FR-11 Reports and exports | TC-AC-05, TC-FT-51, TC-SE-16, TC-BB-07 |
+| FR-13 Data-quality summary | TC-FT-44 |
+| FR-14 Generator determinism | TC-AC-04 (pinned SHA-256) |
+| NFR-03 Usability | TC-US-01 to 08 (real participants, author) |
+| NFR-04 Performance | TC-PF-01, 02 (`scripts/perf.php`, 10,000-row load timing) |
+| NFR-05 Accuracy | TC-AC-01 to 05 |
 
 ## 9. Chapter 5.5 results table (faculty format)
 

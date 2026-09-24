@@ -41,20 +41,29 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Static checks re-run: Pint passed; Larastan level 8 no errors.
 - Evidence (figure IDs): screenshot of this run still to capture.
 
-## 2026-09-25 Phase 2 gate: schema, reference data, design (commit 2ec8b96)
+## 2026-09-24 Phase 2 gate: schema, reference data, design (commit 2ec8b96)
 - Command: `vendor/bin/phpunit` in a clean checkout of commit `2ec8b96` (own vendor copy, process env, MariaDB 10.4.32)
 - Result: 45 tests, 133 assertions, all passed. New: TC-FT-10 to TC-FT-20 (no coordinate columns, named indexes, reference data 17/85 and per-sub-county counts, station scope, countable scope, no personal-identifier columns, composite ward key, CHECK constraints, append-only audit through Eloquent and raw SQL, users cannot be deleted), TC-UT-12 (status workflow), TC-SE-08 (mass assignment).
 - Reversibility (NFR-06): `php artisan migrate:rollback --step=4` then `php artisan migrate` on the development schema, twice, both clean; reference seeder idempotent.
 - Static checks: Pint passed; Larastan level 8 no errors.
 - Independent review: REQUEST CHANGES (no security blocker); fixes applied before the commit (station not fillable, audit triggers and restrict keys, composite ward key, CHECK constraints, synthetic default, countable scope independent of soft-delete scope, LF line endings). Decisions D-32 to D-35.
 
-## 2026-09-25 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
+## 2026-09-24 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
 - Command: `vendor/bin/phpunit` in a clean checkout of commit `41861cd` (own vendor, fresh asset build, process env, MariaDB 10.4.32)
 - Result: 198 tests, 697 assertions, all passed. Pint passed; Larastan level 8 no errors.
 - Coverage added: route x role matrix for every route and 4 actors (TC-SE-01a, 01b, 108 cases), station IDOR (TC-SE-09), lockout (TC-SE-03), SQL injection strings in every list filter (TC-SE-02), headers with CSP nonce (TC-SE-10, 10b), stored XSS escaped (TC-SE-11), sessions ended on password change (TC-SE-12), remember-me ignored (TC-SE-13), inactive station (TC-SE-14), validation V1 to V6 (TC-FT-02), status workflow, soft delete, filters, user management, reference data, admin seeder, console user creation, PII guard 26 samples (TC-UT-01).
 - Mutation check: an officer delete permission planted in `IncidentPolicy` turned 2 tests red (matrix and IDOR); restored, green.
 - Browser check: Playwright visual tour at 1366 px and 360 px, light and dark; one defect found and fixed (sidebar background transparent on desktop because Bootstrap's `offcanvas-lg` forces it).
 - Independent review: REQUEST CHANGES; fixed before the commit: lockout race (row lock per attempt), other sessions ended and remember token rotated on password change, reset or deactivation, remember-me disabled, password-change throttle and audit, PII guard formats (brackets, (0), slashes, grouped IDs, full-width and zero-width tricks, shilling amounts), tag stripping that no longer cuts text at "<", ward move refused when it has incidents, deactivated category or station kept on edit, officer at inactive station cannot create, e2e guard on the default connection, security headers on the preflight 503. Decisions D-39 to D-43 (D-40 awaits the author).
+
+## 2026-09-24 Phase 4 gate: data quality (commit 8e50bc6)
+- Command: `vendor/bin/phpunit` in a clean checkout of `8e50bc6` (own vendor via `composer install`, fresh assets, MariaDB 10.4.32). Result: 252 tests, 884 assertions, all passed. Pint passed; Larastan level 8 no errors.
+- TC-AC-02 rejection recall on the seeded 1,000-record set (1,090 rows): V1 1.00, V2 1.00, V3 1.00, V4 1.00, V5 1.00, V6 1.00 (a row counts only when its seeded rule is reported); false rejections 0. Target at least 0.95 per rule: met.
+- TC-AC-03 duplicate detection on the same set (20 true pairs with retyped locations, 10 near misses): flagged 20, hits 20, precision 1.000, recall 1.000. Target at least 0.90 each: met.
+- 10,000-record load (10,900 rows incl. seeded problems) through the import pipeline on the e2e schema: 33.7 s (about 3 ms per row), 10,300 accepted, 600 rejected, 207 flagged against 200 planted duplicates (so about 7 accidental matches at this size: different addresses on one landmark within the window). Target 10,000 rows within 60 s: met. Note: this load ran before the retyped-duplicate change; re-measure in Phase 6.
+- TC-AC-04 determinism: same seed gives identical files; the incidents.csv SHA-256 for (300, seed 7, 2026-08) is pinned in the test.
+- Independent oracle (`scripts/oracle.php`, written without access to application code): deterministic (byte-identical output on two runs); 1,030 accepted rows, equal to the application's import.
+- Independent review: REQUEST CHANGES; fixed before the commit: atomic commit under a row lock (double submit), strict `YYYY-MM-DD HH:MM` import dates, UTF-8 check per row and PII guard reading Windows-1252 text, abandoned dry-run pruning and file deletion on any failure, console loads recorded as import batches, per-rule counts over all errors, reference-number update limited to the batch, review refuses a confirmation that would remove an incident from every count and never links a record to its own duplicate, closest-in-time candidates, character-based similarity, delete rule checked under a lock, sample:clear audited, realistic retyped duplicates and text near misses in the generator, commit refused when the re-check differs from the dry run, web upload limit 10,000 rows. Decisions D-45 (revised), D-46.
 
 ## Performance table (fill from TC-PF runs)
 

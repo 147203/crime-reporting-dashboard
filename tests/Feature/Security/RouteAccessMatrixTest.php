@@ -95,7 +95,7 @@ final class RouteAccessMatrixTest extends TestCase
         $status = $response->getStatusCode();
 
         $this->assertNotContains($status, [401, 403, 404, 405, 419, 429], "Unexpected status {$status}.");
-        $this->assertLessThan(500, $status, (string) $response->exception?->getMessage());
+        $this->assertLessThan(500, $status, "Server error {$status}.");
 
         if ($response->isRedirect(route('login'))) {
             $response->assertSessionHasErrors();

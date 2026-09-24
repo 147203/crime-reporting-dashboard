@@ -53,6 +53,11 @@ final class PiiGuard
 
     private static function normalise(string $text): string
     {
+        // Text that is not valid UTF-8 (for example a Windows-1252 file) would make every Unicode pattern fail silently.
+        if (! mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'Windows-1252');
+        }
+
         $normalised = class_exists(Normalizer::class) ? Normalizer::normalize($text, Normalizer::FORM_KC) : $text;
         $text = is_string($normalised) ? $normalised : $text;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\DuplicateStatus;
 use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\User;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 final class IncidentService
 {
-    public function __construct(private readonly AuditLogger $audit) {}
+    public function __construct(private readonly AuditLogger $audit, private readonly DuplicateDetector $duplicates) {}
 
     /**
      * @param  array<string, mixed>  $data  validated input, including station_id resolved for the user's role
@@ -25,6 +26,7 @@ final class IncidentService
             $incident->status = IncidentStatus::Reported;
             $incident->created_by = $user->id;
             $incident->updated_by = $user->id;
+            $this->flagDuplicate($incident);
             $incident->save();
 
             $incident->reference_no = sprintf('NRB-%s-%06d', $incident->created_at?->format('Y') ?? now()->format('Y'), $incident->id);
@@ -49,6 +51,10 @@ final class IncidentService
             }
 
             $changed = array_keys($incident->getDirty());
+
+            if ($incident->duplicate_status === DuplicateStatus::None && array_intersect($changed, ['category_id', 'ward_id', 'occurred_at', 'location_description']) !== []) {
+                $this->flagDuplicate($incident);
+            }
 
             if ($changed !== []) {
                 $incident->updated_by = $user->id;
@@ -82,11 +88,27 @@ final class IncidentService
     public function delete(Incident $incident, User $user): void
     {
         DB::transaction(function () use ($incident, $user): void {
+            // Deleting the original of a confirmed duplicate would remove the event from every analytic, because the
+            // confirmed copy is already excluded. Checked under a lock so a confirmation cannot slip in between.
+            if (Incident::query()->where('duplicate_of_id', $incident->id)->where('duplicate_status', DuplicateStatus::Confirmed->value)->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['delete' => 'This record has confirmed duplicates pointing to it and is the one counted in analytics, so it cannot be deleted.']);
+            }
+
             $incident->updated_by = $user->id;
             $incident->save();
             $incident->delete();
 
             $this->audit->record('incident.deleted', $incident, [], $user);
         });
+    }
+
+    private function flagDuplicate(Incident $incident): void
+    {
+        $match = $this->duplicates->findMatch($incident);
+
+        if ($match !== null) {
+            $incident->duplicate_status = DuplicateStatus::Suspected;
+            $incident->duplicate_of_id = $match->id;
+        }
     }
 }

@@ -57,6 +57,11 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('password-change', fn (Request $request): Limit => Limit::perMinute(5)->by('password|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
-        RateLimiter::for('auth-actions', fn (Request $request): Limit => Limit::perMinute(20)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
+        RateLimiter::for('exports', fn (Request $request): Limit => Limit::perMinute(10)->by('exports|'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
+        // Counts submissions only: many people behind one office address may open the login page at the same time.
+        RateLimiter::for('auth-actions', fn (Request $request): Limit => $request->isMethod('GET')
+            ? Limit::none()
+            : Limit::perMinute(20)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

@@ -52,16 +52,23 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - First commit `044e26b` pushed by the author to the private repository; `main` tracks `origin/main`.
 - Gate G0: database tests pass (32), preflight with tests, Pint and Larastan clean, push done. D-03, D-05, D-06 awaiting confirmation.
 
-## 2026-09-25 Phase 2 Requirements and design (schema)
+## 2026-09-24 Phase 2 Requirements and design (schema)
 - Commands: `php artisan migrate`, `php artisan migrate:rollback --step=4`, `php artisan migrate`, `php artisan db:seed`; tests in a clean worktree of the commit.
 - Built: migrations for sub_counties, wards, stations, crime_categories, users security columns, incidents, import_batches, audit_logs (append-only triggers), report_exports; enums Role, IncidentStatus, DuplicateStatus; models with station and countable scopes; factories; reference data seeder with 17 sub-counties and 85 wards (VERIFY, D-28) and 17 sample stations; Mermaid design diagrams in `docs/diagrams/`.
 - Deviation: validation V1 to V7 including the PII guard moves into Phase 3 with the incident form; Phase 4 keeps duplicates, import, generator and oracle.
 - Result: gate G2 passed (see TEST_LOG). Commit `2ec8b96` on `phase/2-design`.
 - Requirement IDs: FR-02 (scope), FR-04 (reference data), FR-12 (audit table), NFR-02 (no identifiers), NFR-06 (reversible migrations).
 
-## 2026-09-25 Phase 3 Build P0: skeleton
+## 2026-09-24 Phase 3 Build P0: skeleton
 - Built: Fortify login with lockout and inactive-account refusal, forced first-login password change, security headers middleware (CSP with nonce), role middleware, account-usable middleware, audit logger, incident create, list (filters, search, sort, pagination), show, edit, status workflow, soft delete with station scoping in queries and policies, user management, reference data management, audit log view, `user:create` command, `AdminSeeder` from ADMIN_* only, UI shell with reusable Blade components (layout, page header, card, KPI, chart with table view, form fields, badges, empty state, confirm modal, sort link), SCSS design tokens, light and dark themes, Playwright harness on a separate `crime_dashboard_e2e` schema.
 - Dependencies added: `sass`, `bootstrap-icons`, `chart.js`, `@playwright/test` (dev).
 - Deviation: validation V1 to V7 including the PII guard was built here with the form (planned for Phase 4).
 - Result: gate G3 passed (TEST_LOG). Commit `41861cd` on `phase/3-skeleton`.
 - Requirement IDs: FR-01 to FR-06, FR-12, NFR-01, NFR-02, NFR-07, NFR-08.
+
+## 2026-09-24 Phase 4 Build P1: data quality
+- Built: duplicate detector (V8) on the form and import paths, duplicate review queue, CSV import (upload, dry run, per-row error report without cell values, commit, discard, error report download), data-quality summary, deterministic sample-data generator with ground-truth files, `sample:generate` and `sample:clear`, the independent oracle script and its expected values for eight filter cases.
+- Commands: `php artisan sample:generate --size=1000 --seed=20260924 --end=2026-08`, `php scripts/oracle.php --input <dir> --filters tests/Fixtures/oracle/filters.json --out tests/Fixtures/oracle/expected_metrics_1000.json`, `DB_DATABASE=crime_dashboard_e2e php artisan sample:generate --size=10000 --load`.
+- Deviation: a defect was found by the accuracy test before commit: the import read `Validator::failed()` without running the rules, so V2, V3, V5 and V6 were skipped; the database CHECK constraint stopped the first bad row. Fixed (`passes()` before `failed()`).
+- Result: gate G4 passed (TEST_LOG). Commit `8e50bc6` on `phase/4-quality`.
+- Requirement IDs: FR-07, FR-08, FR-13, FR-14, NFR-04 (import), NFR-05 (data quality).
