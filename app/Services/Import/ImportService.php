@@ -39,7 +39,8 @@ final class ImportService
 
     private const DISK = 'local';
 
-    private const MAX_REPORTED_ERRORS = 2000;
+    // Enough for every problem in a 10,000-row upload and a 100,000-row console load, so evaluation can score all of them.
+    private const MAX_REPORTED_ERRORS = 50000;
 
     private const DRY_RUN_TTL_HOURS = 24;
 
@@ -128,14 +129,21 @@ final class ImportService
 
     public function discard(ImportBatch $batch, User $user): void
     {
-        if ($batch->status !== ImportBatch::STATUS_DRY_RUN) {
-            throw new ImportStateException('Only a pending dry run can be discarded.');
-        }
+        $discarded = DB::transaction(function () use ($batch, $user): ImportBatch {
+            // Same lock as commit, so a commit and a discard sent together cannot both succeed.
+            $locked = ImportBatch::query()->lockForUpdate()->findOrFail($batch->id);
+            if ($locked->status !== ImportBatch::STATUS_DRY_RUN) {
+                throw new ImportStateException('Only a pending dry run can be discarded.');
+            }
+            $locked->status = ImportBatch::STATUS_DISCARDED;
+            $locked->save();
+            $this->audit->record('import.discarded', $locked, [], $user);
 
-        $this->deleteFile($batch);
-        $batch->status = ImportBatch::STATUS_DISCARDED;
-        $batch->save();
-        $this->audit->record('import.discarded', $batch, [], $user);
+            return $locked;
+        });
+
+        $this->deleteFile($discarded);
+        $discarded->save();
     }
 
     /**

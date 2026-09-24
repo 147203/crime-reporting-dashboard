@@ -35,7 +35,9 @@
             <x-card title="Status">
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <x-badge.status :status="$incident->status" />
-                    <x-badge.duplicate :status="$incident->duplicate_status" />
+                    @if ($incident->duplicateFlagVisibleTo(auth()->user()))
+                        <x-badge.duplicate :status="$incident->duplicate_status" />
+                    @endif
                 </div>
                 <div class="stepper mb-3" aria-label="Status workflow">
                     @foreach (App\Enums\IncidentStatus::cases() as $step)
@@ -46,12 +48,8 @@
                 @if ($incident->closed_at)
                     <p class="small text-body-secondary">Closed {{ $incident->closed_at->format('d M Y, H:i') }}</p>
                 @endif
-                @if ($incident->duplicateOf)
-                    @can('view', $incident->duplicateOf)
-                        <p class="small">Possible duplicate of <a href="{{ route('incidents.show', $incident->duplicateOf) }}">{{ $incident->duplicateOf->reference_no }}</a></p>
-                    @else
-                        <p class="small">Possible duplicate of a record held by another station.</p>
-                    @endcan
+                @if ($incident->duplicateOf && $incident->duplicateFlagVisibleTo(auth()->user()))
+                    <p class="small">Possible duplicate of <a href="{{ route('incidents.show', $incident->duplicateOf) }}">{{ $incident->duplicateOf->reference_no }}</a></p>
                 @endif
                 @can('changeStatus', $incident)
                     @if ($incident->status->next() !== [])

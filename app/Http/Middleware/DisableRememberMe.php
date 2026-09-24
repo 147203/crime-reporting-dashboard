@@ -16,7 +16,9 @@ final class DisableRememberMe
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Fortify reads the flag through input(), which also looks at the query string.
         $request->request->remove('remember');
+        $request->query->remove('remember');
 
         return $next($request);
     }

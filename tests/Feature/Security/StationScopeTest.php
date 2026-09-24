@@ -26,11 +26,12 @@ final class StationScopeTest extends TestCase
         $other = Incident::factory()->atStation(Station::factory()->create())->create();
         $this->actingAs($fixture->officer);
 
-        $this->get(route('incidents.show', $other))->assertForbidden();
-        $this->get(route('incidents.edit', $other))->assertForbidden();
-        $this->put(route('incidents.update', $other), [])->assertForbidden();
-        $this->put(route('incidents.status', $other), ['status' => 'closed'])->assertForbidden();
-        $this->delete(route('incidents.destroy', $other))->assertForbidden();
+        // Not found rather than forbidden, so ids cannot be used to count other stations' records.
+        $this->get(route('incidents.show', $other))->assertNotFound();
+        $this->get(route('incidents.edit', $other))->assertNotFound();
+        $this->put(route('incidents.update', $other), [])->assertNotFound();
+        $this->put(route('incidents.status', $other), ['status' => 'closed'])->assertNotFound();
+        $this->delete(route('incidents.destroy', $other))->assertNotFound();
 
         $this->get(route('incidents.index'))->assertOk()->assertSee((string) $fixture->incident->reference_no)->assertDontSee((string) $other->reference_no);
     }

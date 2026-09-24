@@ -30,6 +30,12 @@ final class SampleGenerateCommand extends Command
         $this->info("Generated {$manifest['rows']} rows in {$directory}");
         $this->table(['valid', 'bad', 'duplicate', 'near_miss'], [array_values($manifest['counts'])]);
 
+        if ($this->option('load') && ! app()->environment('local', 'testing')) {
+            $this->error('Refusing to load sample data outside the local or testing environment.');
+
+            return self::FAILURE;
+        }
+
         if ($this->option('load')) {
             $started = microtime(true);
             $result = $import->importFile($directory.'/incidents.csv', null);

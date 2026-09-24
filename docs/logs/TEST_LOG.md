@@ -72,12 +72,35 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - TC-AC-05 and TC-AC-06 export fidelity: CSV rows equal A1 for the same filters and scope; a 2,500-record export has every record exactly once and in date order. Target 100 percent: met.
 - Independent review: REQUEST CHANGES; fixed: export paging (blocker: sorting by date while paging by id skipped and repeated rows beyond 1,000), oracle comparison of null values, time bands read from config, dompdf hardened (no remote files, no JavaScript, restricted file root), sample-data notice checks the records, flagged hotspots listed in the PDF, captions say when A8 ignores a ward filter, when a station view is compared county-wide (D-47, author to confirm) and when the last month is incomplete, filter label computed once, oracle sanity facts updated to the regenerated dataset. Clarifications recorded as D-27.
 
+## 2026-09-24 Phase 6: hardening, browser tests, performance, evaluation
+- PHP suite: `php artisan test`: 284 tests, 9,660 assertions, all passed. Pint passed; Larastan level 8 no errors.
+- Black-box (TC-BB-01 to 09): `npx playwright test` on the `crime_dashboard_e2e` schema (2,060 sample incidents), desktop 1366 px and mobile 360 px: 16 of 16 passed (the eight usability tasks plus an officer refused administration, and a visual tour in light and dark themes). Screenshots in `docs/evidence/`. Two defects found and fixed during the first runs: the account menu had no accessible name at 360 px (the user name is hidden there), and the auth rate limit counted page loads of the login form (a shared office address could be locked out).
+- Performance (TC-PF-01): `scripts/perf.php`, 10 warm-up and 100 timed requests per page, signed in as an analyst, `php artisan serve` (single process), 105,060 incidents in `crime_dashboard_perf_e2e`. Machine: AMD Ryzen 5 7530U, 14 GB RAM, Ubuntu 24.04, PHP 8.4.25, MariaDB 10.4.32 (XAMPP), no cache. A separate 100,000-row evaluation load was running at the same time, so these figures are conservative.
+- Before the index: dashboard (12 months) mean 3,211 ms, p95 3,476 ms; (24 months) p95 3,787 ms. Target p95 at most 2 s: missed. Profiling showed the category, ward and sub-county aggregates walking the whole (category_id, occurred_at) index (about 600 to 700 ms each); a covering index `incidents_analytics_covering_index` (migration 2026_09_25_000500, reversible) made the A1 to A10 set drop from 3,525 ms to 390 ms. After (below): target met on every page.
+- TC-PF-02 import: 100,000-record file (109,000 rows including seeded problems) loaded through the import pipeline in 367 s; 10,000 records in 33.7 s earlier; 20,000 records in 56.3 s. Target 10,000 rows within 60 s: met.
+- Security (independent pentest-style static review, report `pr_review_phase-6-pentest.md`, local only): no Critical or High; one Medium (F1: the local database shortcut applied to any environment not named production) and Low items. All fixed and tested: the shortcut now needs APP_ENV local or testing, an explicit `DB_ALLOW_LOCAL_SHORTCUT=true` and a loopback APP_URL, and root is refused otherwise (TC-UT-10); production preflight refuses debug mode, insecure cookies and non-database sessions (TC-UT-16); remember flag stripped from the query string (TC-SE-13); sessions end when the browser closes; locked-account attempts now reach the audit log (TC-SE-03); status changes, duplicate decisions and import discards re-checked under row locks; officers get 404 for other stations' incidents and see duplicate flags only for records they may view; PII guard rewritten (37 samples, TC-UT-01); tag stripping repeated until stable; security headers moved ahead of framework middleware; dev-server CSP widening only for local loopback; abandoned uploads pruned hourly (`imports:prune`) and on the imports page; quality page reads only per-rule counts; sample commands limited to local or testing.
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |
 |---|---|---|---|---|---|---|---|
+| Dashboard, last 12 months (before covering index) | 105,060 | 3,211 | 3,180 | 3,476 | none | Ryzen 5 7530U, 14 GB | 2026-09-24 |
+| Dashboard, last 24 months (before covering index) | 105,060 | 2,687 | 3,532 | 3,787 | none | same | 2026-09-24 |
+| Dashboard, last 12 months | 105,060 | 448 | 408 | 689 | none | same | 2026-09-24 |
+| Dashboard, last 24 months | 105,060 | 868 | 837 | 1,048 | none | same | 2026-09-24 |
+| Dashboard, one category | 105,060 | 339 | 330 | 365 | none | same | 2026-09-24 |
+| Incident list, page 1 | 105,060 | 52 | 51 | 57 | none | same | 2026-09-24 |
+| Incident list, filtered and sorted | 105,060 | 281 | 270 | 327 | none | same | 2026-09-24 |
+| Reports page | 105,060 | 99 | 99 | 106 | none | same | 2026-09-24 |
 
 ## Accuracy table (fill from TC-AC runs)
 
 | Measure | Result | Target | Verdict | Date |
 |---|---|---|---|---|
+| A1 to A10 vs independent oracle (1,000 records, 8 cases) | 5,387 of 5,387 values equal | 100 % | Pass | 2026-09-24 |
+| Export fidelity (CSV rows = A1; 2,500-record export, each once) | equal | 100 % | Pass | 2026-09-24 |
+| Rejection recall per rule V1 to V6 (1,000 / 20,000 / 100,000) | 1.000 at every size | at least 0.95 | Pass | 2026-09-24 |
+| False rejections (1,000 / 20,000 / 100,000) | 0 / 0 / 0 | near 0 | Pass | 2026-09-24 |
+| Duplicate precision (1,000 / 20,000 / 100,000) | 1.000 / 0.943 / 0.775 | at least 0.90 | Pass, Pass, Fail at 100,000 | 2026-09-24 |
+| Duplicate recall (1,000 / 20,000 / 100,000) | 1.000 / 0.915 / 0.920 | at least 0.90 | Pass | 2026-09-24 |
+| Planted hotspots recovered at z 1.5, n 10 (100,000 records) | 3 of 3, 0 unplanted | report | see EVAL_LOG | 2026-09-24 |

@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Actions\Auth\AuthenticateUser;
 use App\Enums\Role;
+use App\Models\Incident;
 use App\Models\User;
 use App\Services\AuditLogger;
 use Illuminate\Auth\Events\Login;
@@ -16,6 +17,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
@@ -30,6 +32,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        // Officers resolve incidents only within their station, so another station's record is "not found" rather than
+        // "forbidden" and ids cannot be used to count other stations' records.
+        Route::bind('incident', function (string $value): Incident {
+            $user = auth()->user();
+
+            $scoped = $user instanceof User && $user->role->isStationScoped() ? $user : null;
+
+            return Incident::query()
+                ->when($scoped, fn ($q, User $officer) => $q->visibleTo($officer))
+                ->whereKey((int) $value)
+                ->firstOrFail();
+        });
 
         Fortify::loginView(fn () => view('auth.login'));
         Fortify::confirmPasswordView(fn () => view('auth.confirm-password'));

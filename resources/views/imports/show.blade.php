@@ -48,7 +48,7 @@
             </x-card>
         </div>
         <div class="col-12 col-lg-8">
-            <x-card title="Row errors" :subtitle="($batch->error_report['truncated'] ?? false) ? 'Showing the first 2,000 problems; the counts by rule cover all of them.' : 'Every problem found. Record 1 is the first line after the header.'" :flush="true">
+            <x-card title="Row errors" :subtitle="($batch->error_report['truncated'] ?? false) ? 'Showing the first 50,000 problems; the counts by rule cover all of them.' : 'Every problem found. Record 1 is the first line after the header.'" :flush="true">
                 @if ($rowErrors->isEmpty())
                     <x-empty-state icon="check2-all" title="Every row passed validation" />
                 @else

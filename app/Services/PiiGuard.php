@@ -8,11 +8,15 @@ use Normalizer;
 
 /**
  * V6: detects Kenyan phone numbers and national ID numbers in free text so they are never stored (D-08, NFR-02).
- * Text is first normalised (full-width digits to ASCII, invisible characters removed). Patterns (docs/02 V6, D-36):
- *  - phone: +254, 254, (0) or 0, then 7 or 1, then 8 digits; spaces, dots, hyphens, slashes or brackets allowed between
- *    digits
- *  - national ID: a stand-alone run of 7 or 8 digits, the grouped form "12 345 678", or 6 to 9 digits after "ID",
- *    "ID no" or "ID number"; a run preceded by a currency word (KES, KSh, Sh) is treated as an amount
+ *
+ * Method (docs/02 V6, D-36):
+ *  1. Normalise: invalid UTF-8 read as Windows-1252, compatibility forms folded (full-width digits), digits of any
+ *     script mapped to ASCII, invisible format characters removed.
+ *  2. Set aside what is clearly not an identifier: calendar dates (2026-09-15, 15/09/2026) and amounts written after a
+ *     currency word (KES, KSh, Ksh, Sh).
+ *  3. Read each group of digits joined by separators (space, dot, comma, hyphen, slash, underscore, asterisk, brackets)
+ *     as one number, and test the digits alone: a phone is 254 (optionally followed by the trunk 0) or 0, then 7 or 1, then 8 digits (a leading + is
+ *     allowed); a national ID is 7 or 8 digits, or 6 to 9 digits right after "ID", "ID no" or "ID number".
  */
 final class PiiGuard
 {
@@ -20,11 +24,13 @@ final class PiiGuard
 
     public const NATIONAL_ID = 'national ID number';
 
-    private const SEP = '[\s.\-\/()]*';
+    private const GROUP = '/(?<![\p{L}\d])(\+?\d(?:[\s.,\-\/_*()]{0,2}\d)*)(?![\p{L}\d])/u';
 
-    private const STANDALONE_ID_PATTERN = '/(?<![\d.,:\/\-])(?<!KES\s)(?<!KES)(?<!KSh\s)(?<!KSh)(?<!Ksh\s)(?<!Sh\s)(?:\d{7,8}|\d{2}\s\d{3}\s\d{3})(?![\d.,:\/\-]?\d)/';
+    private const DATE = '/(?<!\d)(?:\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2}|\d{1,2}[-\/.]\d{1,2}[-\/.]\d{4})(?!\d)/';
 
-    private const LABELLED_ID_PATTERN = '/\bID(?:\s*(?:no\.?|number|#))?\s*[:.\-]?\s*\d(?:\s?\d){5,8}\b/i';
+    private const AMOUNT = '/\b(?:KES|KSh|Ksh|Sh|Shs)\.?\s*\d[\d,.\s]*/i';
+
+    private const LABEL = '/\bID(?:\s*(?:no\.?|number|#))?\s*[:.\-]?\s*$/i';
 
     /**
      * @return list<string> kinds of personal identifier found, empty when clean
@@ -35,20 +41,25 @@ final class PiiGuard
             return [];
         }
 
-        $text = self::normalise($text);
+        $text = (string) preg_replace([self::DATE, self::AMOUNT], ' ', self::normalise($text));
         $found = [];
-        $phone = '/(?<![\d+])(?:(?:\+?\s*254|\(\+?254\))'.self::SEP.'(?:\(?0\)?'.self::SEP.')?|\(?0\)?'.self::SEP.')[17](?:'.self::SEP.'\d){8}(?!\d)/';
 
-        if (preg_match($phone, $text) === 1) {
-            $found[] = self::PHONE;
-            $text = (string) preg_replace($phone, ' ', $text);
+        if (preg_match_all(self::GROUP, $text, $matches, PREG_OFFSET_CAPTURE) === false) {
+            return [];
         }
 
-        if (preg_match(self::LABELLED_ID_PATTERN, $text) === 1 || preg_match(self::STANDALONE_ID_PATTERN, $text) === 1) {
-            $found[] = self::NATIONAL_ID;
+        foreach ($matches[1] as [$group, $offset]) {
+            $digits = (string) preg_replace('/\D/', '', $group);
+            $labelled = preg_match(self::LABEL, substr($text, max(0, $offset - 20), min(20, $offset))) === 1;
+
+            if (preg_match('/^(?:2540?|0)[17]\d{8}$/', $digits) === 1) {
+                $found[self::PHONE] = true;
+            } elseif (preg_match('/^\d{7,8}$/', $digits) === 1 || ($labelled && preg_match('/^\d{6,9}$/', $digits) === 1)) {
+                $found[self::NATIONAL_ID] = true;
+            }
         }
 
-        return $found;
+        return array_values(array_filter([self::PHONE, self::NATIONAL_ID], fn (string $kind): bool => isset($found[$kind])));
     }
 
     private static function normalise(string $text): string
@@ -61,7 +72,10 @@ final class PiiGuard
         $normalised = class_exists(Normalizer::class) ? Normalizer::normalize($text, Normalizer::FORM_KC) : $text;
         $text = is_string($normalised) ? $normalised : $text;
 
+        // Digits of any script (Arabic-Indic and others) become ASCII, so the patterns see them.
+        $text = (string) preg_replace_callback('/\p{Nd}/u', fn (array $m): string => (string) \IntlChar::charDigitValue($m[0]), $text);
+
         // Zero-width and other invisible format characters could split a number to slip past the patterns.
-        return (string) preg_replace('/[\p{Cf}]/u', '', $text);
+        return (string) preg_replace('/\p{Cf}/u', '', $text);
     }
 }

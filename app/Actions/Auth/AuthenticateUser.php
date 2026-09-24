@@ -38,17 +38,14 @@ final class AuthenticateUser
             return null;
         }
 
-        return DB::transaction(function () use ($email, $password): ?User {
+        $locked = null;
+        $user = DB::transaction(function () use ($email, $password, &$locked): ?User {
             $user = User::query()->where('email', $email)->lockForUpdate()->firstOrFail();
 
             if ($user->isLocked()) {
-                $this->audit->record('auth.blocked', $user, ['reason' => 'locked'], $user);
+                $locked = $user;
 
-                // Telling the user the account is locked reveals that it exists; accepted so a locked-out officer knows
-                // to wait or ask an administrator (D-39).
-                throw ValidationException::withMessages([
-                    'email' => 'This account is temporarily locked after repeated failed attempts. Try again later or ask an administrator.',
-                ]);
+                return null;
             }
 
             if (! Hash::check($password, $user->password)) {
@@ -67,6 +64,19 @@ final class AuthenticateUser
 
             return $user;
         });
+
+        if ($locked instanceof User) {
+            // Recorded after the transaction; an exception inside it would roll the audit entry back.
+            $this->audit->record('auth.blocked', $locked, ['reason' => 'locked'], $locked);
+
+            // Telling the user the account is locked reveals that it exists; accepted so a locked-out officer knows to
+            // wait or ask an administrator (D-39).
+            throw ValidationException::withMessages([
+                'email' => 'This account is temporarily locked after repeated failed attempts. Try again later or ask an administrator.',
+            ]);
+        }
+
+        return $user;
     }
 
     private function registerFailure(User $user): void

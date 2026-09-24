@@ -17,7 +17,8 @@ final class PreflightTest extends TestCase
     private function preflight(array $overrides = []): Preflight
     {
         $config = new Repository([
-            'app' => ['env' => 'production', 'key' => 'base64:'.base64_encode(str_repeat('k', 32))],
+            'session' => ['secure' => true, 'driver' => 'database'],
+            'app' => ['env' => 'production', 'debug' => false, 'url' => 'https://crime.example.test', 'key' => 'base64:'.base64_encode(str_repeat('k', 32))],
             'admin' => ['initial_password' => 'admin-password-long-enough'],
             'database' => ['default' => 'mysql', 'connections' => [
                 'mysql' => ['host' => '127.0.0.1', 'database' => 'crime_dashboard', 'username' => 'crime_app', 'password' => 'app-password-long-enough'],
@@ -133,10 +134,12 @@ final class PreflightTest extends TestCase
 
     /** TC-UT-10 */
     #[Test]
-    public function outside_production_the_local_root_account_with_a_blank_password_is_accepted(): void
+    public function the_local_shortcut_accepts_root_with_a_blank_password_only_when_opted_in_on_loopback(): void
     {
         $local = $this->preflight([
             'app.env' => 'local',
+            'app.url' => 'http://127.0.0.1:8000',
+            'database.allow_local_shortcut' => true,
             'database.connections.mysql.username' => 'root',
             'database.connections.mysql.password' => '',
             'database.connections.mysql_testing.username' => 'root',
@@ -144,6 +147,31 @@ final class PreflightTest extends TestCase
         ]);
 
         $this->assertSame([], $local->allFailures());
+        $this->assertTrue($local->localDatabaseShortcut());
+
+        $blank = ['database.connections.mysql.username' => 'root', 'database.connections.mysql.password' => ''];
+        $staging = $this->preflight([...$blank, 'app.env' => 'staging', 'app.url' => 'http://127.0.0.1', 'database.allow_local_shortcut' => true]);
+        $lanHost = $this->preflight([...$blank, 'app.env' => 'local', 'app.url' => 'http://192.168.1.20', 'database.allow_local_shortcut' => true]);
+        $noOptIn = $this->preflight([...$blank, 'app.env' => 'local', 'app.url' => 'http://127.0.0.1', 'database.allow_local_shortcut' => false]);
+
+        foreach ([$staging, $lanHost, $noOptIn] as $case) {
+            $this->assertFalse($case->localDatabaseShortcut());
+            $this->assertContains('DB_USERNAME must be a dedicated application user, not root, outside the local shortcut (D-25).', $case->runtimeFailures());
+            $this->assertContains('DB_PASSWORD is not set.', $case->runtimeFailures());
+        }
+    }
+
+    /** TC-UT-16: production refuses debug mode, insecure cookies and non-database sessions. */
+    #[Test]
+    public function production_requires_debug_off_secure_cookies_and_database_sessions(): void
+    {
+        $failures = $this->preflight(['app.debug' => true, 'session.secure' => false, 'session.driver' => 'file'])->runtimeFailures();
+
+        $this->assertSame([
+            'APP_DEBUG must be false in production.',
+            'SESSION_SECURE_COOKIE must be true in production (serve over HTTPS).',
+            'SESSION_DRIVER must be database in production, so sessions can be ended after a password change.',
+        ], $failures);
     }
 
     /** TC-UT-11 */
@@ -152,6 +180,8 @@ final class PreflightTest extends TestCase
     {
         $failures = $this->preflight([
             'app.env' => 'local',
+            'app.url' => 'http://localhost',
+            'database.allow_local_shortcut' => true,
             'database.connections.mysql.password' => 'changeme-set-your-own',
             'database.connections.mysql_testing.database' => 'crime_dashboard',
         ])->allFailures();

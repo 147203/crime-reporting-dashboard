@@ -16,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Headers first after preflight, so responses produced early in the stack (413, maintenance 503) carry them too.
+        $middleware->prepend(SecurityHeaders::class);
         $middleware->prepend(EnsurePreflightPasses::class);
-        $middleware->append(SecurityHeaders::class);
         $middleware->web(append: [EnsureAccountUsable::class]);
         $middleware->alias(['role' => EnsureRole::class]);
     })

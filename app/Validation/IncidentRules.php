@@ -83,7 +83,12 @@ final class IncidentRules
         }
 
         // Removes tags such as <b> or </p> but keeps a lone "<" (strip_tags would cut the rest of the text).
-        $clean = trim((string) preg_replace('/<\/?[a-z!][^<>]*>/i', '', $value));
+        // Repeated until nothing changes, so nested fragments such as "<scr<b>ipt>" cannot reassemble into a tag.
+        do {
+            $before = $value;
+            $value = (string) preg_replace('/<\/?[a-z!][^<>]*>/i', '', $value);
+        } while ($value !== $before);
+        $clean = trim($value);
 
         return $clean === '' ? null : $clean;
     }

@@ -68,11 +68,13 @@ final class IncidentService
 
     public function changeStatus(Incident $incident, IncidentStatus $target, User $user): Incident
     {
-        if (! $incident->status->canMoveTo($target)) {
-            throw ValidationException::withMessages(['status' => "An incident that is {$incident->status->label()} cannot move to {$target->label()}."]);
-        }
-
         return DB::transaction(function () use ($incident, $target, $user): Incident {
+            // Re-read under a lock: two people changing the status at once must not reopen a closed incident.
+            $incident = Incident::query()->lockForUpdate()->findOrFail($incident->id);
+            if (! $incident->status->canMoveTo($target)) {
+                throw ValidationException::withMessages(['status' => "An incident that is {$incident->status->label()} cannot move to {$target->label()}."]);
+            }
+
             $from = $incident->status;
             $incident->status = $target;
             $incident->closed_at = $target === IncidentStatus::Closed ? now() : null;

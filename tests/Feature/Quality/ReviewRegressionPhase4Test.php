@@ -204,7 +204,7 @@ final class ReviewRegressionPhase4Test extends TestCase
         if (! $command instanceof PendingCommand) {
             $this->fail('Console output mocking is off.');
         }
-        $command->expectsConfirmation('Remove every synthetic incident from '.config('database.connections.mysql.database').'?', 'yes')->assertExitCode(0);
+        $command->expectsConfirmation('Remove 3 synthetic incidents from '.config('database.connections.mysql.database').'?', 'yes')->assertExitCode(0);
         $command->run();
 
         $this->assertSame(0, Incident::withTrashed()->count());

@@ -9,6 +9,8 @@ const env = {
     ...process.env,
     APP_ENV: 'local',
     DB_DATABASE: 'crime_dashboard_e2e',
+    DB_ALLOW_LOCAL_SHORTCUT: 'true',
+    APP_URL: `http://127.0.0.1:${port}`,
     E2E_PASSWORD: process.env.E2E_PASSWORD,
     SESSION_SECURE_COOKIE: 'false',
     LOGIN_MAX_ATTEMPTS: '50',

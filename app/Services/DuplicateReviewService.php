@@ -20,21 +20,32 @@ final class DuplicateReviewService
 
     public function resolve(Incident $incident, DuplicateStatus $decision, User $user): void
     {
-        if ($incident->duplicate_status !== DuplicateStatus::Suspected || ! in_array($decision, [DuplicateStatus::Confirmed, DuplicateStatus::Dismissed], true)) {
-            throw ValidationException::withMessages(['decision' => 'Only a suspected duplicate can be confirmed or dismissed.']);
-        }
-
-        // Confirming removes this record from analytics, which is only right while the earlier record is still counted.
-        $original = $incident->duplicate_of_id !== null ? Incident::query()->find($incident->duplicate_of_id) : null;
-        if ($decision === DuplicateStatus::Confirmed && ($original === null || $original->duplicate_status === DuplicateStatus::Confirmed)) {
-            throw ValidationException::withMessages(['decision' => 'The earlier record has been deleted or is itself a confirmed duplicate, so confirming would remove this incident from every count. Dismiss the flag instead.']);
+        if (! in_array($decision, [DuplicateStatus::Confirmed, DuplicateStatus::Dismissed], true)) {
+            throw ValidationException::withMessages(['decision' => 'Choose confirm or dismiss.']);
         }
 
         DB::transaction(function () use ($incident, $decision, $user): void {
-            $incident->duplicate_status = $decision;
-            $incident->updated_by = $user->id;
-            $incident->save();
-            $this->audit->record('duplicate.'.$decision->value, $incident, ['duplicate_of_id' => $incident->duplicate_of_id], $user);
+            // Both rows are locked (lower id first, so two reviews cannot deadlock) and re-checked inside the transaction,
+            // so a parallel decision or a delete of the earlier record cannot slip in between.
+            $ids = array_values(array_filter([$incident->id, $incident->duplicate_of_id]));
+            sort($ids);
+            $rows = Incident::withTrashed()->whereKey($ids)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+
+            $current = $rows->get($incident->id);
+            if ($current === null || $current->trashed() || $current->duplicate_status !== DuplicateStatus::Suspected) {
+                throw ValidationException::withMessages(['decision' => 'Only a suspected duplicate can be confirmed or dismissed.']);
+            }
+
+            // Confirming removes this record from analytics, which is only right while the earlier record is counted.
+            $original = $current->duplicate_of_id !== null ? $rows->get($current->duplicate_of_id) : null;
+            if ($decision === DuplicateStatus::Confirmed && ($original === null || $original->trashed() || $original->duplicate_status === DuplicateStatus::Confirmed)) {
+                throw ValidationException::withMessages(['decision' => 'The earlier record has been deleted or is itself a confirmed duplicate, so confirming would remove this incident from every count. Dismiss the flag instead.']);
+            }
+
+            $current->duplicate_status = $decision;
+            $current->updated_by = $user->id;
+            $current->save();
+            $this->audit->record('duplicate.'.$decision->value, $current, ['duplicate_of_id' => $current->duplicate_of_id], $user);
         });
     }
 }

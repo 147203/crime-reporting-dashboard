@@ -45,11 +45,14 @@ final class ReviewRegressionTest extends TestCase
     {
         $user = User::factory()->create(['password' => 'correct-horse-battery-1']);
 
-        $response = $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery-1', 'remember' => '1']);
+        foreach (['/login', '/login?remember=1'] as $url) {
+            $response = $this->post($url, ['email' => $user->email, 'password' => 'correct-horse-battery-1', 'remember' => '1']);
 
-        $response->assertRedirect('/');
-        foreach ($response->headers->getCookies() as $cookie) {
-            $this->assertStringStartsNotWith('remember_web_', $cookie->getName());
+            $response->assertRedirect('/');
+            foreach ($response->headers->getCookies() as $cookie) {
+                $this->assertStringStartsNotWith('remember_web_', $cookie->getName(), $url);
+            }
+            $this->post('/logout');
         }
     }
 

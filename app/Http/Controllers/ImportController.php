@@ -36,6 +36,8 @@ final class ImportController extends Controller
 
     public function create(): View
     {
+        $this->imports->pruneAbandoned();
+
         return view('imports.create', [
             'batches' => ImportBatch::query()->with('user:id,name')->latest('id')->limit(10)->get(),
             'header' => implode(',', ImportService::HEADER),

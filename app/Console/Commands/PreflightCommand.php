@@ -27,6 +27,10 @@ final class PreflightCommand extends Command
             return self::FAILURE;
         }
 
+        if ($preflight->localDatabaseShortcut()) {
+            $this->warn('Local database shortcut is active (D-25): root with a blank password is accepted on this machine only.');
+        }
+
         $this->info('Preflight passed.');
 
         return self::SUCCESS;
