@@ -97,6 +97,7 @@ final class SchemaTest extends TestCase
                 'incidents_status_index',
                 'incidents_duplicate_status_index',
                 'incidents_reference_no_unique',
+                'incidents_analytics_covering_index',
             ],
             'audit_logs' => ['audit_logs_created_at_index', 'audit_logs_user_created_index'],
             'wards' => ['wards_sub_county_id_name_unique'],

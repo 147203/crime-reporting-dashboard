@@ -22,11 +22,14 @@ final class QualityReport
      */
     public function for(User $viewer): array
     {
-        $imports = ImportBatch::query()->where('status', ImportBatch::STATUS_COMMITTED)->get(['rows_total', 'rows_accepted', 'rows_rejected', 'error_report']);
+        // Only the per-rule counts are read; the full error lists can be large.
+        $imports = ImportBatch::query()->where('status', ImportBatch::STATUS_COMMITTED)
+            ->toBase()->selectRaw("rows_total, rows_accepted, rows_rejected, JSON_EXTRACT(error_report, '$.by_rule') as by_rule")->get();
         $rejections = [];
         foreach ($imports as $batch) {
-            foreach ($batch->error_report['by_rule'] ?? [] as $rule => $count) {
-                $rejections[$rule] = ($rejections[$rule] ?? 0) + (int) $count;
+            $byRule = json_decode((string) ($batch->by_rule ?? 'null'), true);
+            foreach (is_array($byRule) ? $byRule : [] as $rule => $count) {
+                $rejections[(string) $rule] = ($rejections[(string) $rule] ?? 0) + (int) $count;
             }
         }
         ksort($rejections);

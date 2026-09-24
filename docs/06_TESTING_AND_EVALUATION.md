@@ -78,8 +78,9 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 | FR-11 Reports and exports | TC-AC-05, TC-FT-51, TC-SE-16, TC-BB-07 |
 | FR-13 Data-quality summary | TC-FT-44 |
 | FR-14 Generator determinism | TC-AC-04 (pinned SHA-256) |
-| NFR-03 Usability | TC-US-01 to 08 (real participants, author) |
-| NFR-04 Performance | TC-PF-01, 02 (`scripts/perf.php`, 10,000-row load timing) |
+| NFR-03 Usability | TC-US-01 to 08 (real participants, author; kit in `docs/usability/USABILITY_KIT.md`); TC-BB-01 to 09 automate the same tasks (`tests/e2e/usability-tasks.spec.ts`) |
+| NFR-07 Responsiveness | TC-BB-01 to 09 at 360 px (Playwright mobile project) |
+| NFR-04 Performance | TC-PF-01 (`scripts/perf.php` at 105,060 incidents), TC-PF-02 (10,000, 20,000 and 100,000-record loads); results in TEST_LOG |
 | NFR-05 Accuracy | TC-AC-01 to 05 |
 
 ## 9. Chapter 5.5 results table (faculty format)

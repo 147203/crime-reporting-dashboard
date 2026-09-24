@@ -21,7 +21,8 @@ final class SecurityHeaders
         $response = $next($request);
 
         $nonce = Vite::cspNonce();
-        $dev = Vite::isRunningHot() ? ' '.$this->devServerOrigin() : '';
+        // The Vite dev server is allowed only for local requests on a local machine; a stale public/hot file elsewhere is ignored.
+        $dev = app()->environment('local') && in_array($request->ip(), ['127.0.0.1', '::1'], true) && Vite::isRunningHot() ? ' '.$this->devServerOrigin() : '';
 
         $response->headers->set('Content-Security-Policy', implode('; ', [
             "default-src 'self'",

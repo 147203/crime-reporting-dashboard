@@ -26,7 +26,36 @@ final class Preflight
      */
     public function runtimeFailures(): array
     {
-        return [...$this->appKeyFailures(), ...$this->appDatabaseFailures()];
+        return [...$this->appKeyFailures(), ...$this->appDatabaseFailures(), ...$this->productionFailures()];
+    }
+
+    /**
+     * The D-25 shortcut (root, blank password) applies only on an explicitly opted-in local machine served on loopback,
+     * so a checkout copied to another host falls back to the strict rules.
+     */
+    public function localDatabaseShortcut(): bool
+    {
+        $host = (string) parse_url($this->string('app.url'), PHP_URL_HOST);
+
+        return in_array($this->string('app.env'), ['local', 'testing'], true)
+            && $this->config->get('database.allow_local_shortcut') === true
+            && in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function productionFailures(): array
+    {
+        if (! $this->isProduction()) {
+            return [];
+        }
+
+        return array_values(array_filter([
+            $this->config->get('app.debug') === true ? 'APP_DEBUG must be false in production.' : null,
+            $this->config->get('session.secure') !== true ? 'SESSION_SECURE_COOKIE must be true in production (serve over HTTPS).' : null,
+            $this->string('session.driver') !== 'database' ? 'SESSION_DRIVER must be database in production, so sessions can be ended after a password change.' : null,
+        ]));
     }
 
     /**
@@ -92,6 +121,10 @@ final class Preflight
             }
         }
 
+        if (! $this->localDatabaseShortcut() && $this->string('database.connections.mysql.username') === 'root') {
+            $failures[] = 'DB_USERNAME must be a dedicated application user, not root, outside the local shortcut (D-25).';
+        }
+
         return [
             ...$failures,
             ...$this->databasePasswordFailures('DB_PASSWORD', $this->string('database.connections.mysql.password')),
@@ -99,13 +132,13 @@ final class Preflight
     }
 
     /**
-     * Outside production a blank password is accepted (local XAMPP root, D-25); a placeholder never is.
+     * Only under the local shortcut is a blank password accepted (XAMPP root, D-25); a placeholder never is.
      *
      * @return list<string>
      */
     private function databasePasswordFailures(string $variable, string $value): array
     {
-        if ($this->isProduction()) {
+        if (! $this->localDatabaseShortcut()) {
             return $this->secretFailures($variable, $value, self::MIN_DB_PASSWORD_LENGTH);
         }
 
@@ -138,7 +171,7 @@ final class Preflight
 
         $failures = $this->databasePasswordFailures('DB_TEST_PASSWORD', $this->string('database.connections.mysql_testing.password'));
 
-        if ($this->isProduction() && hash_equals($this->string('database.connections.mysql.username'), $testUser)) {
+        if (! $this->localDatabaseShortcut() && hash_equals($this->string('database.connections.mysql.username'), $testUser)) {
             $failures[] = 'DB_TEST_USERNAME must differ from DB_USERNAME.';
         }
 
@@ -151,7 +184,7 @@ final class Preflight
         }
 
         $appPassword = $this->string('database.connections.mysql.password');
-        if ($this->isProduction() && $appPassword !== '' && hash_equals($appPassword, $this->string('database.connections.mysql_testing.password'))) {
+        if (! $this->localDatabaseShortcut() && $appPassword !== '' && hash_equals($appPassword, $this->string('database.connections.mysql_testing.password'))) {
             $failures[] = 'DB_TEST_PASSWORD must differ from DB_PASSWORD.';
         }
 

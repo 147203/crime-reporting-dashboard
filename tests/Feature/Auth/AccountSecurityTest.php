@@ -36,6 +36,7 @@ final class AccountSecurityTest extends TestCase
         $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery-1'])->assertSessionHasErrors('email');
         $this->assertGuest();
         $this->assertSame(1, AuditLog::query()->where('action', 'auth.locked')->count());
+        $this->assertSame(1, AuditLog::query()->where('action', 'auth.blocked')->count(), 'An attempt on a locked account must reach the audit log.');
 
         $this->travel((int) config('security.login_lockout_minutes') + 1)->minutes();
         $this->post('/login', ['email' => $user->email, 'password' => 'correct-horse-battery-1'])->assertRedirect('/');

@@ -79,3 +79,10 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Browser check: two chart defects found in screenshots and fixed (horizontal bar labels showed index numbers; heat-grid shading hidden by Bootstrap table variables).
 - Result: gate G5 passed except performance, which is measured in Phase 6 (TEST_LOG). Commit `a38ca30` on `phase/5-analytics`.
 - Requirement IDs: FR-09, FR-10, FR-11, NFR-05, NFR-07, NFR-08.
+
+## 2026-09-24 Phase 6 Hardening and evaluation
+- Built: covering index for analytics (after measurement), `scripts/perf.php`, `sample:evaluate`, `imports:prune` (scheduled hourly), Playwright black-box suite for the eight usability tasks at desktop and 360 px, usability kit draft for the author (`docs/usability/USABILITY_KIT.md`), security fixes from the pentest-style review.
+- Commands: `DB_DATABASE=crime_dashboard_perf_e2e php artisan sample:generate --size=100000 --load` (6 min 50 s, 330 MB peak), `php scripts/perf.php --base=http://127.0.0.1:8125 --email=analyst@e2e.test`, `php artisan sample:evaluate <dir> <batch>` at 20,000 and 100,000 records, `npx playwright test`.
+- Deviation: performance target missed on first measurement (dashboard p95 3.5 s); fixed with a measured index, not by caching (D-21 kept).
+- Result: gate G6 automated items pass except duplicate precision at 100,000 records (0.775, target 0.90), reported and left for the author's decision (D-48). Usability results await real participants.
+- Requirement IDs: NFR-01, NFR-02, NFR-03 (kit), NFR-04, NFR-05, NFR-07.

@@ -58,6 +58,7 @@
                     </select>
                 </div>
             @endunless
+            @unless ($stationScoped)
             <div class="col-6 col-md-4 col-xl-3">
                 <label class="form-label" for="duplicate_status">Duplicate flag</label>
                 <select class="form-select" id="duplicate_status" name="duplicate_status">
@@ -65,6 +66,7 @@
                     @foreach ($duplicateStatuses as $status)<option value="{{ $status->value }}" @selected(($filters['duplicate_status'] ?? '') === $status->value)>{{ $status->label() }}</option>@endforeach
                 </select>
             </div>
+            @endunless
             <div class="col-12 col-xl d-flex gap-2 justify-content-xl-end">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Apply</button>
                 <a href="{{ route('incidents.index') }}" class="btn btn-outline-secondary">Reset</a>
@@ -94,7 +96,9 @@
                             <tr>
                                 <td class="ps-3">
                                     <a href="{{ route('incidents.show', $incident) }}" class="fw-semibold">{{ $incident->reference_no }}</a>
-                                    <div><x-badge.duplicate :status="$incident->duplicate_status" /></div>
+                                    @if (! $stationScoped || $incident->duplicate_of_id === null || $incident->duplicateOf?->station_id === auth()->user()?->station_id)
+                                        <div><x-badge.duplicate :status="$incident->duplicate_status" /></div>
+                                    @endif
                                 </td>
                                 <td>{{ $incident->category->name }}</td>
                                 <td class="d-none d-md-table-cell">{{ $incident->ward->name }}</td>

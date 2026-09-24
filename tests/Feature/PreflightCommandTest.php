@@ -14,6 +14,9 @@ final class PreflightCommandTest extends TestCase
     {
         config([
             'app.env' => 'production',
+            'app.debug' => false,
+            'session.secure' => true,
+            'session.driver' => 'database',
             'app.key' => 'base64:'.base64_encode(str_repeat('k', 32)),
             'admin.initial_password' => 'admin-password-long-enough',
             'database.connections.mysql.host' => '127.0.0.1',

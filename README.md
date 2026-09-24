@@ -2,7 +2,7 @@
 
 Final-year project, BBIT, Strathmore University. A responsive web application where authorised users record crime incidents in one central database; the system validates and cleans the data, analyses it descriptively, and presents trends, time patterns, area rankings, and non-spatial hotspot flags as dashboards, charts, and exportable reports.
 
-**Author:** Mathai, Margaret Elsie Wairimu (adm. 147203). **Supervisor:** Mr Nicodemus Maingi. **Status:** Phase 0 (setup) built; 32 tests passing on MariaDB; gate G0 pending the first push.
+**Author:** Mathai, Margaret Elsie Wairimu (adm. 147203). **Supervisor:** Mr Nicodemus Maingi. **Status:** Phases 0 to 4 merged; Phase 5 (analytics, dashboards, exports) and Phase 6 (hardening, evaluation) in progress.
 
 Scope note: the panel ruled out GIS. There are no maps, GPS, coordinates, or geocoding. Location is a controlled hierarchy (sub-county, ward) plus a free-text street or landmark. All data is synthetic and labelled as sample data.
 
@@ -42,19 +42,28 @@ PHP 8.4, Laravel 12, MariaDB 10.4 from XAMPP (MySQL-compatible, port 3306, local
 5. **Phase 6 Hardening and evaluation:** security, performance, accuracy, usability.
 6. **Phase 7 Documentation** (continuous) and **Phase 8 Demo.**
 
-## Quickstart (available once Phase 0 completes)
+## Quickstart
+
+Full setup: `docs/10_SETUP_AND_GIT.md`.
 
 ```bash
-composer install && npm install
-cp .env.example .env       # set your own values; never commit .env
+composer install && npm install && npm run build
+cp .env.example .env              # set ADMIN_NAME, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD yourself; never commit .env
 php artisan key:generate
-php artisan migrate        # never with --force
-php artisan app:preflight
-php artisan test
-npm run dev
+php artisan app:preflight         # must print "Preflight passed."
+php artisan migrate               # never with --force
+php artisan db:seed               # reference data and the first administrator (from .env)
+php artisan sample:generate --size=20000 --load   # synthetic demo data, labelled as sample data
+php artisan serve                 # http://127.0.0.1:8000
 ```
 
-Setup and databases: `docs/10_SETUP_AND_GIT.md`.
+Tests:
+
+```bash
+php artisan test                  # unit, feature, security and accuracy tests on the *_test schema
+npx playwright test               # browser tests on the *_e2e schema (desktop and 360 px)
+vendor/bin/pint --test && vendor/bin/phpstan analyse
+```
 
 ## Data and licence notes
 

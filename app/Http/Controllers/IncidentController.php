@@ -30,8 +30,8 @@ final class IncidentController extends Controller
 
         $query = Filters::fromValidated($validated)
             ->apply(Incident::query()->visibleTo($user))
-            ->with(['category:id,name', 'ward:id,name', 'station:id,name'])
-            ->when($validated['duplicate_status'] ?? null, fn ($q, string $status) => $q->where('duplicate_status', $status))
+            ->with(['category:id,name', 'ward:id,name', 'station:id,name', 'duplicateOf' => fn ($q) => $q->withTrashed()->select(['id', 'station_id'])])
+            ->when($user->role->isStationScoped() ? null : ($validated['duplicate_status'] ?? null), fn ($q, string $status) => $q->where('duplicate_status', $status))
             ->when($validated['q'] ?? null, function ($q, string $term): void {
                 $like = '%'.addcslashes($term, '%_\\').'%';
                 $q->where(fn ($inner) => $inner->where('reference_no', 'like', $like)->orWhere('location_description', 'like', $like));

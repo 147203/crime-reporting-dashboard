@@ -31,6 +31,10 @@ return [
     |
     */
 
+    // D-25: allow the local XAMPP root account with a blank password; honoured only with APP_ENV local or testing and a
+    // loopback APP_URL (see App\Support\Preflight::localDatabaseShortcut).
+    'allow_local_shortcut' => (bool) env('DB_ALLOW_LOCAL_SHORTCUT', false),
+
     'connections' => [
 
         'mysql' => [

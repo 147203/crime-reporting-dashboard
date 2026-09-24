@@ -88,6 +88,19 @@ class Incident extends Model
     }
 
     /**
+     * Officers see a duplicate flag only when the earlier record is at their own station; otherwise the flag would reveal
+     * that another station holds a record at that place and time.
+     */
+    public function duplicateFlagVisibleTo(User $user): bool
+    {
+        if (! $user->role->isStationScoped() || $this->duplicate_of_id === null) {
+            return true;
+        }
+
+        return $this->duplicateOf()->withTrashed()->value('station_id') === $user->station_id;
+    }
+
+    /**
      * @return BelongsTo<CrimeCategory, $this>
      */
     public function category(): BelongsTo
