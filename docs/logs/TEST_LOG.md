@@ -41,6 +41,13 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Static checks re-run: Pint passed; Larastan level 8 no errors.
 - Evidence (figure IDs): screenshot of this run still to capture.
 
+## 2026-09-25 Phase 2 gate: schema, reference data, design (commit 2ec8b96)
+- Command: `vendor/bin/phpunit` in a clean checkout of commit `2ec8b96` (own vendor copy, process env, MariaDB 10.4.32)
+- Result: 45 tests, 133 assertions, all passed. New: TC-FT-10 to TC-FT-20 (no coordinate columns, named indexes, reference data 17/85 and per-sub-county counts, station scope, countable scope, no personal-identifier columns, composite ward key, CHECK constraints, append-only audit through Eloquent and raw SQL, users cannot be deleted), TC-UT-12 (status workflow), TC-SE-08 (mass assignment).
+- Reversibility (NFR-06): `php artisan migrate:rollback --step=4` then `php artisan migrate` on the development schema, twice, both clean; reference seeder idempotent.
+- Static checks: Pint passed; Larastan level 8 no errors.
+- Independent review: REQUEST CHANGES (no security blocker); fixes applied before the commit (station not fillable, audit triggers and restrict keys, composite ward key, CHECK constraints, synthetic default, countable scope independent of soft-delete scope, LF line endings). Decisions D-32 to D-35.
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |
