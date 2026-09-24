@@ -43,3 +43,15 @@ php artisan app:preflight       # must print "Preflight passed."
 php artisan migrate             # never with --force
 php artisan test
 ```
+
+## 3. Browser (end-to-end) tests
+
+Playwright runs against a separate schema, `crime_dashboard_e2e`, which it wipes and rebuilds on every run (`php artisan e2e:prepare` refuses any database whose name does not end in `_e2e`). Test accounts get a random password generated for each run; nothing is stored.
+
+```bash
+/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+npx playwright install chromium    # once
+npm run build
+npx playwright test                # desktop (1366 px) and mobile (360 px) projects
+```
+

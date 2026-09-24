@@ -7,6 +7,7 @@ namespace Tests\Feature\Security;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\AccessFixture;
 use Tests\Support\RouteAccessMatrix;
 use Tests\TestCase;
 
@@ -27,7 +28,8 @@ final class CsrfAndThrottleTest extends TestCase
     public function every_state_changing_route_rejects_a_request_without_a_csrf_token(): void
     {
         $this->enableCsrfVerification();
-        $this->actingAs(User::factory()->create());
+        $fixture = new AccessFixture;
+        $this->actingAs($fixture->admin);
 
         foreach (array_keys(RouteAccessMatrix::routes()) as $key) {
             [$method, $name] = explode(' ', $key, 2);
@@ -36,7 +38,7 @@ final class CsrfAndThrottleTest extends TestCase
                 continue;
             }
 
-            $this->call($method, route($name))->assertStatus(419);
+            $this->call($method, route($name, RouteAccessMatrix::parameters($name, $fixture)))->assertStatus(419);
         }
     }
 

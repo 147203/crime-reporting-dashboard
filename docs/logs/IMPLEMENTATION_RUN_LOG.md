@@ -58,3 +58,10 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Deviation: validation V1 to V7 including the PII guard moves into Phase 3 with the incident form; Phase 4 keeps duplicates, import, generator and oracle.
 - Result: gate G2 passed (see TEST_LOG). Commit `2ec8b96` on `phase/2-design`.
 - Requirement IDs: FR-02 (scope), FR-04 (reference data), FR-12 (audit table), NFR-02 (no identifiers), NFR-06 (reversible migrations).
+
+## 2026-09-25 Phase 3 Build P0: skeleton
+- Built: Fortify login with lockout and inactive-account refusal, forced first-login password change, security headers middleware (CSP with nonce), role middleware, account-usable middleware, audit logger, incident create, list (filters, search, sort, pagination), show, edit, status workflow, soft delete with station scoping in queries and policies, user management, reference data management, audit log view, `user:create` command, `AdminSeeder` from ADMIN_* only, UI shell with reusable Blade components (layout, page header, card, KPI, chart with table view, form fields, badges, empty state, confirm modal, sort link), SCSS design tokens, light and dark themes, Playwright harness on a separate `crime_dashboard_e2e` schema.
+- Dependencies added: `sass`, `bootstrap-icons`, `chart.js`, `@playwright/test` (dev).
+- Deviation: validation V1 to V7 including the PII guard was built here with the form (planned for Phase 4).
+- Result: gate G3 passed (TEST_LOG). Commit `41861cd` on `phase/3-skeleton`.
+- Requirement IDs: FR-01 to FR-06, FR-12, NFR-01, NFR-02, NFR-07, NFR-08.

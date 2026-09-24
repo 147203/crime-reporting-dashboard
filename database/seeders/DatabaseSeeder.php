@@ -9,10 +9,11 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * No seeder may create an account with a known password.
+     * Reference data, then the first administrator from the environment. No seeder may create an account with a known
+     * password.
      */
     public function run(): void
     {
-        $this->call(ReferenceDataSeeder::class);
+        $this->call([ReferenceDataSeeder::class, AdminSeeder::class]);
     }
 }

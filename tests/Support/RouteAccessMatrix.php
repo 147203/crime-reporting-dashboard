@@ -6,7 +6,8 @@ namespace Tests\Support;
 
 /**
  * Expected outcome of every route for every actor (docs/02 section 2).
- * A route that is registered but missing here fails RouteAccessMatrixTest, so no route can ship without a decision on who may use it.
+ * A route that is registered but missing here fails RouteAccessMatrixTest, so no route can ship without a decision on
+ * who may use it. Route parameters come from the fixture (an incident at the officer's own station, created by them).
  */
 final class RouteAccessMatrix
 {
@@ -27,17 +28,64 @@ final class RouteAccessMatrix
      */
     public static function routes(): array
     {
-        $signedIn = ['admin' => self::ALLOW, 'officer' => self::ALLOW, 'analyst' => self::ALLOW];
+        $everyone = ['admin' => self::ALLOW, 'officer' => self::ALLOW, 'analyst' => self::ALLOW];
         $guestOnly = ['admin' => self::HOME, 'officer' => self::HOME, 'analyst' => self::HOME];
+        $writers = ['admin' => self::ALLOW, 'officer' => self::ALLOW, 'analyst' => self::FORBIDDEN];
+        $adminOnly = ['admin' => self::ALLOW, 'officer' => self::FORBIDDEN, 'analyst' => self::FORBIDDEN];
 
         return [
-            'GET home' => ['guest' => self::LOGIN, ...$signedIn],
             'GET login' => ['guest' => self::ALLOW, ...$guestOnly],
             'POST login.store' => ['guest' => self::ALLOW, ...$guestOnly],
-            'POST logout' => ['guest' => self::LOGIN, ...$signedIn],
-            'GET password.confirm' => ['guest' => self::LOGIN, ...$signedIn],
-            'POST password.confirm.store' => ['guest' => self::LOGIN, ...$signedIn],
-            'GET password.confirmation' => ['guest' => self::LOGIN, ...$signedIn],
+            'POST logout' => self::signedIn($everyone),
+            'GET password.confirm' => self::signedIn($everyone),
+            'POST password.confirm.store' => self::signedIn($everyone),
+            'GET password.confirmation' => self::signedIn($everyone),
+            'GET password.edit' => self::signedIn($everyone),
+            'PUT password.update' => self::signedIn($everyone),
+
+            'GET home' => self::signedIn($everyone),
+
+            'GET incidents.index' => self::signedIn($everyone),
+            'GET incidents.create' => self::signedIn($writers),
+            'POST incidents.store' => self::signedIn($writers),
+            'GET incidents.show' => self::signedIn($everyone),
+            'GET incidents.edit' => self::signedIn($writers),
+            'PUT incidents.update' => self::signedIn($writers),
+            'PUT incidents.status' => self::signedIn($writers),
+            'DELETE incidents.destroy' => self::signedIn($adminOnly),
+
+            'GET admin.users.index' => self::signedIn($adminOnly),
+            'GET admin.users.create' => self::signedIn($adminOnly),
+            'POST admin.users.store' => self::signedIn($adminOnly),
+            'GET admin.users.edit' => self::signedIn($adminOnly),
+            'PUT admin.users.update' => self::signedIn($adminOnly),
+            'GET admin.reference.index' => self::signedIn($adminOnly),
+            'POST admin.reference.store' => self::signedIn($adminOnly),
+            'PUT admin.reference.update' => self::signedIn($adminOnly),
+            'GET admin.audit.index' => self::signedIn($adminOnly),
         ];
+    }
+
+    /**
+     * @param  array{admin: string, officer: string, analyst: string}  $roles
+     * @return array{guest: string, admin: string, officer: string, analyst: string}
+     */
+    private static function signedIn(array $roles): array
+    {
+        return ['guest' => self::LOGIN, 'admin' => $roles['admin'], 'officer' => $roles['officer'], 'analyst' => $roles['analyst']];
+    }
+
+    /**
+     * @return array<string, int|string>
+     */
+    public static function parameters(string $routeName, AccessFixture $fixture): array
+    {
+        return match ($routeName) {
+            'incidents.show', 'incidents.edit', 'incidents.update', 'incidents.status', 'incidents.destroy' => ['incident' => $fixture->incident->id],
+            'admin.users.edit', 'admin.users.update' => ['user' => $fixture->officer->id],
+            'admin.reference.store' => ['type' => 'categories'],
+            'admin.reference.update' => ['type' => 'categories', 'item' => $fixture->incident->category_id],
+            default => [],
+        };
     }
 }

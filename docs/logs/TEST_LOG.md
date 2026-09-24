@@ -48,6 +48,14 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Static checks: Pint passed; Larastan level 8 no errors.
 - Independent review: REQUEST CHANGES (no security blocker); fixes applied before the commit (station not fillable, audit triggers and restrict keys, composite ward key, CHECK constraints, synthetic default, countable scope independent of soft-delete scope, LF line endings). Decisions D-32 to D-35.
 
+## 2026-09-25 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
+- Command: `vendor/bin/phpunit` in a clean checkout of commit `41861cd` (own vendor, fresh asset build, process env, MariaDB 10.4.32)
+- Result: 198 tests, 697 assertions, all passed. Pint passed; Larastan level 8 no errors.
+- Coverage added: route x role matrix for every route and 4 actors (TC-SE-01a, 01b, 108 cases), station IDOR (TC-SE-09), lockout (TC-SE-03), SQL injection strings in every list filter (TC-SE-02), headers with CSP nonce (TC-SE-10, 10b), stored XSS escaped (TC-SE-11), sessions ended on password change (TC-SE-12), remember-me ignored (TC-SE-13), inactive station (TC-SE-14), validation V1 to V6 (TC-FT-02), status workflow, soft delete, filters, user management, reference data, admin seeder, console user creation, PII guard 26 samples (TC-UT-01).
+- Mutation check: an officer delete permission planted in `IncidentPolicy` turned 2 tests red (matrix and IDOR); restored, green.
+- Browser check: Playwright visual tour at 1366 px and 360 px, light and dark; one defect found and fixed (sidebar background transparent on desktop because Bootstrap's `offcanvas-lg` forces it).
+- Independent review: REQUEST CHANGES; fixed before the commit: lockout race (row lock per attempt), other sessions ended and remember token rotated on password change, reset or deactivation, remember-me disabled, password-change throttle and audit, PII guard formats (brackets, (0), slashes, grouped IDs, full-width and zero-width tricks, shilling amounts), tag stripping that no longer cuts text at "<", ward move refused when it has incidents, deactivated category or station kept on edit, officer at inactive station cannot create, e2e guard on the default connection, security headers on the preflight 503. Decisions D-39 to D-43 (D-40 awaits the author).
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |

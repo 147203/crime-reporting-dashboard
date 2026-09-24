@@ -12,10 +12,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property string|null $reference_no
+ * @property int $category_id
+ * @property Carbon $occurred_at
+ * @property Carbon $reported_at
+ * @property int $sub_county_id
+ * @property int $ward_id
+ * @property int $station_id
+ * @property string|null $location_description
+ * @property string|null $description
  * @property IncidentStatus $status
+ * @property Carbon|null $closed_at
  * @property DuplicateStatus $duplicate_status
+ * @property int|null $duplicate_of_id
+ * @property bool $is_synthetic
+ * @property int|null $import_batch_id
+ * @property int|null $created_by
+ * @property int|null $updated_by
  */
 class Incident extends Model
 {

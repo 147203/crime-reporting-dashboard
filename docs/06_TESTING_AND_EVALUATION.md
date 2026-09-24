@@ -57,21 +57,21 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 | Reporting | Table per task, SUS mean, median, range, n; list of issues fixed; be explicit that n is small |
 | Rule | Never invent participants or scores |
 
-## 8. Traceability (fill as tests are written)
+## 8. Traceability (as built; update as tests are added)
 
-| Requirement | Test cases |
+| Requirement | Test cases (file) |
 |---|---|
-| FR-01 | TC-FT-, TC-SE-, TC-BB- |
-| FR-02 | TC-SE- matrix |
-| FR-05 to FR-08 | TC-UT-, TC-FT-, TC-ST-, TC-AC- |
-| FR-09, FR-10 | TC-AC-, TC-BB-, TC-PF- |
-| FR-11 | TC-AC- export fidelity |
-| FR-12, FR-13 | TC-FT-, TC-ST- |
-| FR-14 | TC-AC- determinism test |
-| NFR-01, NFR-02 | TC-SE-, TC-UT- |
-| NFR-03 | TC-US- |
-| NFR-04 | TC-PF- |
-| NFR-05 | TC-AC- |
+| FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`) |
+| FR-02 Role and station access | TC-SE-01a, 01b (`Security/RouteAccessMatrixTest`, every route x 4 actors), TC-SE-09 (`Security/StationScopeTest`), TC-FT-13, 14 (`Schema/IncidentScopeTest`) |
+| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`) |
+| FR-04 Reference data | TC-FT-12 (`Schema/SchemaTest`), TC-FT-29 (`Admin/AdministrationTest`) |
+| FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`) |
+| FR-06 Records: filter, status, soft delete | TC-FT-03 to 05 (`Incidents/IncidentWorkflowTest`), TC-UT-12 (`Unit/IncidentStatusTest`) |
+| FR-12 Audit log | TC-FT-19 (`Schema/AuditAndMassAssignmentTest`), TC-FT-25, 28, 29 |
+| NFR-01 Security | TC-SE-01 to 11, TC-FT-01 to 02 (preflight), TC-UT-01 to 11 (`Unit/PreflightTest`) |
+| NFR-02 Privacy | TC-FT-10, 16 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-25, 28 (no secrets in audit) |
+| NFR-06 Reliability (reversible migrations) | Rollback and re-migrate logged in TEST_LOG (Phase 2 gate) |
+| FR-07 to FR-11, FR-13, FR-14, NFR-03 to 05 | Phases 4 to 6 |
 
 ## 9. Chapter 5.5 results table (faculty format)
 

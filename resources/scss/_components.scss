@@ -1,0 +1,188 @@
+// Reusable component styles. Markup lives in resources/views/components.
+
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    h1 {
+        font-size: clamp(1.35rem, 1.1rem + 1vw, 1.75rem);
+        font-weight: 650;
+        margin: 0;
+    }
+    .page-subtitle {
+        color: var(--app-muted);
+        margin: 0.25rem 0 0;
+    }
+}
+
+.card {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    .card-header {
+        border-bottom-color: var(--app-border);
+        padding-top: 0.9rem;
+        padding-bottom: 0.9rem;
+    }
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    .card-subtitle {
+        font-size: 0.8125rem;
+        color: var(--app-muted);
+    }
+}
+
+.kpi {
+    .kpi-label {
+        font-size: 0.8125rem;
+        color: var(--app-muted);
+        font-weight: 500;
+    }
+    .kpi-value {
+        font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+        font-weight: 700;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+    .kpi-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: inline-grid;
+        place-items: center;
+        border-radius: $radius;
+        background: var(--bs-primary-bg-subtle);
+        color: var(--bs-primary-text-emphasis);
+        font-size: 1.15rem;
+    }
+    .kpi-meta {
+        font-size: 0.78rem;
+        color: var(--app-muted);
+    }
+}
+
+.delta-up {
+    color: var(--bs-danger-text-emphasis);
+}
+.delta-down {
+    color: var(--bs-success-text-emphasis);
+}
+
+.chart-box {
+    position: relative;
+    height: 18rem;
+    @include media-breakpoint-down(sm) {
+        height: 15rem;
+    }
+    &.chart-box-sm {
+        height: 13rem;
+    }
+}
+
+.chart-caption {
+    font-size: 0.78rem;
+    color: var(--app-muted);
+}
+
+.table {
+    --bs-table-bg: transparent;
+    font-variant-numeric: tabular-nums;
+    th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--app-muted);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+}
+
+.sort-link {
+    color: inherit;
+    &:hover {
+        color: var(--bs-primary);
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--app-muted);
+    .bi {
+        font-size: 2.25rem;
+        opacity: 0.7;
+    }
+}
+
+.filter-bar {
+    .form-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--app-muted);
+        margin-bottom: 0.25rem;
+    }
+}
+
+.heat-0 { background: var(--bs-body-bg); }
+.heat-1 { background: rgba(0, 114, 178, 0.12); }
+.heat-2 { background: rgba(0, 114, 178, 0.26); }
+.heat-3 { background: rgba(0, 114, 178, 0.42); }
+.heat-4 { background: rgba(0, 114, 178, 0.6); color: #fff; }
+.heat-5 { background: rgba(0, 114, 178, 0.82); color: #fff; }
+
+.hotspot-row {
+    background: var(--bs-danger-bg-subtle) !important;
+}
+
+.detail-list {
+    dt {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--app-muted);
+        font-weight: 600;
+    }
+    dd {
+        margin-bottom: 0.9rem;
+    }
+}
+
+.stepper {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    .step {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        color: var(--app-muted);
+        &.done,
+        &.current {
+            color: var(--bs-body-color);
+            font-weight: 600;
+        }
+        .dot {
+            width: 0.65rem;
+            height: 0.65rem;
+            border-radius: 50%;
+            background: var(--app-border);
+        }
+        &.done .dot {
+            background: var(--bs-success);
+        }
+        &.current .dot {
+            background: var(--bs-primary);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}

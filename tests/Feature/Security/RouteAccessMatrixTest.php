@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Security;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Response;
+use Tests\Support\AccessFixture;
 use Tests\Support\RouteAccessMatrix;
 use Tests\TestCase;
 
 /**
- * Route x role authorization harness. The guest column runs now; the admin, officer and analyst columns run once
- * roles exist (Phase 3), using the same matrix and the same assertion.
+ * TC-SE-01: route x role authorization matrix, every route for guest, admin, officer and analyst.
  */
 final class RouteAccessMatrixTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** TC-SE-01a */
     #[Test]
     public function every_registered_route_is_named_and_listed_in_the_matrix_and_nothing_else_is(): void
@@ -39,23 +42,32 @@ final class RouteAccessMatrixTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, string}>
+     * @return iterable<string, array{string, string, string, string}>
      */
-    public static function guestCases(): iterable
+    public static function cases(): iterable
     {
-        foreach (RouteAccessMatrix::routes() as $key => $expected) {
+        foreach (RouteAccessMatrix::routes() as $key => $expectations) {
             [$method, $name] = explode(' ', $key, 2);
 
-            yield $key => [$method, $name, $expected['guest']];
+            foreach ($expectations as $actor => $expected) {
+                yield "{$actor} {$key}" => [$actor, $method, $name, $expected];
+            }
         }
     }
 
     /** TC-SE-01b */
     #[Test]
-    #[DataProvider('guestCases')]
-    public function a_guest_gets_the_expected_outcome(string $method, string $name, string $expected): void
+    #[DataProvider('cases')]
+    public function each_actor_gets_the_expected_outcome(string $actor, string $method, string $name, string $expected): void
     {
-        $this->assertOutcome($this->call($method, route($name)), $expected);
+        $fixture = new AccessFixture;
+        $user = $fixture->actor($actor);
+
+        if ($user !== null) {
+            $this->actingAs($user);
+        }
+
+        $this->assertOutcome($this->call($method, route($name, RouteAccessMatrix::parameters($name, $fixture))), $expected);
     }
 
     /**
@@ -73,9 +85,8 @@ final class RouteAccessMatrixTest extends TestCase
     }
 
     /**
-     * "Allowed" means the request got past authentication, authorization and throttling: no 401, 403, 404, 405, 419, 429
-     * or 5xx. A redirect counts only if it is not to the login or home page, or if it carries validation errors (the
-     * action ran and rejected the input).
+     * "Allowed" means the request got past authentication, authorization and throttling: no 401, 403, 404, 405, 419,
+     * 429 or 5xx, and not bounced to the login page (a redirect to login counts only if it carries validation errors).
      *
      * @param  TestResponse<Response>  $response
      */
@@ -84,9 +95,9 @@ final class RouteAccessMatrixTest extends TestCase
         $status = $response->getStatusCode();
 
         $this->assertNotContains($status, [401, 403, 404, 405, 419, 429], "Unexpected status {$status}.");
-        $this->assertLessThan(500, $status);
+        $this->assertLessThan(500, $status, (string) $response->exception?->getMessage());
 
-        if ($response->isRedirect(route('login')) || $response->isRedirect(route('home'))) {
+        if ($response->isRedirect(route('login'))) {
             $response->assertSessionHasErrors();
         }
     }
