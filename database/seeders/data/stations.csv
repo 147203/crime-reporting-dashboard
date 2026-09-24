@@ -1,0 +1,19 @@
+# Synthetic stations for sample data only: one per sub-county, not real police station names.
+sub_county,name
+Westlands,Westlands Sample Station
+Dagoretti North,Dagoretti North Sample Station
+Dagoretti South,Dagoretti South Sample Station
+Lang'ata,Lang'ata Sample Station
+Kibra,Kibra Sample Station
+Roysambu,Roysambu Sample Station
+Kasarani,Kasarani Sample Station
+Ruaraka,Ruaraka Sample Station
+Embakasi South,Embakasi South Sample Station
+Embakasi North,Embakasi North Sample Station
+Embakasi Central,Embakasi Central Sample Station
+Embakasi East,Embakasi East Sample Station
+Embakasi West,Embakasi West Sample Station
+Makadara,Makadara Sample Station
+Kamukunji,Kamukunji Sample Station
+Starehe,Starehe Sample Station
+Mathare,Mathare Sample Station

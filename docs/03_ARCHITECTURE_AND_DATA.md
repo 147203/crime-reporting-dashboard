@@ -48,91 +48,23 @@ resources/views/           Blade views and chart partials
 tests/                     Unit, Feature, Security, Performance, oracle fixtures
 ```
 
-## 3. Database schema (proposed)
+## 3. Database schema (as built, Phase 2)
 
-| Table | Key columns | Notes |
+Source of truth: `database/migrations/2026_09_25_*.php`. Diagram: `docs/diagrams/erd.md`.
+
+| Table | Key columns | Integrity rules |
 |---|---|---|
-| `users` | id, name, email (unique), password (hash), role (`admin`, `officer`, `analyst`), station_id (nullable), is_active, failed_attempts, locked_until, last_login_at | No self-registration |
-| `sub_counties` | id, name (unique) | Reference |
-| `wards` | id, sub_county_id (FK), name; unique (sub_county_id, name) | Reference |
-| `stations` | id, sub_county_id (FK), name (unique) | Reference |
-| `crime_categories` | id, name (unique), is_active | Theft, robbery, burglary, assault, other |
-| `incidents` | id, reference_no (unique), category_id, occurred_at, reported_at, sub_county_id, ward_id, station_id, location_description, description, status, closed_at, duplicate_status, duplicate_of_id, is_synthetic, created_by, updated_by, created_at, updated_at, deleted_at | Never a coordinate column |
-| `import_batches` | id, user_id, file_name, rows_total, rows_accepted, rows_rejected, error_report (json), created_at | Import history |
-| `audit_logs` | id, user_id (nullable), action, entity_type, entity_id, meta (json, no sensitive content), ip_address, created_at | Append-only |
-| `report_exports` | id, user_id, type, filters (json), created_at | Export history |
+| `users` | id, name, email (unique), password (bcrypt), role (`admin`, `officer`, `analyst`, default `officer`), station_id (nullable), is_active, failed_attempts, locked_until, must_change_password (default true), last_login_at | No self-registration; never deleted, only deactivated (D-33); role and station not mass-assignable |
+| `sub_counties` | id, name (unique) | Reference, 17 rows (D-28) |
+| `wards` | id, sub_county_id, name; unique (sub_county_id, name); unique (id, sub_county_id) | Reference, 85 rows; the second key is the target of the incidents composite key |
+| `stations` | id, sub_county_id, name (unique), is_active | Synthetic sample stations |
+| `crime_categories` | id, name (unique), is_active | Theft, Robbery, Burglary, Assault, Other |
+| `incidents` | id, reference_no (unique), category_id, occurred_at, reported_at, sub_county_id, ward_id, station_id, location_description (150), description (text, 1,000 enforced by validation), status, closed_at, duplicate_status, duplicate_of_id, is_synthetic (default true), import_batch_id, created_by, updated_by, timestamps, deleted_at | Composite key (ward_id, sub_county_id) to wards (V4 in the database); CHECK on status, duplicate_status, closed_at iff closed, reported_at >= occurred_at; no coordinate column |
+| `import_batches` | id, user_id, file_name, stored_path, status (`dry_run`, `committed`, `discarded`), rows_total, rows_accepted, rows_rejected, rows_flagged_duplicate, error_report (json) | Error report holds row, column and rule only, never cell values (D-34) |
+| `audit_logs` | id, user_id, action, entity_type, entity_id, meta (json), ip_address, created_at | Append-only: model guard plus BEFORE UPDATE and BEFORE DELETE triggers (D-32) |
+| `report_exports` | id, user_id, type (`csv`, `pdf`), filters (json), row_count, created_at | Export history |
 
-Indexes (named explicitly): `incidents(occurred_at)`, `incidents(category_id, occurred_at)`, `incidents(ward_id, occurred_at)`, `incidents(sub_county_id, occurred_at)`, `incidents(station_id, occurred_at)`, `incidents(status)`, `incidents(duplicate_status)`, `audit_logs(created_at)`, `audit_logs(user_id, created_at)`. Confirm with `EXPLAIN` on the analytics queries and record the plans in the test log.
-
-```mermaid
-erDiagram
-    SUB_COUNTIES ||--o{ WARDS : contains
-    SUB_COUNTIES ||--o{ STATIONS : hosts
-    STATIONS ||--o{ USERS : employs
-    CRIME_CATEGORIES ||--o{ INCIDENTS : classifies
-    WARDS ||--o{ INCIDENTS : located_in
-    STATIONS ||--o{ INCIDENTS : records
-    USERS ||--o{ INCIDENTS : creates
-    USERS ||--o{ AUDIT_LOGS : performs
-    USERS ||--o{ IMPORT_BATCHES : runs
-    INCIDENTS ||--o| INCIDENTS : duplicate_of
-    USERS {
-        bigint id PK
-        string email
-        string role
-        bigint station_id FK
-        boolean is_active
-        int failed_attempts
-        datetime locked_until
-    }
-    INCIDENTS {
-        bigint id PK
-        string reference_no
-        bigint category_id FK
-        datetime occurred_at
-        datetime reported_at
-        bigint sub_county_id FK
-        bigint ward_id FK
-        bigint station_id FK
-        string status
-        string duplicate_status
-        bigint duplicate_of_id FK
-        boolean is_synthetic
-    }
-    WARDS {
-        bigint id PK
-        bigint sub_county_id FK
-        string name
-    }
-    SUB_COUNTIES {
-        bigint id PK
-        string name
-    }
-    STATIONS {
-        bigint id PK
-        bigint sub_county_id FK
-        string name
-    }
-    CRIME_CATEGORIES {
-        bigint id PK
-        string name
-        boolean is_active
-    }
-    AUDIT_LOGS {
-        bigint id PK
-        bigint user_id FK
-        string action
-        string entity_type
-        bigint entity_id
-    }
-    IMPORT_BATCHES {
-        bigint id PK
-        bigint user_id FK
-        int rows_total
-        int rows_accepted
-        int rows_rejected
-    }
-```
+Indexes (named explicitly): `incidents_occurred_at_index`, `incidents_category_occurred_index`, `incidents_ward_occurred_index`, `incidents_sub_county_occurred_index`, `incidents_station_occurred_index`, `incidents_status_index`, `incidents_duplicate_status_index`, `incidents_import_batch_id_index`, `audit_logs_created_at_index`, `audit_logs_user_created_index`, `audit_logs_action_index`, `import_batches_created_at_index`, `report_exports_created_at_index`, `users_role_index`. Confirm with `EXPLAIN` on the analytics and duplicate queries and record the plans in the test log (a `(ward_id, category_id, occurred_at)` index is considered in Phase 4 only if EXPLAIN shows the need).
 
 ## 4. Use cases (Chapter 4 draft)
 

@@ -1,0 +1,87 @@
+# VERIFY: names and ward-to-sub-county mapping follow the IEBC 2012 electoral boundaries for Nairobi City County (17 constituencies used as sub-counties, 85 wards). The author checks against the official gazette before relying on them.
+sub_county,name
+Westlands,Kitisuru
+Westlands,Parklands/Highridge
+Westlands,Karura
+Westlands,Kangemi
+Westlands,Mountain View
+Dagoretti North,Kilimani
+Dagoretti North,Kawangware
+Dagoretti North,Gatina
+Dagoretti North,Kileleshwa
+Dagoretti North,Kabiro
+Dagoretti South,Mutu-ini
+Dagoretti South,Ngando
+Dagoretti South,Riruta
+Dagoretti South,Uthiru/Ruthimitu
+Dagoretti South,Waithaka
+Lang'ata,Karen
+Lang'ata,Nairobi West
+Lang'ata,Mugumo-ini
+Lang'ata,South C
+Lang'ata,Nyayo Highrise
+Kibra,Laini Saba
+Kibra,Lindi
+Kibra,Makina
+Kibra,Woodley/Kenyatta Golf Course
+Kibra,Sarang'ombe
+Roysambu,Githurai
+Roysambu,Kahawa West
+Roysambu,Zimmerman
+Roysambu,Roysambu
+Roysambu,Kahawa
+Kasarani,Clay City
+Kasarani,Mwiki
+Kasarani,Kasarani
+Kasarani,Njiru
+Kasarani,Ruai
+Ruaraka,Baba Dogo
+Ruaraka,Utalii
+Ruaraka,Mathare North
+Ruaraka,Lucky Summer
+Ruaraka,Korogocho
+Embakasi South,Imara Daima
+Embakasi South,Kwa Njenga
+Embakasi South,Kwa Reuben
+Embakasi South,Pipeline
+Embakasi South,Kware
+Embakasi North,Kariobangi North
+Embakasi North,Dandora Area I
+Embakasi North,Dandora Area II
+Embakasi North,Dandora Area III
+Embakasi North,Dandora Area IV
+Embakasi Central,Kayole North
+Embakasi Central,Kayole Central
+Embakasi Central,Kayole South
+Embakasi Central,Komarock
+Embakasi Central,Matopeni/Spring Valley
+Embakasi East,Upper Savanna
+Embakasi East,Lower Savanna
+Embakasi East,Embakasi
+Embakasi East,Utawala
+Embakasi East,Mihango
+Embakasi West,Umoja I
+Embakasi West,Umoja II
+Embakasi West,Mowlem
+Embakasi West,Kariobangi South
+Makadara,Maringo/Hamza
+Makadara,Viwandani
+Makadara,Harambee
+Makadara,Makongeni
+Kamukunji,Pumwani
+Kamukunji,Eastleigh North
+Kamukunji,Eastleigh South
+Kamukunji,Airbase
+Kamukunji,California
+Starehe,Nairobi Central
+Starehe,Ngara
+Starehe,Ziwani/Kariokor
+Starehe,Pangani
+Starehe,Landimawe
+Starehe,Nairobi South
+Mathare,Hospital
+Mathare,Mabatini
+Mathare,Huruma
+Mathare,Ngei
+Mathare,Mlango Kubwa
+Mathare,Kiamaiko

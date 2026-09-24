@@ -47,3 +47,7 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Author ran key:generate, app:preflight (passed), migrate (created `crime_dashboard`, 3 migrations), test (32 passed). Details in TEST_LOG.
 - Gate G0: tests on the database pass; preflight with tests pass; Pint and Larastan clean; push pending (GitHub account setup).
 
+
+## 2026-09-24 Phase 0 gate closed
+- First commit `044e26b` pushed by the author to the private repository; `main` tracks `origin/main`.
+- Gate G0: database tests pass (32), preflight with tests, Pint and Larastan clean, push done. D-03, D-05, D-06 awaiting confirmation.

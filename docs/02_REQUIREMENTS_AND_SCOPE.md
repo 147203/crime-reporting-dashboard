@@ -90,7 +90,7 @@ Duplicate status values: none, suspected, confirmed, dismissed. Confirmed duplic
 
 ## 6. Location model (no coordinates)
 
-`sub_counties` (Nairobi County sub-counties) and `wards` (each ward in one sub-county) are reference tables loaded from an official list; the author verifies names and counts against the source (VERIFY: number of sub-counties and wards). Police stations belong to a sub-county. An incident stores `sub_county_id`, `ward_id`, `station_id`, and a free-text `location_description`. No latitude, longitude, or spatial column exists anywhere.
+`sub_counties` (Nairobi County sub-counties) and `wards` (each ward in one sub-county) are reference tables loaded from an official list; the author verifies names and counts against the source (VERIFY: loaded as 17 sub-counties and 85 wards from the IEBC 2012 boundaries, `database/seeders/data/`, D-28). Stations are synthetic sample stations, one per sub-county. Police stations belong to a sub-county. An incident stores `sub_county_id`, `ward_id`, `station_id`, and a free-text `location_description`. No latitude, longitude, or spatial column exists anywhere.
 
 ## 7. Non-functional requirements (measurable, PROVISIONAL)
 
