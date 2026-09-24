@@ -65,6 +65,13 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Independent oracle (`scripts/oracle.php`, written without access to application code): deterministic (byte-identical output on two runs); 1,030 accepted rows, equal to the application's import.
 - Independent review: REQUEST CHANGES; fixed before the commit: atomic commit under a row lock (double submit), strict `YYYY-MM-DD HH:MM` import dates, UTF-8 check per row and PII guard reading Windows-1252 text, abandoned dry-run pruning and file deletion on any failure, console loads recorded as import batches, per-rule counts over all errors, reference-number update limited to the batch, review refuses a confirmation that would remove an incident from every count and never links a record to its own duplicate, closest-in-time candidates, character-based similarity, delete rule checked under a lock, sample:clear audited, realistic retyped duplicates and text near misses in the generator, commit refused when the re-check differs from the dry run, web upload limit 10,000 rows. Decisions D-45 (revised), D-46.
 
+## 2026-09-24 Phase 5 gate: analytics, dashboard, exports (commit a38ca30)
+- Command: `vendor/bin/phpunit` in a clean checkout of `a38ca30`. Result: 272 tests, 9,632 assertions, all passed. Pint passed; Larastan level 8 no errors.
+- TC-AC-01 accuracy: application A1 to A10 compared with the independent oracle on the seeded 1,000-record dataset for 8 filter cases: 5,387 values compared, 0 mismatches (exact for integers and nulls; floats already rounded by both sides compared within 1e-9). Target 100 percent match: met.
+- Mutation checks: a continuous median (PERCENTILE_CONT) planted in A10 made TC-AC-01 fail at `all.A10.report_delay_hours.median`; paging the export by id made TC-AC-06 fail. Both restored, green.
+- TC-AC-05 and TC-AC-06 export fidelity: CSV rows equal A1 for the same filters and scope; a 2,500-record export has every record exactly once and in date order. Target 100 percent: met.
+- Independent review: REQUEST CHANGES; fixed: export paging (blocker: sorting by date while paging by id skipped and repeated rows beyond 1,000), oracle comparison of null values, time bands read from config, dompdf hardened (no remote files, no JavaScript, restricted file root), sample-data notice checks the records, flagged hotspots listed in the PDF, captions say when A8 ignores a ward filter, when a station view is compared county-wide (D-47, author to confirm) and when the last month is incomplete, filter label computed once, oracle sanity facts updated to the regenerated dataset. Clarifications recorded as D-27.
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |
