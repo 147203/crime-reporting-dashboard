@@ -72,7 +72,9 @@ Common rules: time zone is Africa/Nairobi (no daylight saving, so local time is 
 | A9 | Area by time grid | Matrix of sub-county by month (or by time band); cell value is the count; colour scale by quintile | Heat grid table (a table, not a map) |
 | A10 | Status and timeliness | Count per status; closure rate = Closed divided by all countable incidents (denominator stated); median and 90th percentile of hours between `occurred_at` and `reported_at`; median days between `reported_at` and `closed_at` for closed incidents | KPI cards, table |
 
-Every chart and KPI shows the period, active filters, and n. Percentages state their denominator. Parameters live in configuration, not code. Hotspot parameters are justified in Chapter 4 and their sensitivity is reported in Chapter 5.
+Every chart and KPI shows the period, active filters, and n. Percentages state their denominator.
+
+Clarifications (D-27, as implemented and oracle-tested): A2 lists only categories present; A5, A6 and A7 list every weekday, band and area, with 0 shares when n is 0. A7 ward list is limited by the sub-county and ward filters; the sub-county list by the sub-county filter and, with a ward filter, to that ward's sub-county. A8 ignores the ward filter (one ward has no spread) and compares all wards of the sub-county filter (all 85 otherwise), zeros included; for a single station this mostly reflects where that station's incidents occur (D-47). A9 rows are all sub-counties of the sub-county filter. A4 previous period: same number of days, ending the day before `from`. A10 percentiles are nearest-rank. Presentation only (not metrics): status shares in the A10 chart are status count divided by A1; the A9 cell shading uses the quintiles of the non-zero cells (level 0 for empty cells, then 1 to 5). Parameters live in configuration, not code. Hotspot parameters are justified in Chapter 4 and their sensitivity is reported in Chapter 5.
 
 ## 5. Validation and data-quality rules
 

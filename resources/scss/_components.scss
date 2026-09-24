@@ -90,7 +90,13 @@
 .table {
     --bs-table-bg: transparent;
     font-variant-numeric: tabular-nums;
-    th {
+    tbody th {
+        font-size: inherit;
+        text-transform: none;
+        letter-spacing: normal;
+        color: inherit;
+    }
+    thead th {
         font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -126,12 +132,35 @@
     }
 }
 
-.heat-0 { background: var(--bs-body-bg); }
-.heat-1 { background: rgba(0, 114, 178, 0.12); }
-.heat-2 { background: rgba(0, 114, 178, 0.26); }
-.heat-3 { background: rgba(0, 114, 178, 0.42); }
-.heat-4 { background: rgba(0, 114, 178, 0.6); color: #fff; }
-.heat-5 { background: rgba(0, 114, 178, 0.82); color: #fff; }
+// Bootstrap paints table cells from --bs-table-bg, so the heat levels set that variable rather than background.
+.heat-grid {
+    font-variant-numeric: tabular-nums;
+    td.heat-1 { --bs-table-bg: rgba(0, 114, 178, 0.12); }
+    td.heat-2 { --bs-table-bg: rgba(0, 114, 178, 0.26); }
+    td.heat-3 { --bs-table-bg: rgba(0, 114, 178, 0.42); }
+    td.heat-4 { --bs-table-bg: rgba(0, 114, 178, 0.62); --bs-table-color: #fff; color: #fff; }
+    td.heat-5 { --bs-table-bg: rgba(0, 114, 178, 0.85); --bs-table-color: #fff; color: #fff; }
+    td.heat-0 { color: var(--app-muted); }
+}
+
+.heat-legend {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--app-muted);
+    .swatch {
+        width: 1.1rem;
+        height: 0.8rem;
+        border-radius: 2px;
+        border: 1px solid var(--app-border);
+        &.l1 { background: rgba(0, 114, 178, 0.12); }
+        &.l2 { background: rgba(0, 114, 178, 0.26); }
+        &.l3 { background: rgba(0, 114, 178, 0.42); }
+        &.l4 { background: rgba(0, 114, 178, 0.62); }
+        &.l5 { background: rgba(0, 114, 178, 0.85); }
+    }
+}
 
 .hotspot-row {
     background: var(--bs-danger-bg-subtle) !important;
