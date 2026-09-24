@@ -41,14 +41,14 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Static checks re-run: Pint passed; Larastan level 8 no errors.
 - Evidence (figure IDs): screenshot of this run still to capture.
 
-## 2026-09-25 Phase 2 gate: schema, reference data, design (commit 2ec8b96)
+## 2026-09-24 Phase 2 gate: schema, reference data, design (commit 2ec8b96)
 - Command: `vendor/bin/phpunit` in a clean checkout of commit `2ec8b96` (own vendor copy, process env, MariaDB 10.4.32)
 - Result: 45 tests, 133 assertions, all passed. New: TC-FT-10 to TC-FT-20 (no coordinate columns, named indexes, reference data 17/85 and per-sub-county counts, station scope, countable scope, no personal-identifier columns, composite ward key, CHECK constraints, append-only audit through Eloquent and raw SQL, users cannot be deleted), TC-UT-12 (status workflow), TC-SE-08 (mass assignment).
 - Reversibility (NFR-06): `php artisan migrate:rollback --step=4` then `php artisan migrate` on the development schema, twice, both clean; reference seeder idempotent.
 - Static checks: Pint passed; Larastan level 8 no errors.
 - Independent review: REQUEST CHANGES (no security blocker); fixes applied before the commit (station not fillable, audit triggers and restrict keys, composite ward key, CHECK constraints, synthetic default, countable scope independent of soft-delete scope, LF line endings). Decisions D-32 to D-35.
 
-## 2026-09-25 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
+## 2026-09-24 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
 - Command: `vendor/bin/phpunit` in a clean checkout of commit `41861cd` (own vendor, fresh asset build, process env, MariaDB 10.4.32)
 - Result: 198 tests, 697 assertions, all passed. Pint passed; Larastan level 8 no errors.
 - Coverage added: route x role matrix for every route and 4 actors (TC-SE-01a, 01b, 108 cases), station IDOR (TC-SE-09), lockout (TC-SE-03), SQL injection strings in every list filter (TC-SE-02), headers with CSP nonce (TC-SE-10, 10b), stored XSS escaped (TC-SE-11), sessions ended on password change (TC-SE-12), remember-me ignored (TC-SE-13), inactive station (TC-SE-14), validation V1 to V6 (TC-FT-02), status workflow, soft delete, filters, user management, reference data, admin seeder, console user creation, PII guard 26 samples (TC-UT-01).

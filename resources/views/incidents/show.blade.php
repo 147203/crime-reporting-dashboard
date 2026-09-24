@@ -14,6 +14,9 @@
         </x-slot:actions>
     </x-page-header>
 
+    @error('delete')
+        <div class="alert alert-warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ $message }}</div>
+    @enderror
     <div class="row g-3">
         <div class="col-12 col-lg-8">
             <x-card title="Details">

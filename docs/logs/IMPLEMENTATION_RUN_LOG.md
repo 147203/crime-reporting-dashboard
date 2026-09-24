@@ -52,14 +52,14 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - First commit `044e26b` pushed by the author to the private repository; `main` tracks `origin/main`.
 - Gate G0: database tests pass (32), preflight with tests, Pint and Larastan clean, push done. D-03, D-05, D-06 awaiting confirmation.
 
-## 2026-09-25 Phase 2 Requirements and design (schema)
+## 2026-09-24 Phase 2 Requirements and design (schema)
 - Commands: `php artisan migrate`, `php artisan migrate:rollback --step=4`, `php artisan migrate`, `php artisan db:seed`; tests in a clean worktree of the commit.
 - Built: migrations for sub_counties, wards, stations, crime_categories, users security columns, incidents, import_batches, audit_logs (append-only triggers), report_exports; enums Role, IncidentStatus, DuplicateStatus; models with station and countable scopes; factories; reference data seeder with 17 sub-counties and 85 wards (VERIFY, D-28) and 17 sample stations; Mermaid design diagrams in `docs/diagrams/`.
 - Deviation: validation V1 to V7 including the PII guard moves into Phase 3 with the incident form; Phase 4 keeps duplicates, import, generator and oracle.
 - Result: gate G2 passed (see TEST_LOG). Commit `2ec8b96` on `phase/2-design`.
 - Requirement IDs: FR-02 (scope), FR-04 (reference data), FR-12 (audit table), NFR-02 (no identifiers), NFR-06 (reversible migrations).
 
-## 2026-09-25 Phase 3 Build P0: skeleton
+## 2026-09-24 Phase 3 Build P0: skeleton
 - Built: Fortify login with lockout and inactive-account refusal, forced first-login password change, security headers middleware (CSP with nonce), role middleware, account-usable middleware, audit logger, incident create, list (filters, search, sort, pagination), show, edit, status workflow, soft delete with station scoping in queries and policies, user management, reference data management, audit log view, `user:create` command, `AdminSeeder` from ADMIN_* only, UI shell with reusable Blade components (layout, page header, card, KPI, chart with table view, form fields, badges, empty state, confirm modal, sort link), SCSS design tokens, light and dark themes, Playwright harness on a separate `crime_dashboard_e2e` schema.
 - Dependencies added: `sass`, `bootstrap-icons`, `chart.js`, `@playwright/test` (dev).
 - Deviation: validation V1 to V7 including the PII guard was built here with the form (planned for Phase 4).

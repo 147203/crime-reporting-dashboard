@@ -1,0 +1,13 @@
+{
+    "dataset": {"size": 1000, "seed": 20260924, "end_month": "2026-08"},
+    "cases": [
+        {"id": "all", "filters": {"from": "2024-09-01", "to": "2026-08-31"}},
+        {"id": "last_quarter", "filters": {"from": "2026-06-01", "to": "2026-08-31"}},
+        {"id": "theft", "filters": {"from": "2024-09-01", "to": "2026-08-31", "category": "Theft"}},
+        {"id": "kibra", "filters": {"from": "2024-09-01", "to": "2026-08-31", "sub_county": "Kibra"}},
+        {"id": "closed", "filters": {"from": "2024-09-01", "to": "2026-08-31", "status": "closed"}},
+        {"id": "westlands_station", "filters": {"from": "2024-09-01", "to": "2026-08-31", "station": "Westlands Sample Station"}},
+        {"id": "kangemi_2025", "filters": {"from": "2025-01-01", "to": "2025-12-31", "ward": "Kangemi"}},
+        {"id": "assault_embakasi_north", "filters": {"from": "2025-06-01", "to": "2026-05-31", "category": "Assault", "sub_county": "Embakasi North"}}
+    ]
+}

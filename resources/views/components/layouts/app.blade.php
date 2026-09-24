@@ -63,7 +63,7 @@
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-theme-toggle aria-pressed="false" aria-label="Switch theme"><i class="bi bi-moon-stars"></i></button>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu for {{ $user?->name }}">
                             <i class="bi bi-person-circle" aria-hidden="true"></i>
                             <span class="d-none d-sm-inline">{{ $user?->name }}</span>
                         </button>

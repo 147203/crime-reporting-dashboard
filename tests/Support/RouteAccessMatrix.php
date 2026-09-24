@@ -32,6 +32,7 @@ final class RouteAccessMatrix
         $guestOnly = ['admin' => self::HOME, 'officer' => self::HOME, 'analyst' => self::HOME];
         $writers = ['admin' => self::ALLOW, 'officer' => self::ALLOW, 'analyst' => self::FORBIDDEN];
         $adminOnly = ['admin' => self::ALLOW, 'officer' => self::FORBIDDEN, 'analyst' => self::FORBIDDEN];
+        $reviewers = ['admin' => self::ALLOW, 'officer' => self::FORBIDDEN, 'analyst' => self::ALLOW];
 
         return [
             'GET login' => ['guest' => self::ALLOW, ...$guestOnly],
@@ -53,6 +54,16 @@ final class RouteAccessMatrix
             'PUT incidents.update' => self::signedIn($writers),
             'PUT incidents.status' => self::signedIn($writers),
             'DELETE incidents.destroy' => self::signedIn($adminOnly),
+
+            'GET duplicates.index' => self::signedIn($reviewers),
+            'PUT duplicates.resolve' => self::signedIn($reviewers),
+            'GET quality.index' => self::signedIn($reviewers),
+            'GET imports.create' => self::signedIn($adminOnly),
+            'POST imports.store' => self::signedIn($adminOnly),
+            'GET imports.show' => self::signedIn($adminOnly),
+            'POST imports.commit' => self::signedIn($adminOnly),
+            'POST imports.discard' => self::signedIn($adminOnly),
+            'GET imports.errors' => self::signedIn($adminOnly),
 
             'GET admin.users.index' => self::signedIn($adminOnly),
             'GET admin.users.create' => self::signedIn($adminOnly),
@@ -81,7 +92,8 @@ final class RouteAccessMatrix
     public static function parameters(string $routeName, AccessFixture $fixture): array
     {
         return match ($routeName) {
-            'incidents.show', 'incidents.edit', 'incidents.update', 'incidents.status', 'incidents.destroy' => ['incident' => $fixture->incident->id],
+            'incidents.show', 'incidents.edit', 'incidents.update', 'incidents.status', 'incidents.destroy', 'duplicates.resolve' => ['incident' => $fixture->incident->id],
+            'imports.show', 'imports.commit', 'imports.discard', 'imports.errors' => ['batch' => $fixture->batch->id],
             'admin.users.edit', 'admin.users.update' => ['user' => $fixture->officer->id],
             'admin.reference.store' => ['type' => 'categories'],
             'admin.reference.update' => ['type' => 'categories', 'item' => $fixture->incident->category_id],

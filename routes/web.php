@@ -6,9 +6,12 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ReferenceDataController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DuplicateController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\IncidentController;
 use App\Http\Controllers\IncidentStatusController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\QualityController;
 use Illuminate\Support\Facades\Route;
 
 // Every route below requires an authenticated, active account; each also carries its own authorization (project rule).
@@ -27,6 +30,20 @@ Route::middleware('auth')->group(function (): void {
         Route::put('/{incident}', [IncidentController::class, 'update'])->middleware('can:update,incident')->name('update');
         Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->middleware('can:changeStatus,incident')->name('status');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->middleware('can:delete,incident')->name('destroy');
+    });
+
+    Route::get('/duplicates', [DuplicateController::class, 'index'])->middleware('can:reviewDuplicates,App\Models\Incident')->name('duplicates.index');
+    Route::put('/duplicates/{incident}', [DuplicateController::class, 'resolve'])->middleware(['can:reviewDuplicates,App\Models\Incident', 'can:view,incident'])->name('duplicates.resolve');
+
+    Route::get('/quality', [QualityController::class, 'index'])->middleware('can:viewDataQuality,App\Models\Incident')->name('quality.index');
+
+    Route::prefix('imports')->name('imports.')->middleware('can:import,App\Models\Incident')->group(function (): void {
+        Route::get('/', [ImportController::class, 'create'])->name('create');
+        Route::post('/', [ImportController::class, 'store'])->name('store');
+        Route::get('/{batch}', [ImportController::class, 'show'])->name('show');
+        Route::post('/{batch}/commit', [ImportController::class, 'commit'])->name('commit');
+        Route::post('/{batch}/discard', [ImportController::class, 'discard'])->name('discard');
+        Route::get('/{batch}/errors', [ImportController::class, 'errors'])->name('errors');
     });
 
     Route::prefix('admin')->name('admin.')->middleware(['role:admin', 'can:manage-system'])->group(function (): void {

@@ -15,21 +15,31 @@ Real police records are confidential (proposal limitation 1.7.1), so the system 
 | Component | Design |
 |---|---|
 | Reference data | Sub-counties, wards, stations from the verified official list (`database/seeders/data/*.csv`, author-verified) |
-| Volume tiers | 1,000 (unit and feature tests), 20,000 (demo), 100,000 (performance tests) |
-| Time span | 24 months ending in the current month, so A3 (moving average) and A4 (period comparison) have data |
+| Volume tiers | 1,000 (accuracy tests), 2,000 (browser tests), 20,000 (demo), 100,000 (performance tests) |
+| Time span | 24 months ending with the last complete month (option `--end`), so A3 (moving average) and A4 (period comparison) have data; copies and near misses never pass the end of the period |
 | Category mix | Theft, robbery, burglary, assault, other, in proportions derived from the anchor statistics (parameterised) |
 | Temporal shape | Weekday and time-of-day weights per category (for example more theft in daytime hours, more assault on weekend nights) and mild seasonality; all weights listed in the config |
 | Area shape | Baseline counts per ward proportional to a documented weight; the weights are assumptions, not claims about real wards |
-| Planted hotspots | A chosen list of wards and category pairs receive a documented multiplier over documented months (for example three wards x 1.8 for theft). Saved to `oracle/hotspots.json` |
+| Planted hotspots | A chosen list of wards and category pairs receive a documented multiplier over documented months (for example three wards x 1.8 for theft). Saved to `truth/hotspots.json` |
 | Planted trend | One category with a documented upward drift, saved in the oracle, to test A3 and A4 |
-| Seeded bad records | A known number of rows violating each rule V1 to V6 (future dates, ward-subcounty mismatch, over-length text, phone number or ID pattern in text). Saved to `oracle/bad_records.csv` with the rule each violates |
-| Seeded duplicates | A known number of near-duplicate pairs (same category and ward, times within the window, slightly different location text) and near-miss non-duplicates. Saved to `oracle/duplicates.json` |
+| Seeded bad records | A known number of rows violating each rule V1 to V6 (future dates, ward-subcounty mismatch, over-length text, phone number or ID pattern in text). Saved to `truth/bad_records.csv` with the rule each violates |
+| Seeded duplicates | Near-duplicate pairs (same category and ward, within the window, location retyped: typo, swapped letters, upper case, an extra or a dropped word, so some fall below the similarity threshold on purpose) and near misses that must not be flagged (outside the window, or same place and time with a different landmark). Saved to `truth/duplicates.csv` |
 
-## 3. Oracle outputs (independent of the application)
+## 3. Files and the independent oracle (as built)
 
-A stand-alone script (`scripts/oracle.py` or `scripts/oracle.php` using plain arrays, never the application's query code) reads the generated CSV and computes A1 to A10 for a fixed list of filter combinations, writing `oracle/expected_metrics.json`. Feature tests load the same dataset into MySQL and assert the application output equals the oracle values. This is the evidence for NFR-05 accuracy.
+`php artisan sample:generate --size=N --seed=S --end=YYYY-MM [--load]` writes to `storage/app/sample/<size>-<seed>-<end>/`:
 
-Tie-break and rounding rules (write them down once and reuse): counts are integers; shares and rates are rounded to two decimals half-up; medians use the lower-middle value for even counts unless the definition in doc 02 says otherwise; z scores are compared before rounding.
+| File | Content |
+|---|---|
+| `incidents.csv` | The import format: `category,occurred_at,reported_at,sub_county,ward,station,location_description,description,status,closed_at` |
+| `truth/bad_records.csv` | `row,rule`: rows seeded to break V1 to V6 (1 percent of N per rule, at least 5) |
+| `truth/duplicates.csv` | `row,original_row,kind`: `true` near-duplicates (2 percent of N) and `near_miss` rows outside the time window (1 percent) |
+| `truth/hotspots.json`, `truth/trend.json` | Planted ward hotspots (3 wards x 3.0), planted Theft hotspots (2 wards x 3.0), planted Burglary growth (+60 percent over 24 months) |
+| `manifest.json` | Parameters (`config/sample_data.php`), row counts and SHA-256 of every file |
+
+`--load` sends the file through the same import pipeline as the CSV upload (validation V1 to V7, duplicate flag V8).
+
+The oracle is `scripts/oracle.php` (documented in `scripts/ORACLE.md`). It was written separately from the application, reads only the generated CSV, the bad-row truth file, the ward reference list and `tests/Fixtures/oracle/filters.json`, and never reads application code. It writes the expected A1 to A10 values for eight fixed filter cases to `tests/Fixtures/oracle/expected_metrics_1000.json`; the accuracy tests compare the application's output with that file.
 
 ## 4. Evaluating data quality
 
@@ -47,12 +57,12 @@ Sensitivity table for A8: vary `HOTSPOT_Z_THRESHOLD` (1.0, 1.5, 2.0) and `HOTSPO
 
 If the author obtains any real data, it needs written permission from the data owner, an agreement on anonymisation, and a note to the supervisor before it touches the machine. It stays outside the repo, is never used in screenshots, and only aggregated results are reported. Until then nothing in the repo or thesis may imply real records were used.
 
-## 6. Commands (to be built in Phase 4)
+## 6. Commands
 
 ```
-php artisan sample:generate --size=20000 --seed=20260924
-php artisan sample:clear            # removes only rows where is_synthetic = true
-php scripts/oracle.php --input storage/app/sample/20000.csv --out oracle/
+php artisan sample:generate --size=20000 --seed=20260924 --load
+php artisan sample:clear            # removes only rows where is_synthetic = true; asks first, refuses in production
+php scripts/oracle.php --input <dataset dir> --filters tests/Fixtures/oracle/filters.json --out <file.json>
 ```
 
 `sample:clear` refuses to run when `APP_ENV=production`.

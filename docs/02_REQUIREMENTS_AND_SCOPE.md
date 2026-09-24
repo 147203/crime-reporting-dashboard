@@ -85,9 +85,18 @@ Every chart and KPI shows the period, active filters, and n. Percentages state t
 | V5 | Location description at most 150 characters; description at most 1,000 characters, both stripped of HTML | Reject or sanitise |
 | V6 | **PII guard:** description and location must not contain Kenyan phone numbers or national ID number patterns. Patterns (D-36): phone = `+254`, `254` or `0`, then `7` or `1`, then 8 digits, with optional spaces, dots or hyphens; national ID = a stand-alone run of 7 or 8 digits, or 6 to 9 digits after "ID", "ID no" or "ID number" | Reject with a message that explains why |
 | V7 | Reference number unique | Reject |
-| V8 | **Duplicate candidate:** same category and ward, `occurred_at` within `DUPLICATE_WINDOW_MINUTES` (default 120), and normalised location similarity at least `DUPLICATE_SIMILARITY` (default 0.8, normalised Levenshtein) | Save as `suspected`, add to review queue; never auto-delete |
+| V8 | **Duplicate candidate:** same category and ward, `occurred_at` within `DUPLICATE_WINDOW_MINUTES` (default 120), and normalised location similarity at least `DUPLICATE_SIMILARITY` (default 0.8, normalised Levenshtein: lower case, punctuation removed, spaces collapsed; 1 minus distance over the longer length). Records without a location description are not compared (D-38). The best match above the threshold is linked | Save as `suspected`, add to review queue; never auto-delete |
 
-Duplicate status values: none, suspected, confirmed, dismissed. Confirmed duplicates are excluded from every analytic.
+Duplicate status values: none, suspected, confirmed, dismissed. Confirmed duplicates are excluded from every analytic. A suspected duplicate can be confirmed only while its earlier record is still counted (not deleted and not itself a confirmed duplicate); otherwise the flag is dismissed (D-46).
+
+### 5a. Data-quality summary (FR-13) definitions
+
+| Measure | Definition |
+|---|---|
+| Rows in files, accepted, rejected | Sums over committed import batches (web uploads and console loads) |
+| Rejections by rule | Number of problems per rule over every error of every committed import; one row can break more than one rule, so these can exceed rejected rows |
+| Duplicate review | Records the viewer can see (not deleted), by duplicate status |
+| Completeness of a field | Countable records the viewer can see with the field filled in, divided by countable records the viewer can see, as a percentage (2 dp) |
 
 ## 6. Location model (no coordinates)
 
