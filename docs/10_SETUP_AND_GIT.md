@@ -20,12 +20,15 @@ sudo /opt/lampp/lampp startmysql
 ss -ltnp | grep ':3306'                    # MariaDB must be listening
 ```
 
+If Ubuntu's own MySQL server is installed, it starts at boot and takes port 3306 first (symptom: `Access denied for user 'root'@'localhost'`, error 1698). Stop it and keep it off: `sudo systemctl stop mysql && sudo systemctl disable mysql`, then start XAMPP's MariaDB again. MySQL cannot replace MariaDB here: analytics A10 uses `PERCENTILE_DISC`, which MySQL lacks.
+
 ## 2. Databases (two schemas on XAMPP MariaDB)
 
 ```bash
 /opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "
 CREATE DATABASE IF NOT EXISTS crime_dashboard      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 SHOW DATABASES LIKE 'crime%';"
 ```
 
@@ -41,8 +44,13 @@ cp .env.example .env            # then edit .env yourself: ADMIN_NAME, ADMIN_EMA
 php artisan key:generate
 php artisan app:preflight       # must print "Preflight passed."
 php artisan migrate             # never with --force
+php artisan db:seed             # reference data and the first administrator from ADMIN_* in .env
+php artisan sample:generate --size=20000 --load   # optional demo data (run once)
+php artisan serve               # http://127.0.0.1:8000
 php artisan test
 ```
+
+The step-by-step guide with every setting and a troubleshooting table is in the project README.
 
 ## 3. Browser (end-to-end) tests
 
