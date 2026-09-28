@@ -32,6 +32,7 @@ PHP 8.4, Laravel 12, MariaDB 10.4 from XAMPP (MySQL-compatible, port 3306, local
 | `docs/09_DECISIONS_RISKS.md` | Decisions, risks, open questions |
 | `docs/10_SETUP_AND_GIT.md` | Machine setup, databases, first run |
 | `docs/logs/` | Implementation, test, fieldwork and evaluation logs |
+| `docs/reports/Progress_Report.docx` | Supervisor progress report, rebuilt at the end of every phase with `node scripts/progress-report.cjs` |
 
 ## Process in one screen
 
