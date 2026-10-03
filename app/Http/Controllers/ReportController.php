@@ -13,6 +13,7 @@ use App\Services\ReportService;
 use App\Support\ReferenceOptions;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class ReportController extends Controller
@@ -39,6 +40,11 @@ final class ReportController extends Controller
     public function csv(AnalyticsFilterRequest $request): StreamedResponse
     {
         return $this->reports->csv($this->user($request), $request->filters());
+    }
+
+    public function xlsx(AnalyticsFilterRequest $request): BinaryFileResponse
+    {
+        return $this->reports->xlsx($this->user($request), $request->filters());
     }
 
     public function pdf(AnalyticsFilterRequest $request): Response

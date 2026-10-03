@@ -6,16 +6,16 @@
 |---|---|
 | Student | Mathai, Margaret Elsie Wairimu, BBIT 4D, admission number 147203 |
 | Supervisor | Mr Nicodemus Maingi |
-| Report date | 28 September 2026 (updated at the end of every phase) |
+| Report date | 3 October 2026 (updated at the end of every phase) |
 | Period covered | Development from 24 September 2026 to date |
 | Method | Object-oriented analysis and design (OOAD), prototyping development |
 | Repository | Private GitHub repository under my own account (147203) |
 
 # 1. Summary
 
-The development of the platform is well advanced. I have built and tested a working prototype that covers every module in my revised scope: secure sign-in with three roles, incident reporting with validation, bulk CSV import, duplicate detection and review, a data-quality summary, ten descriptive analytics measures on a dashboard, and CSV and PDF reports. Following the panel decision there is **no GIS component**: location is recorded as sub-county, ward and a free-text landmark, and a "hotspot" is a statistical flag on a ward shown in tables and charts.
+The development of the platform is well advanced. I have built and tested a working prototype that covers every module in my revised scope: secure sign-in with three roles, incident reporting with validation, bulk CSV import, duplicate detection and review, a data-quality summary, ten descriptive analytics measures on an interactive dashboard, CSV, Excel and PDF reports, and a tested backup and restore procedure. Following the panel decision there is **no GIS component**: location is recorded as sub-county, ward and a free-text landmark, and a "hotspot" is a statistical flag on a ward shown in tables and charts.
 
-The prototype is covered by 284 automated tests and 16 browser tests, all passing. What remains is the **corrected proposal**, the **fieldwork** with real participants, a small set of **development items** that depend on decisions or on fieldwork findings (Section 6), the **writing of Chapters 4 to 6**, and the **demonstration**.
+The prototype is covered by 305 automated tests and 20 browser tests, all passing. Every module promised in my proposal, apart from the GIS component the panel removed, is now built. What remains is the **corrected proposal**, the **fieldwork** with real participants, the development changes that will come out of the fieldwork and usability sessions (Section 6), the **writing of Chapters 4 to 6**, and the **demonstration**.
 
 # 2. How I am working
 
@@ -46,6 +46,7 @@ The system follows the three-layer design in my proposal (presentation, applicat
 | 4. Prototype 2: data quality | Validation rules V1 to V8, a check that refuses phone and ID numbers in free text, duplicate detection with a review screen, CSV import with a check-first step, data-quality summary, sample-data generator that plants known errors, duplicates and hotspots | 252 tests; accuracy measured against the planted errors | Done |
 | 5. Prototype 3: analytics and reports | Analytics A1 to A10 computed in the database, dashboard with charts and matching tables, statistical hotspot table, sub-county by month grid, CSV and PDF exports | 272 tests; results compared with an independent calculation | Done |
 | 6. Hardening and evaluation (automated part) | Security fixes from an independent review, a database index that made the dashboard five times faster, browser tests of the eight usability tasks on laptop and phone screens, evaluation at 1,000, 20,000 and 100,000 records, usability session kit | 284 tests and 16 browser tests | Done |
+| 6b. Development completion | Closed gaps I found when using the system: an administrator can no longer change their own password, role or status from the user screen, the last administrator cannot be removed, new users get a generated temporary password shown once, locked accounts can be unlocked, and password fields have a show or hide button. Added the remaining items from my proposal: Excel export, charts that open the matching incidents when clicked, backup and restore, and an accessibility check. Applied the stricter duplicate rule (house or plot numbers must match) | 310 tests and 20 browser tests; backup restored into a separate database and compared table by table; accessibility scan of 13 pages in both themes on laptop and phone screens | Done |
 
 # 5. Key results
 
@@ -55,17 +56,19 @@ All results come from synthetic sample data, clearly labelled as such in the sys
 
 | Measure | Result | Target |
 |---|---|---|
-| Automated tests | 284 tests and 16 browser tests, all passing | All pass |
+| Automated tests | 310 tests and 20 browser tests, all passing | All pass |
 | Accuracy of analytics A1 to A10 | 5,387 of 5,387 values equal to an independent calculation written separately from the system | 100 percent match |
 | Access control | Every page tested for four kinds of user; an officer cannot open another station's records | All correct |
 | Bad records rejected | 100 percent for every rule at 1,000, 20,000 and 100,000 records; no valid record rejected | At least 95 percent |
-| Duplicate detection (precision / recall) | 1.000 / 1.000 at 1,000 records; 0.943 / 0.915 at 20,000; 0.775 / 0.920 at 100,000 | At least 0.90 each |
+| Duplicate detection after the stricter rule (precision / recall) | 1.000 / 1.000 at 1,000 records; 1.000 / 0.890 at 20,000; 0.998 / 0.883 at 100,000 (before: 0.943 / 0.915 and 0.775 / 0.920) | At least 0.90 each |
 | Planted hotspots found | All 3 planted hotspot wards flagged, no false flags (100,000 records) | Report |
 | Dashboard speed at 100,000 records | 95 percent of requests within 0.69 s (3.5 s before I added a database index) | Within 2 s |
 | Import speed | 10,000 records in 34 seconds | Within 60 s |
 | Independent security review | No critical or high issues; every issue found was fixed and retested | No open critical or high |
+| Accessibility (WCAG 2.1 AA, automated) | No serious or critical issue on any page, light and dark themes, laptop and phone width, after fixing the contrast and keyboard problems the first scan found | None |
+| Backup and restore | Restored copy matched the original in every table (the audit log differs by the backup's own entry) | Tested once |
 
-One target was missed: duplicate precision drops to 0.775 at 100,000 records, because many different incidents of the same type in the same ward within two hours share similar landmark text in the sample data. I have kept the target unchanged and recorded two options: keep the rule and report the limitation, or also compare house or plot numbers.
+In the first evaluation duplicate precision fell to 0.775 at 100,000 records, because different incidents of the same type in the same ward within two hours often share a landmark in the sample data. I decided to also require any house or plot numbers in the two locations to match. Precision is now 0.998, but recall falls just below the target (0.890 and 0.883 at the larger sizes), because some planted copies retype the number. I have kept the target unchanged and report both results as measured.
 
 # 6. What is yet to be done
 
@@ -73,15 +76,11 @@ One target was missed: duplicate precision drops to 0.775 at 100,000 records, be
 
 | Item | What is needed | Depends on |
 |---|---|---|
-| Duplicate rule at high volume | Decide whether to add a house or plot number check to the duplicate rule, then implement and re-measure | My decision, with your advice |
-| Two access-rule decisions | Confirm who may change an incident's status, and how hotspots are compared in an officer's station view | My decision |
 | Ward and sub-county list | Check the 85 wards and 17 sub-counties against the official IEBC list and correct any differences | Official source |
 | Changes from fieldwork | Apply requirement changes that come out of the interviews and questionnaire | Fieldwork |
 | Changes from usability sessions | Fix problems found by real users, then re-test the affected tasks | Usability sessions |
-| Backup and restore | Write and test once a backup and restore procedure (requirement NFR-06) | None |
-| Accessibility check | Run a formal accessibility check of colour contrast and keyboard use (NFR-08) | None |
+| Keyboard walk-through | The automated accessibility scan passes; I still need to go through the main tasks using only the keyboard and record the result | None |
 | Final diagrams | Redraw the design diagrams in StarUML and Visual Paradigm as the faculty requires | None |
-| Excel export | Not built; optional in my plan and the first item to drop if time is short | Time |
 
 ## 6.2 Research and documentation still open
 
@@ -100,7 +99,7 @@ One target was missed: duplicate precision drops to 0.775 at 100,000 records, be
 - **Fieldwork:** whether ethics clearance or a research permit is needed, and which participant groups are acceptable.
 - **AI-use disclosure:** what the university requires.
 - **Demonstration and final submission dates.**
-- **Duplicate rule** option described in Section 5.
+- **Duplicate rule:** whether the small fall in recall (Section 5) is acceptable as a reported limitation.
 
 # 7. Next steps
 
@@ -109,8 +108,8 @@ One target was missed: duplicate precision drops to 0.775 at 100,000 records, be
 | When | What I will do |
 |---|---|
 | 28 Sep to 4 Oct | Rewrite the title, aim and objectives, then the rest of Chapter 1, and send the corrected proposal; request fieldwork permission; revise the interview guide and questionnaire; verify the ward list |
-| 5 to 11 Oct | Complete the Chapter 2 and 3 corrections; start interviews and the questionnaire; decide the open development items; write and test the backup and restore procedure |
-| 12 Oct to 1 Nov | Apply fieldwork findings to the system; run the accessibility check; hold usability sessions and fix what they reveal |
+| 5 to 11 Oct | Complete the Chapter 2 and 3 corrections; start interviews and the questionnaire |
+| 12 Oct to 1 Nov | Apply fieldwork findings to the system; do the keyboard walk-through; hold usability sessions and fix what they reveal |
 | 2 to 15 Nov | Write Chapters 4 to 6 from the logged evidence; redraw the final diagrams; fix references; replace the Gantt chart |
 | 16 to 22 Nov | Rehearse the demonstration from a fresh installation and record a backup video |
 
@@ -123,3 +122,4 @@ I would be grateful for a short meeting this week to agree the title, the resubm
 | Date | Change |
 |---|---|
 | 28 September 2026 | First report: development phases 0 and 2 to 6 complete; open development items, proposal correction, fieldwork, usability, chapters and demonstration pending |
+| 3 October 2026 | Phase 6b complete: account rules, Excel export, clickable dashboard, backup and restore, accessibility check and the stricter duplicate rule; development items now limited to fieldwork and usability changes, ward-list check, keyboard walk-through and final diagrams |

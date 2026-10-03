@@ -22,6 +22,7 @@
             <x-card title="Download">
                 <div class="d-grid gap-2">
                     <a class="btn btn-primary" href="{{ route('reports.pdf', $filters) }}"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> PDF summary (A1 to A10)</a>
+                    <a class="btn btn-outline-primary" href="{{ route('reports.xlsx', $filters) }}"><i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Excel workbook of the {{ number_format($vm->n()) }} records</a>
                     <a class="btn btn-outline-primary" href="{{ route('reports.csv', $filters) }}"><i class="bi bi-filetype-csv" aria-hidden="true"></i> CSV of the {{ number_format($vm->n()) }} records</a>
                 </div>
                 <p class="small text-body-secondary mt-3 mb-0">{{ $realRecords === 0 ? 'Every exported record is sample data.' : number_format($realRecords).' records are not labelled as sample data.' }} Exports are limited to what your role may see and are recorded in the audit log.</p>

@@ -74,6 +74,12 @@
         </form>
     </x-card>
 
+    @if ($drillDown !== [])
+        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2 py-2" role="status">
+            <span><i class="bi bi-funnel" aria-hidden="true"></i> From the dashboard: {{ implode(', ', $drillDown) }}.</span>
+            <a class="btn btn-sm btn-outline-secondary" href="{{ route('incidents.index') }}">Clear</a>
+        </div>
+    @endif
     <x-card :flush="true" :title="number_format($incidents->total()).' '.Str::plural('incident', $incidents->total())" subtitle="Deleted records are not shown.">
         @if ($incidents->isEmpty())
             <x-empty-state icon="search" title="No incidents match these filters" text="Change or reset the filters to see more records." />

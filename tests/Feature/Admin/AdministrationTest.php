@@ -34,6 +34,7 @@ final class AdministrationTest extends TestCase
             'role' => 'officer',
             'station_id' => $station->id,
             'is_active' => '1',
+            'password_mode' => 'manual',
             'password' => 'temporary-pass-42',
             'password_confirmation' => 'temporary-pass-42',
         ])->assertRedirect(route('admin.users.index'));
@@ -51,7 +52,7 @@ final class AdministrationTest extends TestCase
     public function an_officer_needs_a_station_and_a_non_officer_has_none(): void
     {
         $admin = User::factory()->admin()->create();
-        $base = ['name' => 'X', 'password' => 'temporary-pass-42', 'password_confirmation' => 'temporary-pass-42'];
+        $base = ['name' => 'X', 'password_mode' => 'manual', 'password' => 'temporary-pass-42', 'password_confirmation' => 'temporary-pass-42'];
 
         $this->actingAs($admin)->post(route('admin.users.store'), [...$base, 'email' => 'a@example.test', 'role' => 'officer'])->assertSessionHasErrors('station_id');
 
@@ -69,7 +70,7 @@ final class AdministrationTest extends TestCase
 
         $this->actingAs($admin)->put(route('admin.users.update', $user), [
             'name' => $user->name, 'email' => $user->email, 'role' => 'analyst', 'is_active' => '0',
-            'password' => 'reset-password-77', 'password_confirmation' => 'reset-password-77',
+            'password_mode' => 'manual', 'password' => 'reset-password-77', 'password_confirmation' => 'reset-password-77',
         ])->assertRedirect();
 
         $user->refresh();
@@ -79,9 +80,13 @@ final class AdministrationTest extends TestCase
         $this->assertSame(1, AuditLog::query()->where('action', 'user.password_reset')->count());
         $this->assertStringNotContainsString('reset-password-77', (string) json_encode(AuditLog::query()->get()->toArray()));
 
-        $this->put(route('admin.users.update', $admin), ['name' => $admin->name, 'email' => $admin->email, 'role' => 'analyst', 'is_active' => '1'])
-            ->assertSessionHasErrors('role');
-        $this->assertSame(Role::Admin, $admin->refresh()->role);
+        // Own role and status cannot be changed from the admin form; the submitted values are ignored.
+        $this->put(route('admin.users.update', $admin), ['name' => 'Renamed Admin', 'email' => $admin->email, 'role' => 'analyst', 'is_active' => '0'])
+            ->assertSessionHasNoErrors();
+        $admin->refresh();
+        $this->assertSame(Role::Admin, $admin->role);
+        $this->assertTrue($admin->is_active);
+        $this->assertSame('Renamed Admin', $admin->name);
     }
 
     /** TC-FT-29: FR-04 reference data is added, renamed and deactivated; inactive categories leave the form. */

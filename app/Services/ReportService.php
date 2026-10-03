@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Incident;
 use App\Models\ReportExport;
 use App\Models\User;
 use App\Services\Analytics\Analytics;
@@ -11,7 +12,12 @@ use App\Services\Analytics\DashboardViewModel;
 use App\Support\Filters;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
+use OpenSpout\Common\Entity\Cell\StringCell;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * FR-11 exports. Both honour the viewer's role scope and the same filters as the dashboard, so the CSV row count equals
@@ -43,24 +49,67 @@ final class ReportService
 
             // Offset paging over a total order (date, then id); paging by id while sorting by date skips and repeats rows.
             foreach ($query->lazy(1000) as $incident) {
-                fputcsv($out, array_map(self::cell(...), [
-                    $incident->reference_no,
-                    $incident->category?->name,
-                    $incident->occurred_at->format('Y-m-d H:i'),
-                    $incident->reported_at->format('Y-m-d H:i'),
-                    $incident->subCounty?->name,
-                    $incident->ward?->name,
-                    $incident->station?->name,
-                    $incident->status->value,
-                    $incident->closed_at?->format('Y-m-d H:i'),
-                    $incident->duplicate_status->value,
-                    $incident->location_description,
-                    $incident->description,
-                    $incident->is_synthetic ? 'sample' : 'real',
-                ]), escape: '');
+                fputcsv($out, self::row($incident), escape: '');
             }
             fclose($out);
         }, $this->fileName('csv', $filters), ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * The same rows as the CSV, as an Excel workbook (proposal: PDF, Excel and CSV reports). Every cell is written as
+     * text, so nothing a user typed can become a formula.
+     */
+    public function xlsx(User $user, Filters $filters): BinaryFileResponse
+    {
+        $analytics = new Analytics($user, $filters);
+        $this->record($user, 'xlsx', $filters, $analytics->a1()['n']);
+
+        $path = (string) tempnam(sys_get_temp_dir(), 'export');
+        // Text cells already stop formulas; the values keep the CSV's leading apostrophe as well, so the workbook
+        // matches the CSV cell for cell and stays safe if someone saves it back to CSV.
+        $text = fn (array $values): Row => new Row(array_values(array_map(fn (string $value): StringCell => new StringCell($value, null), $values)));
+
+        try {
+            $writer = new Writer;
+            $writer->openToFile($path);
+            $writer->addRow($text(self::CSV_COLUMNS));
+
+            $query = $analytics->base()
+                ->with(['category:id,name', 'subCounty:id,name', 'ward:id,name', 'station:id,name'])
+                ->orderBy('incidents.occurred_at')->orderBy('incidents.id');
+            foreach ($query->lazy(1000) as $incident) {
+                $writer->addRow($text(self::row($incident)));
+            }
+            $writer->close();
+        } catch (Throwable $e) {
+            @unlink($path);
+
+            throw $e;
+        }
+
+        return response()->download($path, $this->fileName('xlsx', $filters), ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->deleteFileAfterSend();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function row(Incident $incident): array
+    {
+        return array_map(self::cell(...), [
+            $incident->reference_no,
+            $incident->category?->name,
+            $incident->occurred_at->format('Y-m-d H:i'),
+            $incident->reported_at->format('Y-m-d H:i'),
+            $incident->subCounty?->name,
+            $incident->ward?->name,
+            $incident->station?->name,
+            $incident->status->value,
+            $incident->closed_at?->format('Y-m-d H:i'),
+            $incident->duplicate_status->value,
+            $incident->location_description,
+            $incident->description,
+            $incident->is_synthetic ? 'sample' : 'real',
+        ]);
     }
 
     public function pdf(User $user, Filters $filters): Response

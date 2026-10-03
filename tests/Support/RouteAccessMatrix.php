@@ -57,6 +57,7 @@ final class RouteAccessMatrix
 
             'GET reports.index' => self::signedIn($everyone),
             'GET reports.csv' => self::signedIn($everyone),
+            'GET reports.xlsx' => self::signedIn($everyone),
             'GET reports.pdf' => self::signedIn($everyone),
 
             'GET duplicates.index' => self::signedIn($reviewers),
@@ -74,6 +75,7 @@ final class RouteAccessMatrix
             'POST admin.users.store' => self::signedIn($adminOnly),
             'GET admin.users.edit' => self::signedIn($adminOnly),
             'PUT admin.users.update' => self::signedIn($adminOnly),
+            'POST admin.users.unlock' => self::signedIn($adminOnly),
             'GET admin.reference.index' => self::signedIn($adminOnly),
             'POST admin.reference.store' => self::signedIn($adminOnly),
             'PUT admin.reference.update' => self::signedIn($adminOnly),
@@ -98,7 +100,7 @@ final class RouteAccessMatrix
         return match ($routeName) {
             'incidents.show', 'incidents.edit', 'incidents.update', 'incidents.status', 'incidents.destroy', 'duplicates.resolve' => ['incident' => $fixture->incident->id],
             'imports.show', 'imports.commit', 'imports.discard', 'imports.errors' => ['batch' => $fixture->batch->id],
-            'admin.users.edit', 'admin.users.update' => ['user' => $fixture->officer->id],
+            'admin.users.edit', 'admin.users.update', 'admin.users.unlock' => ['user' => $fixture->officer->id],
             'admin.reference.store' => ['type' => 'categories'],
             'admin.reference.update' => ['type' => 'categories', 'item' => $fixture->incident->category_id],
             default => [],

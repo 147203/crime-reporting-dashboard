@@ -3,7 +3,7 @@
     $spec: ['type' => 'bar|line|doughnut', 'labels' => [...], 'datasets' => [['label' => ..., 'data' => [...]]], 'horizontal' => bool, 'percent' => bool]
     $headers / $rows: the table alternative. $caption: period, filters and n.
 --}}
-@props(['id', 'title', 'spec', 'headers', 'rows', 'caption' => null, 'small' => false])
+@props(['id', 'title', 'spec', 'headers', 'rows', 'caption' => null, 'small' => false, 'links' => []])
 <x-card :title="$title" :subtitle="$caption" {{ $attributes }}>
     <x-slot:actions>
         <div class="btn-group btn-group-sm" role="group" aria-label="{{ $title }} view" data-view-toggle="{{ $id }}-view">
@@ -17,7 +17,7 @@
                 <x-empty-state icon="bar-chart" title="No data for these filters" />
             @else
                 <div @class(['chart-box', 'chart-box-sm' => $small])>
-                    <canvas data-chart="{{ $id }}-data" role="img" aria-label="{{ $title }}. The same data is available in the table view."></canvas>
+                    <canvas data-chart="{{ $id }}-data" role="img" aria-label="{{ $title }}. The same data is available in the table view{{ $links ? ', where each row links to its records' : '' }}."></canvas>
                 </div>
                 <script type="application/json" id="{{ $id }}-data">@json($spec)</script>
             @endif
@@ -29,7 +29,8 @@
                     <thead><tr>@foreach ($headers as $header)<th scope="col" @class(['text-end' => ! $loop->first])>{{ $header }}</th>@endforeach</tr></thead>
                     <tbody>
                         @forelse ($rows as $row)
-                            <tr>@foreach ($row as $cell)<td @class(['text-end' => ! $loop->first])>{{ $cell }}</td>@endforeach</tr>
+                            @php($rowLink = $links[$loop->index] ?? null)
+                            <tr>@foreach ($row as $cell)<td @class(['text-end' => ! $loop->first])>@if ($loop->first && $rowLink)<a href="{{ $rowLink }}">{{ $cell }}</a>@else{{ $cell }}@endif</td>@endforeach</tr>
                         @empty
                             <tr><td colspan="{{ count($headers) }}" class="text-body-secondary">No data.</td></tr>
                         @endforelse

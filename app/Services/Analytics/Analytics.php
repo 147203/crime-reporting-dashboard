@@ -24,6 +24,12 @@ use InvalidArgumentException;
  */
 final class Analytics
 {
+    /** Day of week 1 (Monday) to 7, shared with the incident list's drill-down filter so both count the same way. */
+    public const WEEKDAY_SQL = 'WEEKDAY(incidents.occurred_at) + 1';
+
+    /** Hour of day, shared with the incident list's time-band filter. */
+    public const HOUR_SQL = 'HOUR(incidents.occurred_at)';
+
     public function __construct(private readonly User $viewer, private readonly Filters $filters)
     {
         if ($filters->from === null || $filters->to === null) {
@@ -132,7 +138,7 @@ final class Analytics
      */
     public function a5(int $n): array
     {
-        $counts = $this->countsBy('WEEKDAY(incidents.occurred_at) + 1');
+        $counts = $this->countsBy(self::WEEKDAY_SQL);
 
         return array_map(fn (int $day): array => ['weekday' => $day, 'count' => $counts[$day] ?? 0, 'share_pct' => self::pct($counts[$day] ?? 0, $n, zero: 0.0)], range(1, 7));
     }
@@ -148,7 +154,7 @@ final class Analytics
         $cases = [];
         $bindings = [];
         foreach ($bands as $index => $band) {
-            $cases[] = 'WHEN HOUR(incidents.occurred_at) BETWEEN ? AND ? THEN '.(int) $index;
+            $cases[] = 'WHEN '.self::HOUR_SQL.' BETWEEN ? AND ? THEN '.(int) $index;
             array_push($bindings, (int) $band['from'], (int) $band['to']);
         }
         $counts = $this->base()->toBase()
@@ -168,7 +174,7 @@ final class Analytics
     /**
      * A7 area ranking per ward and per sub-county, zero-count areas included. Competition ranking (ties share a rank).
      *
-     * @return array{wards: list<array{name: string, count: int, share_pct: float, rank: int}>, sub_counties: list<array{name: string, count: int, share_pct: float, rank: int}>}
+     * @return array{wards: list<array{id: int, name: string, count: int, share_pct: float, rank: int}>, sub_counties: list<array{id: int, name: string, count: int, share_pct: float, rank: int}>}
      */
     public function a7(int $n): array
     {
@@ -188,7 +194,7 @@ final class Analytics
      * A8 non-spatial hotspot flag: z score of each ward's count against all wards (zeros included), flagged when
      * z >= threshold and count >= minimum. The ward filter is ignored, because one ward has no spread.
      *
-     * @return array{mu: float, sigma: float, flagged: list<array{ward: string, count: int, z: float}>, threshold: float, min_incidents: int}
+     * @return array{mu: float, sigma: float, flagged: list<array{id: int, ward: string, count: int, z: float}>, threshold: float, min_incidents: int}
      */
     public function a8(): array
     {
@@ -198,9 +204,10 @@ final class Analytics
         $counts = $withoutWard->countsBy('incidents.ward_id');
         $wards = $this->wardUniverse(applyWardFilter: false)->pluck('name', 'id');
 
+        // Keyed by id: ward names are unique only within a sub-county.
         $values = [];
         foreach ($wards as $id => $name) {
-            $values[(string) $name] = $counts[$id] ?? 0;
+            $values[(int) $id] = $counts[$id] ?? 0;
         }
 
         $size = count($values);
@@ -209,10 +216,10 @@ final class Analytics
 
         $flagged = [];
         if ($sigma > 0) {
-            foreach ($values as $name => $count) {
+            foreach ($values as $id => $count) {
                 $z = ($count - $mu) / $sigma;
                 if ($z >= $threshold && $count >= $minimum) {
-                    $flagged[] = ['ward' => (string) $name, 'count' => $count, 'z_exact' => $z];
+                    $flagged[] = ['id' => $id, 'ward' => (string) $wards[$id], 'count' => $count, 'z_exact' => $z];
                 }
             }
         }
@@ -221,7 +228,7 @@ final class Analytics
         return [
             'mu' => round($mu, 4),
             'sigma' => round($sigma, 4),
-            'flagged' => array_map(fn (array $f): array => ['ward' => $f['ward'], 'count' => $f['count'], 'z' => round($f['z_exact'], 4)], $flagged),
+            'flagged' => array_map(fn (array $f): array => ['id' => $f['id'], 'ward' => $f['ward'], 'count' => $f['count'], 'z' => round($f['z_exact'], 4)], $flagged),
             'threshold' => $threshold,
             'min_incidents' => $minimum,
         ];
@@ -348,13 +355,13 @@ final class Analytics
     /**
      * @param  array<int, string>  $names  id => name
      * @param  array<int|string, int>  $counts  id => count
-     * @return list<array{name: string, count: int, share_pct: float, rank: int}>
+     * @return list<array{id: int, name: string, count: int, share_pct: float, rank: int}>
      */
     private static function ranked(array $names, array $counts, int $n): array
     {
         $rows = [];
         foreach ($names as $id => $name) {
-            $rows[] = ['name' => $name, 'count' => $counts[$id] ?? 0, 'share_pct' => self::pct($counts[$id] ?? 0, $n, zero: 0.0), 'rank' => 0];
+            $rows[] = ['id' => (int) $id, 'name' => $name, 'count' => $counts[$id] ?? 0, 'share_pct' => self::pct($counts[$id] ?? 0, $n, zero: 0.0), 'rank' => 0];
         }
         usort($rows, fn (array $a, array $b): int => [$b['count'], $a['name']] <=> [$a['count'], $b['name']]);
 

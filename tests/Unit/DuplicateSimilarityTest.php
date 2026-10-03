@@ -20,4 +20,14 @@ final class DuplicateSimilarityTest extends TestCase
         $this->assertLessThan(0.8, DuplicateDetector::similarity('near market', 'opposite the hospital'));
         $this->assertSame(1.0, DuplicateDetector::similarity('', ''));
     }
+
+    /** TC-UT-18: D-48, the numbers in two locations must match for a duplicate. */
+    #[Test]
+    public function numbers_in_a_location_are_compared_exactly(): void
+    {
+        $this->assertSame(['12', '3'], DuplicateDetector::numbers('plot 12 near stage 3'));
+        $this->assertSame(['5'], DuplicateDetector::numbers('near the market 05'));
+        $this->assertNotSame(DuplicateDetector::numbers('near the market 5'), DuplicateDetector::numbers('near the market 400'));
+        $this->assertSame([], DuplicateDetector::numbers('near the market gate'));
+    }
 }

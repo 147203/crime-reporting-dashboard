@@ -63,19 +63,20 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 |---|---|
 | FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`) |
 | FR-02 Role and station access | TC-SE-01a, 01b (`Security/RouteAccessMatrixTest`, every route x 4 actors), TC-SE-09 (`Security/StationScopeTest`), TC-FT-13, 14 (`Schema/IncidentScopeTest`) |
-| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`) |
+| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19, 20 (`Admin/AccountManagementTest`: generated password shown once, no self reset, last administrator kept, unlock, eye toggle) |
 | FR-04 Reference data | TC-FT-12 (`Schema/SchemaTest`), TC-FT-29 (`Admin/AdministrationTest`) |
 | FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`) |
 | FR-06 Records: filter, status, soft delete | TC-FT-03 to 05 (`Incidents/IncidentWorkflowTest`), TC-UT-12 (`Unit/IncidentStatusTest`) |
 | FR-12 Audit log | TC-FT-19 (`Schema/AuditAndMassAssignmentTest`), TC-FT-25, 28, 29 |
-| NFR-01 Security | TC-SE-01 to 11, TC-FT-01 to 02 (preflight), TC-UT-01 to 11 (`Unit/PreflightTest`) |
+| NFR-01 Security | TC-SE-01 to 11, TC-FT-01, 02, 60 to 62 (preflight, database server and built-assets checks), TC-UT-01 to 11 (`Unit/PreflightTest`) |
 | NFR-02 Privacy | TC-FT-10, 16 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-25, 28 (no secrets in audit) |
-| NFR-06 Reliability (reversible migrations) | Rollback and re-migrate logged in TEST_LOG (Phase 2 gate) |
-| FR-07 Data quality (PII guard, duplicates, review) | TC-UT-13, 15, TC-FT-43, 48, 49, TC-AC-02, 03 (`Quality/*`) |
+| NFR-06 Reliability (reversible migrations, backup) | Rollback and re-migrate logged in TEST_LOG (Phase 2 gate); TC-FT-59 (`BackupCommandsTest`, guards); backup and restore procedure run once and compared table by table (TEST_LOG, Phase 6b) |
+| NFR-08 Accessibility | TC-BB-10 (`tests/e2e/accessibility.spec.ts`, axe WCAG 2.1 A and AA, 13 pages, light and dark, 1366 px and 360 px), TC-FT-57 (eye toggle labelled) |
+| FR-07 Data quality (PII guard, duplicates, review) | TC-UT-13, 15, 18 (D-48 numbers), TC-FT-43, 48, 49, TC-AC-02, 03 (`Quality/*`) |
 | FR-08 CSV import | TC-FT-40 to 42, 45 to 47, 53, TC-SE-17, 18 (`Quality/ImportAndReviewTest`, `Quality/ReviewRegressionPhase4Test`) |
 | FR-09 Analytics A1 to A10 | TC-AC-01 (`Quality/AnalyticsOracleTest`, exact match with the independent oracle) |
-| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-BB-06 |
-| FR-11 Reports and exports | TC-AC-05, TC-FT-51, TC-SE-16, TC-BB-07 |
+| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-FT-58 (`Quality/DrillDownTest`, every drill-down list total equals its chart value, for an administrator and a station officer, and with two wards of the same name), TC-BB-06 |
+| FR-11 Reports and exports | TC-AC-05, TC-AC-07 (Excel rows equal CSV rows, text cells only), TC-FT-51, TC-SE-16, TC-BB-07 |
 | FR-13 Data-quality summary | TC-FT-44 |
 | FR-14 Generator determinism | TC-AC-04 (pinned SHA-256) |
 | NFR-03 Usability | TC-US-01 to 08 (real participants, author; kit in `docs/usability/USABILITY_KIT.md`); TC-BB-01 to 09 automate the same tasks (`tests/e2e/usability-tasks.spec.ts`) |

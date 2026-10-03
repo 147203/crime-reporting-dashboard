@@ -45,7 +45,8 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Command: `vendor/bin/phpunit` in a clean checkout of commit `2ec8b96` (own vendor copy, process env, MariaDB 10.4.32)
 - Result: 45 tests, 133 assertions, all passed. New: TC-FT-10 to TC-FT-20 (no coordinate columns, named indexes, reference data 17/85 and per-sub-county counts, station scope, countable scope, no personal-identifier columns, composite ward key, CHECK constraints, append-only audit through Eloquent and raw SQL, users cannot be deleted), TC-UT-12 (status workflow), TC-SE-08 (mass assignment).
 - Reversibility (NFR-06): `php artisan migrate:rollback --step=4` then `php artisan migrate` on the development schema, twice, both clean; reference seeder idempotent.
-- Static checks: Pint passed; Larastan level 8 no errors.
+- Independent review (`pr_review_phase-6b-completion.md`, local only): APPROVE, no critical or high. Fixed: one medium (ward drill-down links looked the ward up by name, which is unique only within a sub-county; A7 and A8 rows now carry the ward id and A8 counts by id; new test with two wards of the same name) and the low items: last-administrator check now inside the transaction under a row lock, one-time password page sent with `Cache-Control: no-store`, backup file owner-only from creation and a failed write fails the backup, restore refuses server schemas and the live schema without `--replace-live` and streams the dump, temporary workbook deleted on error, weekday and hour expressions shared between analytics and the list, officer cases for drill-down and Excel, preflight test no longer needs built assets. Backup and restore rerun after the change: incidents 20,601 = 20,601, both triggers restored, audit log one row apart as before.
+- Static checks: Pint passed; Larastan level 8 no errors. Final browser run: 20 of 20 passed.
 - Independent review: REQUEST CHANGES (no security blocker); fixes applied before the commit (station not fillable, audit triggers and restrict keys, composite ward key, CHECK constraints, synthetic default, countable scope independent of soft-delete scope, LF line endings). Decisions D-32 to D-35.
 
 ## 2026-09-24 Phase 3 gate: skeleton, auth, incidents, admin (commit 41861cd)
@@ -80,6 +81,15 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - TC-PF-02 import: 100,000-record file (109,000 rows including seeded problems) loaded through the import pipeline in 367 s; 10,000 records in 33.7 s earlier; 20,000 records in 56.3 s. Target 10,000 rows within 60 s: met.
 - Security (independent pentest-style static review, report `pr_review_phase-6-pentest.md`, local only): no Critical or High; one Medium (F1: the local database shortcut applied to any environment not named production) and Low items. All fixed and tested: the shortcut now needs APP_ENV local or testing, an explicit `DB_ALLOW_LOCAL_SHORTCUT=true` and a loopback APP_URL, and root is refused otherwise (TC-UT-10); production preflight refuses debug mode, insecure cookies and non-database sessions (TC-UT-16); remember flag stripped from the query string (TC-SE-13); sessions end when the browser closes; locked-account attempts now reach the audit log (TC-SE-03); status changes, duplicate decisions and import discards re-checked under row locks; officers get 404 for other stations' incidents and see duplicate flags only for records they may view; PII guard rewritten (37 samples, TC-UT-01); tag stripping repeated until stable; security headers moved ahead of framework middleware; dev-server CSP widening only for local loopback; abandoned uploads pruned hourly (`imports:prune`) and on the imports page; quality page reads only per-rule counts; sample commands limited to local or testing.
 
+## 2026-10-03 Phase 6b: development completion (branch phase/6b-completion, base 997adad)
+
+- Unit, feature, security, accuracy: `php artisan test` on `crime_dashboard_test`: 310 passed (11,252 assertions), up from 284. New: TC-UT-17 (password generator), TC-UT-18 (V8 numbers), TC-FT-55 to 62 (generated password, unlock, eye toggle, drill-down totals, backup and restore guards, preflight server and asset checks and fixes), TC-SE-19 (no self password reset through the admin form), TC-SE-20 (last active administrator kept, also from a stale form), TC-AC-07 (Excel rows equal CSV rows, text cells only).
+- Black-box: `npx playwright test`: 20 of 20 passed (16 earlier plus TC-BB-10 in two themes at two widths). The login helper now targets the password field by id, because the eye button also carries the word "Password".
+- Accessibility (TC-BB-10, NFR-08): axe-core, WCAG 2.1 A and AA rules, `/login` and 12 signed-in pages. First run: serious or critical issues on 11 of 13 pages: colour contrast (dimmed status badge, hotspot links, inline code, outline buttons in the dark theme, darkest heat-grid cells), wide tables not reachable by keyboard, and a tab list whose children were links. All fixed; final run: none in light or dark, at 1366 px or 360 px.
+- Backup and restore (NFR-06): `php artisan db:backup` wrote `crime_dashboard-20261003-132541.sql.gz` (641,970 bytes); `php artisan db:restore <file> --target=crime_dashboard_restore_e2e` loaded it. Every table's row count and `CHECKSUM TABLE` value matched the source except `audit_logs` (6 against 5): the backup records its own audit entry after the dump is taken, as designed. Both triggers were restored. Result: Pass.
+- Duplicate rule after D-48 (b), `sample:evaluate`: see the accuracy table.
+- Static checks: Pint passed; Larastan level 8 no errors.
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |
@@ -103,4 +113,7 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 | False rejections (1,000 / 20,000 / 100,000) | 0 / 0 / 0 | near 0 | Pass | 2026-09-24 |
 | Duplicate precision (1,000 / 20,000 / 100,000) | 1.000 / 0.943 / 0.775 | at least 0.90 | Pass, Pass, Fail at 100,000 | 2026-09-24 |
 | Duplicate recall (1,000 / 20,000 / 100,000) | 1.000 / 0.915 / 0.920 | at least 0.90 | Pass | 2026-09-24 |
+| Duplicate precision after D-48 (b) (1,000 / 20,000 / 100,000) | 1.000 / 1.000 / 0.998 | at least 0.90 | Pass | 2026-10-03 |
+| Duplicate recall after D-48 (b) (1,000 / 20,000 / 100,000) | 1.000 / 0.890 / 0.883 | at least 0.90 | Pass, Fail, Fail (just below) | 2026-10-03 |
+| Excel export fidelity (rows equal CSV, text cells only) | equal | 100 % | Pass | 2026-10-03 |
 | Planted hotspots recovered at z 1.5, n 10 (100,000 records) | 3 of 3, 0 unplanted | report | see EVAL_LOG | 2026-09-24 |

@@ -9,6 +9,7 @@ use App\Models\Station;
 use App\Models\SubCounty;
 use App\Models\Ward;
 use App\Support\Filters;
+use Carbon\CarbonImmutable;
 
 /**
  * Turns A1 to A10 results into chart specifications and their table alternatives. Every chart carries a caption with
@@ -22,6 +23,17 @@ final class DashboardViewModel
      * @param  array<string, mixed>  $metrics  Analytics::all()
      */
     public function __construct(public readonly array $metrics, public readonly Filters $filters) {}
+
+    /**
+     * Link to the incident list showing exactly the records behind a chart value: same period and filters, the same
+     * counting rule (no confirmed duplicates), plus the clicked value.
+     *
+     * @param  array<string, int|string>  $extra
+     */
+    public function listUrl(array $extra = []): string
+    {
+        return route('incidents.index', [...$this->filters->toArray(), 'countable' => 1, ...$extra]);
+    }
 
     public function n(): int
     {
@@ -66,9 +78,21 @@ final class DashboardViewModel
         $rows = $this->metrics['A3'];
         $labels = array_map(fn (array $r): string => date('M Y', (int) strtotime($r['month'].'-01')), $rows);
 
+        $from = $this->filters->from;
+        $to = $this->filters->to;
+        $links = array_map(function (array $r) use ($from, $to): string {
+            $start = CarbonImmutable::parse($r['month'].'-01');
+            $first = $from !== null && $from->greaterThan($start) ? $from : $start;
+            $last = $to !== null && $to->lessThan($start->endOfMonth()) ? $to : $start->endOfMonth();
+
+            return $this->listUrl(['from' => $first->toDateString(), 'to' => $last->toDateString()]);
+        }, $rows);
+
         return [
+            'links' => $links,
             'spec' => [
                 'type' => 'line',
+                'links' => $links,
                 'labels' => $labels,
                 'datasets' => [
                     ['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'kind' => 'line', 'colour' => 0],
@@ -87,9 +111,12 @@ final class DashboardViewModel
     public function categories(): array
     {
         $rows = $this->metrics['A2'];
+        $ids = CrimeCategory::query()->whereIn('name', array_column($rows, 'category'))->pluck('id', 'name');
+        $links = array_map(fn (array $r): string => $this->listUrl(['category_id' => (int) $ids[$r['category']]]), $rows);
 
         return [
-            'spec' => ['type' => 'bar', 'horizontal' => true, 'labels' => array_column($rows, 'category'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count')]]],
+            'links' => $links,
+            'spec' => ['type' => 'bar', 'horizontal' => true, 'links' => $links, 'labels' => array_column($rows, 'category'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count')]]],
             'headers' => ['Category', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (array $r): array => [$r['category'], number_format($r['count']), number_format($r['share_pct'], 2)], $rows),
         ];
@@ -101,9 +128,11 @@ final class DashboardViewModel
     public function weekdays(): array
     {
         $rows = $this->metrics['A5'];
+        $links = array_map(fn (array $r): string => $this->listUrl(['weekday' => $r['weekday']]), $rows);
 
         return [
-            'spec' => ['type' => 'bar', 'labels' => array_map(fn (array $r): string => substr(self::WEEKDAYS[$r['weekday']], 0, 3), $rows), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 2]]],
+            'links' => $links,
+            'spec' => ['type' => 'bar', 'links' => $links, 'labels' => array_map(fn (array $r): string => substr(self::WEEKDAYS[$r['weekday']], 0, 3), $rows), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 2]]],
             'headers' => ['Day', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (array $r): array => [self::WEEKDAYS[$r['weekday']], number_format($r['count']), number_format($r['share_pct'], 2)], $rows),
         ];
@@ -115,9 +144,11 @@ final class DashboardViewModel
     public function timeBands(): array
     {
         $rows = $this->metrics['A6'];
+        $links = array_map(fn (int|string $band): string => $this->listUrl(['band' => (int) $band]), array_keys($rows));
 
         return [
-            'spec' => ['type' => 'bar', 'labels' => array_column($rows, 'band'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 3]]],
+            'links' => $links,
+            'spec' => ['type' => 'bar', 'links' => $links, 'labels' => array_column($rows, 'band'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 3]]],
             'headers' => ['Time of day', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (array $r): array => [$r['band'], number_format($r['count']), number_format($r['share_pct'], 2)], $rows),
         ];
@@ -129,9 +160,11 @@ final class DashboardViewModel
     public function topWards(int $limit = 10): array
     {
         $rows = array_slice($this->metrics['A7']['wards'], 0, $limit);
+        $links = array_map(fn (array $r): string => $this->wardUrl($r['id']), $rows);
 
         return [
-            'spec' => ['type' => 'bar', 'horizontal' => true, 'labels' => array_column($rows, 'name'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 4]]],
+            'links' => $links,
+            'spec' => ['type' => 'bar', 'horizontal' => true, 'links' => $links, 'labels' => array_column($rows, 'name'), 'datasets' => [['label' => 'Incidents', 'data' => array_column($rows, 'count'), 'colour' => 4]]],
             'headers' => ['Rank', 'Ward', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (array $r): array => [$r['rank'], $r['name'], number_format($r['count']), number_format($r['share_pct'], 2)], $rows),
         ];
@@ -145,8 +178,11 @@ final class DashboardViewModel
         $status = $this->metrics['A10']['status'];
         $labels = ['reported' => 'Reported', 'under_investigation' => 'Under investigation', 'closed' => 'Closed'];
 
+        $links = array_map(fn (string $key): string => $this->listUrl(['status' => $key]), array_keys($labels));
+
         return [
-            'spec' => ['type' => 'doughnut', 'labels' => array_values($labels), 'datasets' => [['label' => 'Incidents', 'data' => array_values($status)]]],
+            'links' => $links,
+            'spec' => ['type' => 'doughnut', 'links' => $links, 'labels' => array_values($labels), 'datasets' => [['label' => 'Incidents', 'data' => array_values($status)]]],
             'headers' => ['Status', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (string $key): array => [$labels[$key], number_format($status[$key]), $this->n() > 0 ? number_format(round(100 * $status[$key] / $this->n(), 2), 2) : '0.00'], array_keys($labels)),
         ];
@@ -196,6 +232,11 @@ final class DashboardViewModel
                 'total' => (int) array_sum($row['counts']),
             ], $grid['rows'])),
         ];
+    }
+
+    public function wardUrl(int $wardId): string
+    {
+        return $this->listUrl(['ward_id' => $wardId]);
     }
 
     public static function signed(float $value): string
