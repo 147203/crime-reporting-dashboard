@@ -38,6 +38,6 @@ class AdminSeeder extends Seeder
         $admin->must_change_password = true;
         $admin->save();
 
-        $this->command->info("Administrator {$email} created. The password must be changed at first login; ADMIN_INITIAL_PASSWORD can now be removed from .env.");
+        $this->command->info("Administrator {$email} created. The password must be changed at first login, after which ADMIN_INITIAL_PASSWORD no longer signs in.");
     }
 }

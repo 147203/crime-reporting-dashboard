@@ -117,5 +117,7 @@ final class PreflightCommandTest extends TestCase
         $this->assertStringContainsString('sudo systemctl stop mysql', PreflightCommand::explainConnectionError("SQLSTATE[HY000] [1698] Access denied for user 'root'@'localhost'"));
         $this->assertStringContainsString('lampp startmysql', PreflightCommand::explainConnectionError('SQLSTATE[HY000] [2002] Connection refused'));
         $this->assertStringContainsString('does not exist', PreflightCommand::explainConnectionError("SQLSTATE[HY000] [1049] Unknown database 'x'"));
+        $this->assertStringContainsString('XAMPP Control Panel', PreflightCommand::explainConnectionError('SQLSTATE[HY000] [2002] No connection could be made', 'Windows'));
+        $this->assertStringContainsString('Stop-Service MySQL80', PreflightCommand::explainConnectionError("SQLSTATE[HY000] [1045] Access denied for user 'root'@'localhost' (using password: NO)", 'Windows'));
     }
 }

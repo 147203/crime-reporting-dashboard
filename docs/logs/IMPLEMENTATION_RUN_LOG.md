@@ -92,3 +92,7 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Commands: `php artisan test`, `npx playwright test`, `php artisan db:backup`, `php artisan db:restore <file> --target=crime_dashboard_restore_e2e`, `php artisan sample:evaluate` at 1,000, 20,000 and 100,000 records, Pint, Larastan.
 - Deviation: duplicate recall after D-48 (b) is 0.890 and 0.883 at 20,000 and 100,000 records (target 0.90), reported, not tuned.
 - Requirement IDs: FR-03, FR-07, FR-10, FR-11, NFR-01, NFR-06, NFR-08.
+## 2026-10-03 Setup guide for Windows, Linux and macOS
+- Built: README sections 3, 4, 6 and 11 rewritten as a start-to-end guide for Windows 10/11 (PHP 8.4 zip with the Visual C++ Redistributable, because XAMPP for Windows ships PHP 8.2; XAMPP used for MariaDB only), Ubuntu/Debian and macOS, with a new-machine check (4.8); docs/10 aligned. `app:preflight` advice is now specific to the operating system (Windows `MySQL80` service, error 1045 added); backup tools are found in XAMPP's folder on all three systems.
+- Measured: with PHP's 128 MB memory limit (the Windows default), the full test suite (peak 84.5 MB) and a 20,000-record generate and load both complete; 100,000 records need a higher limit (documented).
+- Deviation: the Windows and macOS steps follow the official installers but have not yet been run on a Windows or macOS machine (VERIFY: run section 4 on one and record the result here).

@@ -2,45 +2,42 @@
 
 How to run the project on a fresh machine.
 
-## 1. Machine prerequisites (verify first; install what is missing)
+## 1. Machine prerequisites
 
-| Tool | Needed | Check |
-|---|---|---|
-| PHP | 8.4 (D-22) with mbstring, xml, curl, zip, mysql, bcmath, intl, gd | `php -v`, `php -m` |
-| Composer | 2.x | `composer --version` |
-| MariaDB | XAMPP's bundled MariaDB 10.4 on 127.0.0.1:3306, root with a blank password (D-04, D-25) | `/opt/lampp/bin/mysql --version` |
-| Node and npm | 20 or newer | `node -v`, `npm -v` |
-| Git | any recent | `git --version` |
+The full step-by-step guide for **Windows 10/11, Ubuntu/Debian and macOS** (installers, PATH, PHP extensions, XAMPP, checks and troubleshooting) is in the project README, sections 3, 4 and 11. Summary:
 
-Ubuntu 24.04 (run only what is missing):
+| Tool | Needed | Windows | Linux | Check |
+|---|---|---|---|---|
+| PHP | 8.4 (D-22) with curl, fileinfo, mbstring, openssl, pdo_mysql, zip | Zip from windows.php.net in `C:\php` (XAMPP's own PHP 8.2 is too old), plus the Visual C++ Redistributable | `php8.4-*` packages | `php -v`, `php -m` |
+| Composer | 2.x | Composer-Setup.exe | getcomposer.org | `composer --version` |
+| MariaDB | XAMPP's MariaDB 10.4 on 127.0.0.1:3306, root with a blank password (D-04, D-25) | `C:\xampp`, started from the XAMPP Control Panel | `/opt/lampp`, `sudo /opt/lampp/lampp startmysql` | `select version()` ends in `-MariaDB` |
+| Node and npm | 20.19+ or 22.12+ | nodejs.org installer | nodejs.org or distribution | `node -v` |
+| Git | any recent | git-scm.com | `apt install git` | `git --version` |
 
-```bash
-sudo apt install -y php8.4-bcmath
-sudo /opt/lampp/lampp startmysql
-ss -ltnp | grep ':3306'                    # MariaDB must be listening
-```
+A second MySQL server on port 3306 is the most common failure: Ubuntu's `mysql` service (error 1698) or the Windows `MySQL80` service (error 1045). `php artisan app:preflight` detects it and prints the fix for the system it runs on. MySQL cannot replace MariaDB here: analytics A10 uses `PERCENTILE_DISC`, which MySQL lacks.
 
-If Ubuntu's own MySQL server is installed, it starts at boot and takes port 3306 first (symptom: `Access denied for user 'root'@'localhost'`, error 1698). Stop it and keep it off: `sudo systemctl stop mysql && sudo systemctl disable mysql`, then start XAMPP's MariaDB again. MySQL cannot replace MariaDB here: analytics A10 uses `PERCENTILE_DISC`, which MySQL lacks.
-
-## 2. Databases (two schemas on XAMPP MariaDB)
+## 2. Databases (three schemas on XAMPP MariaDB)
 
 ```bash
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "
-CREATE DATABASE IF NOT EXISTS crime_dashboard      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-SHOW DATABASES LIKE 'crime%';"
+SQL="CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "$SQL"                 # Linux
 ```
 
-The test schema must end in `_test`; the test suite refuses to run otherwise and wipes that schema on every run.
+```powershell
+$SQL = "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+& C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -e $SQL     # Windows
+```
 
-Recommended (R-18): XAMPP's MariaDB listens on every network interface. Add `bind-address=127.0.0.1` under `[mysqld]` in `/opt/lampp/etc/my.cnf`, then `sudo /opt/lampp/lampp restartmysql`.
+The test schema must end in `_test` and the browser-test schema in `_e2e`; both are wiped on every run.
+
+Recommended (R-18): XAMPP's MariaDB listens on every network interface. Add `bind-address=127.0.0.1` under `[mysqld]` in `/opt/lampp/etc/my.cnf` (Windows: `C:\xampp\mysql\bin\my.ini`), then restart MySQL.
 
 ## 2a. First run of the application
 
 ```bash
 composer install && npm install && npm run build
-cp .env.example .env            # then edit .env yourself: ADMIN_NAME, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
+cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .env
+                                # then edit .env yourself: ADMIN_NAME, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
 php artisan key:generate
 php artisan app:preflight       # must print "Preflight passed."
 php artisan migrate             # never with --force
@@ -50,7 +47,7 @@ php artisan serve               # http://127.0.0.1:8000
 php artisan test
 ```
 
-The step-by-step guide with every setting and a troubleshooting table is in the project README.
+`composer install && npm install` works in PowerShell 7 and Command Prompt; in Windows PowerShell 5.1 run the commands one at a time. Commands written as `NAME=value command` in these docs become `$env:NAME='value'; command; Remove-Item Env:NAME` in PowerShell.
 
 ## 3. Browser (end-to-end) tests
 

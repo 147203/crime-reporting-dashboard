@@ -4,7 +4,7 @@ Final-year project, BBIT, Strathmore University. A responsive web application wh
 
 **Author:** Mathai, Margaret Elsie Wairimu (adm. 147203). **Supervisor:** Mr Nicodemus Maingi.
 
-**Status:** development phases 0 and 2 to 6 are complete and merged (284 automated tests and 16 browser tests passing). Proposal correction, fieldwork, usability sessions, Chapters 4 to 6 and the demonstration are pending; see [the progress report](docs/reports/PROGRESS_REPORT.md).
+**Status:** development is complete (phases 0 and 2 to 6b merged; 310 automated tests and 28 browser tests passing). Proposal correction, fieldwork, usability sessions, Chapters 4 to 6 and the demonstration are pending; see [the progress report](docs/reports/PROGRESS_REPORT.md).
 
 **Scope notes:** the panel ruled out GIS, so there are no maps, GPS, coordinates or geocoding. Location is sub-county and ward from reference lists plus a free-text street or landmark; a "hotspot" is a statistical flag on a ward, shown in tables and charts. There is no machine learning or prediction: the analytics are descriptive. All data is synthetic and labelled as sample data.
 
@@ -65,61 +65,157 @@ The database must be **MariaDB**: the timeliness measure (A10) uses `PERCENTILE_
 
 ## 3. Prerequisites
 
-| Tool                | Version                                                                            | Check                              |
-| ------------------- | ---------------------------------------------------------------------------------- | ---------------------------------- |
-| PHP                 | 8.4, with extensions mbstring, xml, curl, zip, mysql (pdo_mysql), bcmath, intl, gd | `php -v`, `php -m`             |
-| Composer            | 2.x                                                                                | `composer --version`             |
-| XAMPP (for MariaDB) | Any version shipping MariaDB 10.4 or later, from https://www.apachefriends.org     | `/opt/lampp/bin/mysql --version` |
-| Node.js and npm     | Node 20 or newer                                                                   | `node -v`, `npm -v`            |
-| Git                 | Any recent                                                                         | `git --version`                  |
+| Tool | Version | Why it is needed |
+| --- | --- | --- |
+| PHP | **8.4** (8.4.x) with the extensions curl, fileinfo, mbstring, openssl, pdo_mysql, zip | Runs the application (Laravel 12) |
+| Composer | 2.x | Installs the PHP libraries |
+| MariaDB | 10.4 or newer, from **XAMPP** (only its database is used, not its Apache or PHP) | The database. It must be MariaDB: measure A10 uses `PERCENTILE_DISC`, which MySQL does not have |
+| Node.js and npm | Node **20.19+ or 22.12+** (the current LTS is fine) | Builds the stylesheets and scripts (Vite) |
+| Git | Any recent | Gets the code |
+| Disk and memory | About 1.5 GB free (code, libraries, browser for tests); 4 GB RAM or more | |
 
-On Ubuntu 24.04, install whatever is missing, for example:
+Pick your system below, install what is missing, then continue with [section 4](#4-first-time-setup), which is the same everywhere. Commands are shown for **PowerShell** on Windows and for a **bash/zsh terminal** on Linux and macOS.
+
+### 3.1 Windows 10 or 11
+
+> XAMPP for Windows ships its own PHP, but it is **8.2**, which is too old for this project. Install XAMPP only for its MariaDB, and install PHP 8.4 separately as below.
+
+1. **Microsoft Visual C++ Redistributable (x64)**, needed by PHP for Windows: https://aka.ms/vs/17/release/vc_redist.x64.exe. Install it, accepting the defaults.
+2. **PHP 8.4**: from https://windows.php.net/download/ download the **PHP 8.4, VS17 x64 Non Thread Safe** zip and extract it to `C:\php` (so `C:\php\php.exe` exists). Then, in PowerShell:
+
+   ```powershell
+   cd C:\php
+   Copy-Item php.ini-development php.ini
+   # Turn on the extension folder and the six extensions the project needs
+   (Get-Content php.ini) `
+     -replace '^;\s*extension_dir = "ext"', 'extension_dir = "ext"' `
+     -replace '^;extension=(curl|fileinfo|mbstring|openssl|pdo_mysql|zip)$', 'extension=$1' |
+     Set-Content php.ini
+   # Add C:\php to your user PATH
+   [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path', 'User') + ';C:\php', 'User')
+   ```
+
+   **Close PowerShell and open a new window**, then check:
+
+   ```powershell
+   php -v                     # must say PHP 8.4.x
+   where.exe php              # C:\php\php.exe must be listed first (not C:\xampp\php\php.exe)
+   php -m                     # the list must include curl, fileinfo, mbstring, openssl, pdo_mysql, zip
+   ```
+
+3. **Composer**: run `Composer-Setup.exe` from https://getcomposer.org/download/. When it asks for the PHP to use, choose `C:\php\php.exe`. Open a new PowerShell window and check `composer --version`.
+4. **XAMPP**: download XAMPP for Windows from https://www.apachefriends.org and install it to `C:\xampp` (the default; avoid `C:\Program Files`). Only the **MySQL** component is needed (it is MariaDB). Open the **XAMPP Control Panel** (`C:\xampp\xampp-control.exe`) and press **Start** next to **MySQL**; it turns green. Check:
+
+   ```powershell
+   & C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect 10.4.x-MariaDB
+   ```
+
+   If this prints an access-denied error or a version without "MariaDB", another MySQL server (often the `MySQL80` Windows service) holds port 3306; see [Troubleshooting](#11-troubleshooting).
+5. **Node.js**: install the LTS version from https://nodejs.org (Windows installer, defaults). Check `node -v` and `npm -v` in a new window. If PowerShell says *running scripts is disabled on this system*, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+6. **Git**: install from https://git-scm.com/download/win (defaults). Check `git --version`.
+
+Keep the project in a plain folder such as `C:\projects`. Avoid folders synced by OneDrive (often Desktop and Documents): syncing locks files while Composer and npm write thousands of them.
+
+### 3.2 Ubuntu or Debian Linux
 
 ```bash
-sudo apt install -y php8.4-cli php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip php8.4-mysql php8.4-bcmath php8.4-intl php8.4-gd unzip
+# PHP 8.4 (Ubuntu 24.04: add the ondrej/php PPA first if php8.4 is not found: sudo add-apt-repository ppa:ondrej/php)
+sudo apt install -y php8.4-cli php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip php8.4-mysql php8.4-bcmath php8.4-intl php8.4-gd unzip git
+# Composer 2: https://getcomposer.org/download/   Node.js LTS: https://nodejs.org (or your distribution's nodejs 20.19+/22.12+)
 ```
 
-Only XAMPP's database is used. If Ubuntu's own MySQL server is also installed, it will take port 3306 first; see [Troubleshooting](#11-troubleshooting).
+Install XAMPP for Linux from https://www.apachefriends.org (it installs to `/opt/lampp`), then:
+
+```bash
+sudo /opt/lampp/lampp startmysql
+/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect 10.4.x-MariaDB
+```
+
+If Ubuntu's own MySQL server is installed, it starts at boot and takes port 3306 first (error 1698). Turn it off for good: `sudo systemctl stop mysql && sudo systemctl disable mysql`, then start XAMPP's MariaDB again.
+
+### 3.3 macOS
+
+```bash
+brew install php@8.4 composer node git      # Homebrew from https://brew.sh
+brew link --overwrite --force php@8.4
+php -v                                      # must say PHP 8.4.x
+```
+
+Install XAMPP for macOS (the native installer, not the "-VM" one) from https://www.apachefriends.org, then:
+
+```bash
+sudo /Applications/XAMPP/xamppfiles/xampp startmysql
+/Applications/XAMPP/xamppfiles/bin/mysql -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect x.x.x-MariaDB
+```
+
+If Homebrew's MySQL is running it holds port 3306: `brew services stop mysql`.
+
+> The Windows and macOS steps follow the official installers; the project was developed and tested on Ubuntu 24.04. Section 4.8 is the check that proves a new machine is set up correctly.
 
 ---
 
 ## 4. First-time setup
 
-### 4.1 Start the database and create the schemas
+Every command below runs from the project folder unless it says otherwise. Where Windows differs, the PowerShell line is shown after the bash line.
+
+### 4.1 Create the databases
+
+Make sure MariaDB is running (XAMPP Control Panel on Windows, `startmysql` on Linux and macOS), then create the three schemas:
 
 ```bash
-sudo /opt/lampp/lampp startmysql
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect 10.4.x-MariaDB
-
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "
-CREATE DATABASE IF NOT EXISTS crime_dashboard      CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# Linux (macOS: use /Applications/XAMPP/xamppfiles/bin/mysql)
+/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-| Schema                   | Used by                 | Note                                                                      |
-| ------------------------ | ----------------------- | ------------------------------------------------------------------------- |
-| `crime_dashboard`      | The application         | Your working data                                                         |
-| `crime_dashboard_test` | `php artisan test`    | Wiped on every test run; the name must end in`_test`                    |
-| `crime_dashboard_e2e`  | `npx playwright test` | Wiped and rebuilt on every browser-test run; the name must end in`_e2e` |
+```powershell
+# Windows
+& C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
 
-### 4.2 Get the code and install dependencies
+| Schema | Used by | Note |
+| --- | --- | --- |
+| `crime_dashboard` | The application | Your working data |
+| `crime_dashboard_test` | `php artisan test` | Wiped on every test run; the name must end in `_test` |
+| `crime_dashboard_e2e` | `npx playwright test` | Wiped and rebuilt on every browser-test run; the name must end in `_e2e` |
+
+### 4.2 Get the code
+
+The repository is private: your GitHub account needs access to it. Over HTTPS, Git opens a browser window to sign in the first time.
 
 ```bash
-git clone git@github.com:147203/crime-reporting-dashboard.git
+cd ~                                 # Linux, macOS: any folder you like
+git clone https://github.com/147203/crime-reporting-dashboard.git
 cd crime-reporting-dashboard
+```
+
+```powershell
+mkdir C:\projects; cd C:\projects    # Windows
+git clone https://github.com/147203/crime-reporting-dashboard.git
+cd crime-reporting-dashboard
+```
+
+Copying the folder from another machine (for example on a USB drive) also works: leave out `vendor`, `node_modules`, `.env` and `storage/app/private`, and continue with 4.3.
+
+### 4.3 Install the libraries and build the front end
+
+```bash
 composer install
 npm install
 npm run build
 ```
 
-### 4.3 Configure
+### 4.4 Configure
 
 ```bash
-cp .env.example .env
+cp .env.example .env                 # Linux, macOS
 ```
 
-Open `.env` and set at least these three values (see [section 5](#5-configuration-env)); never commit `.env`:
+```powershell
+Copy-Item .env.example .env          # Windows
+notepad .env                         # opens it for editing
+```
+
+In `.env`, set the first administrator (see [section 5](#5-configuration-env)); never commit `.env`:
 
 ```
 ADMIN_NAME="Your Name"
@@ -127,35 +223,49 @@ ADMIN_EMAIL=you@example.com
 ADMIN_INITIAL_PASSWORD=<at least 14 characters, not starting with "changeme">
 ```
 
-Then:
+Everything else already matches a standard XAMPP install (`127.0.0.1`, port `3306`, user `root`, blank password, `APP_ENV=local`). Then:
 
 ```bash
 php artisan key:generate
-php artisan app:preflight          # must end with "Preflight passed."
+php artisan app:preflight            # must end with "Preflight passed."
 ```
 
-### 4.4 Create the tables, reference data and first administrator
+`app:preflight` also connects to the database and checks the front end is built. If it fails, it says what is wrong and how to fix it on your system.
+
+### 4.5 Create the tables, reference data and first administrator
 
 ```bash
-php artisan migrate                # never add --force
-php artisan db:seed                # 17 sub-counties, 85 wards, sample stations, categories, and the administrator from .env
+php artisan migrate                  # never add --force
+php artisan db:seed                  # 17 sub-counties, 85 wards, sample stations, categories, and the administrator from .env
 ```
 
-After the first seed you may remove `ADMIN_INITIAL_PASSWORD` from `.env`; the administrator must choose a new password at first login anyway.
+Keep `ADMIN_INITIAL_PASSWORD` in `.env`, because `app:preflight` checks it. It stops being a working password once the administrator chooses their own at first login, which the system forces.
 
-### 4.5 Load demo data (optional, recommended)
+### 4.6 Load demo data (optional, recommended)
 
 ```bash
 php artisan sample:generate --size=20000 --load
 ```
 
-This creates about 20,600 synthetic incidents over the last 24 complete months, labelled as sample data, loaded through the same import and validation pipeline as a real CSV upload. Run it once; running it again adds another set. To remove all sample records: `php artisan sample:clear`.
+This creates about 20,600 synthetic incidents over the last 24 complete months, labelled as sample data, loaded through the same import and validation pipeline as a real CSV upload (about 45 seconds). Run it once; running it again adds another set. To remove all sample records: `php artisan sample:clear`. Sizes up to 20,000 run within PHP's default 128 MB memory limit; for `--size=100000` set `memory_limit = 512M` in `php.ini` (Windows: `C:\php\php.ini`).
 
-### 4.6 Start the application
+### 4.7 Start the application
 
 ```bash
-php artisan serve                  # http://127.0.0.1:8000
+php artisan serve                    # then open http://127.0.0.1:8000
 ```
+
+Leave this window open while you use the application; `Ctrl+C` stops it.
+
+### 4.8 Check that the new machine works
+
+| Check | Expected |
+| --- | --- |
+| `php artisan app:preflight` | `Preflight passed.` |
+| Open http://127.0.0.1:8000 and sign in with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` | Asked to choose a new password, then the dashboard |
+| Dashboard after loading demo data | KPI cards and charts show figures; the banner at the top says "Sample data" |
+| `php artisan test` (optional, about 30 seconds) | All tests pass |
+| `npx playwright install chromium`, then `npx playwright test` (optional, about 3 minutes) | All browser tests pass |
 
 ---
 
@@ -187,22 +297,26 @@ php artisan serve                  # http://127.0.0.1:8000
 
 ## 6. Running the project day to day
 
-After a reboot:
+After a restart, start the database, then the application:
 
-```bash
-sudo /opt/lampp/lampp startmysql   # start the database
-cd ~/IS/crime-reporting-dashboard
-php artisan serve                  # http://127.0.0.1:8000
-```
+| System | Start the database | Start the application (in the project folder) |
+| --- | --- | --- |
+| Windows | XAMPP Control Panel, **Start** next to MySQL (tick **Svc** once, as administrator, to start it with Windows) | `php artisan serve` |
+| Linux | `sudo /opt/lampp/lampp startmysql` | `php artisan serve` |
+| macOS | `sudo /Applications/XAMPP/xamppfiles/xampp startmysql` | `php artisan serve` |
 
-While changing styles or JavaScript, run `npm run dev` in a second terminal for live reloading; otherwise `npm run build` once after pulling changes.
+Then open http://127.0.0.1:8000. While changing styles or JavaScript, run `npm run dev` in a second terminal for live reloading (or `composer run dev` to start both); otherwise `npm run build` once after pulling changes.
 
 After pulling new code:
 
 ```bash
-composer install && npm install && npm run build
+composer install
+npm install
+npm run build
 php artisan migrate
 ```
+
+Commands that set a variable for one run are written the Linux way in this README (`NAME=value command`). In PowerShell use `$env:NAME='value'; command; Remove-Item Env:NAME`.
 
 ---
 
@@ -294,20 +408,46 @@ docs/                    requirements, architecture, testing, decisions, logs, d
 
 ## 11. Troubleshooting
 
-| Symptom                                                                             | Cause                                                                                         | Fix                                                                                                |
-| ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `SQLSTATE[HY000] [1698] Access denied for user 'root'@'localhost'`                | Ubuntu's own MySQL server is running on port 3306 instead of XAMPP's MariaDB                  | `sudo systemctl stop mysql && sudo systemctl disable mysql && sudo /opt/lampp/lampp startmysql`  |
-| `SQLSTATE[HY000] [2002] Connection refused`                                       | The database is not running (or is still starting)                                            | `sudo /opt/lampp/lampp startmysql`, wait a few seconds, check with `ss -ltnp \| grep 3306`      |
-| `app:preflight` says the server is not XAMPP's MariaDB                                | Ubuntu's MySQL answered on port 3306 (it can re-enable itself after updates)                 | Same fix as error 1698 above                                                                      |
-| `app:preflight` names `DB_USERNAME ... not root` or `DB_PASSWORD is not set`  | The local shortcut is off                                                                     | In`.env`: `DB_ALLOW_LOCAL_SHORTCUT=true`, `APP_ENV=local`, `APP_URL=http://127.0.0.1:8000` |
-| Every page shows "The application is not configured" (503)                          | `APP_KEY` or database settings invalid                                                      | Run`php artisan app:preflight` and fix what it names                                             |
-| `MissingAppKeyException`                                                          | No application key                                                                            | `php artisan key:generate`                                                                       |
-| `Vite manifest not found`                                                         | Front-end assets not built                                                                    | `npm run build`                                                                                  |
-| `Failed to listen on 127.0.0.1:8000`                                              | Another`artisan serve` is running                                                           | Stop it (`pkill -f "artisan serve"`) or use the port it offers                                   |
-| Login says the account is locked                                                    | 5 wrong passwords                                                                             | Wait 15 minutes, or an administrator presses **Unlock** under Users                               |
-| `db:backup` says mysqldump was not found                                            | XAMPP is not in `/opt/lampp`                                                                  | Set `DB_DUMP_BINARY` and `DB_CLIENT_BINARY` in `.env` to the full paths                          |
-| Tests refuse to run ("must use the mysql_testing connection and a *_test database") | Test schema missing or misnamed                                                               | Create`crime_dashboard_test` (section 4.1) and keep `DB_TEST_DATABASE` ending in `_test`     |
-| The dashboard's last month looks low                                                | The default period ends today, so the current month is incomplete (the chart caption says so) | Use a preset ending on a complete month, or read the table view                                    |
+Run `php artisan app:preflight` first: it names most problems and the fix for your system.
+
+**Database**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `SQLSTATE[HY000] [1698] Access denied for user 'root'@'localhost'` (Linux) | Ubuntu's own MySQL server is running on port 3306 instead of XAMPP's MariaDB (it can re-enable itself after updates) | `sudo systemctl stop mysql && sudo systemctl disable mysql && sudo /opt/lampp/lampp startmysql` |
+| `[1045] Access denied for user 'root'@'localhost' (using password: NO)` (Windows) | Another MySQL server, usually the `MySQL80` service from MySQL Installer, holds port 3306 | Administrator PowerShell: `Stop-Service MySQL80; Set-Service MySQL80 -StartupType Manual`, then Start MySQL in the XAMPP Control Panel |
+| XAMPP Control Panel: *Port 3306 in use* / MySQL will not start (Windows) | Same as above, or a second XAMPP | Find the owner: `netstat -ano \| findstr :3306`, then `tasklist /FI "PID eq <number>"`; stop that program or service |
+| `app:preflight` says the server is not XAMPP's MariaDB | A MySQL server answered on port 3306 | As the two rows above for your system |
+| `SQLSTATE[HY000] [2002] Connection refused` / *No connection could be made* | The database is not running (or still starting) | Windows: Start MySQL in the XAMPP Control Panel. Linux: `sudo /opt/lampp/lampp startmysql`, wait a few seconds |
+| `[1049] Unknown database 'crime_dashboard'` | The schemas were not created | [Section 4.1](#41-create-the-databases) |
+| `app:preflight` names `DB_USERNAME ... not root` or `DB_PASSWORD is not set` | The local shortcut is off | In `.env`: `DB_ALLOW_LOCAL_SHORTCUT=true`, `APP_ENV=local`, `APP_URL=http://127.0.0.1:8000` |
+
+**PHP, Composer and Node**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `php -v` shows 8.2 (Windows) | XAMPP's PHP (`C:\xampp\php`) is found before `C:\php` | Remove `C:\xampp\php` from PATH or move `C:\php` above it; check with `where.exe php`; open a new window |
+| `'php' is not recognized` | PHP folder not on PATH, or the window was open before PATH changed | Redo the PATH step in 3.1 and open a new window |
+| Composer: *requires PHP extension ext-zip / ext-fileinfo / ext-openssl* | Extension not enabled in `php.ini` | Windows: in `C:\php\php.ini` remove the `;` before `extension=zip` (and the others in 3.1); Linux: `sudo apt install php8.4-zip` etc.; check `php -m` |
+| `could not find driver` | `pdo_mysql` not enabled | As above, for `extension=pdo_mysql` |
+| PHP for Windows: *VCRUNTIME140.dll was not found* | Visual C++ Redistributable missing | Install it (3.1, step 1) |
+| PowerShell: *npm.ps1 cannot be loaded because running scripts is disabled* | PowerShell execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or use Command Prompt |
+| `npm install` or `composer install` fails with *EPERM* / *file locked* (Windows) | OneDrive or an antivirus scan is locking files | Move the project to `C:\projects`, run the command again |
+| Vite: *requires Node.js version 20.19+ or 22.12+* | Node too old | Install the current LTS from nodejs.org |
+| `Vite manifest not found` | Front-end assets not built | `npm run build` |
+
+**Application**
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Every page shows "The application is not configured" (503) | `APP_KEY` or database settings invalid | Run `php artisan app:preflight` and fix what it names |
+| `MissingAppKeyException` | No application key | `php artisan key:generate` |
+| `Failed to listen on 127.0.0.1:8000` | Another `artisan serve` is running | Close the other window (Linux: `pkill -f "artisan serve"`), or use the port it offers |
+| Login says the account is locked | 5 wrong passwords | Wait 15 minutes, or an administrator presses **Unlock** under Users |
+| `db:backup` says mysqldump was not found | XAMPP is not in its default folder (`/opt/lampp`, `C:\xampp`, `/Applications/XAMPP`) | Set `DB_DUMP_BINARY` and `DB_CLIENT_BINARY` in `.env` to the full paths |
+| `sample:generate --size=100000` stops with *Allowed memory size exhausted* | PHP memory limit (128 MB on Windows by default) | Set `memory_limit = 512M` in `php.ini` |
+| Tests refuse to run ("must use the mysql_testing connection and a *_test database") | Test schema missing or misnamed | Create `crime_dashboard_test` ([section 4.1](#41-create-the-databases)) and keep `DB_TEST_DATABASE` ending in `_test` |
+| The dashboard's last month looks low | The default period ends today, so the current month is incomplete (the chart caption says so) | Use a preset ending on a complete month, or read the table view |
 
 ---
 
@@ -336,4 +476,4 @@ docs/                    requirements, architecture, testing, decisions, logs, d
 - No real personal data is used or stored. The schema has no fields for victims, suspects or witnesses, and free text containing phone or national ID numbers is refused.
 - Every route requires sign-in plus a role or policy check; officers cannot see other stations' records, even by typing an address.
 - The blank-password database account is a local-only convenience (decision D-25): it is accepted only on this machine with `APP_ENV=local` and a loopback address. With `APP_ENV=production`, the app requires a dedicated database user and password, secure cookies and debug mode off.
-- XAMPP's MariaDB listens on every network interface by default. To keep it on this machine only, add `bind-address=127.0.0.1` under `[mysqld]` in `/opt/lampp/etc/my.cnf` and run `sudo /opt/lampp/lampp restartmysql`.
+- XAMPP's MariaDB listens on every network interface by default. To keep it on this machine only, add `bind-address=127.0.0.1` under `[mysqld]` in its settings file (Linux `/opt/lampp/etc/my.cnf`, Windows `C:\xampp\mysql\bin\my.ini`, macOS `/Applications/XAMPP/xamppfiles/etc/my.cnf`) and restart MySQL.
