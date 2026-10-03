@@ -63,3 +63,12 @@ npm run build
 npx playwright test                # desktop (1366 px) and mobile (360 px) projects
 ```
 
+
+## 4. Backup and restore (NFR-06)
+
+```bash
+php artisan db:backup                                   # writes storage/app/private/backups/crime_dashboard-<date>-<time>.sql.gz
+php artisan db:restore storage/app/private/backups/<file> --target=crime_dashboard_restore_e2e   # local or testing only; asks first
+```
+
+The backup refuses the `_test` schema, passes the database password to `mysqldump` through the environment (never on the command line), and makes the file readable by its owner only. Restore creates the target schema if it does not exist; to restore over the live schema, name it as the target on purpose. Dumps (`*.sql.gz`) are gitignored. The tested procedure and its result are in `docs/logs/TEST_LOG.md`.

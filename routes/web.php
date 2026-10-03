@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/reports', [ReportController::class, 'index'])->middleware('can:export,App\Models\Incident')->name('reports.index');
     Route::get('/reports/csv', [ReportController::class, 'csv'])->middleware(['can:export,App\Models\Incident', 'throttle:exports'])->name('reports.csv');
+    Route::get('/reports/xlsx', [ReportController::class, 'xlsx'])->middleware(['can:export,App\Models\Incident', 'throttle:exports'])->name('reports.xlsx');
     Route::get('/reports/pdf', [ReportController::class, 'pdf'])->middleware(['can:export,App\Models\Incident', 'throttle:exports'])->name('reports.pdf');
 
     Route::get('/quality', [QualityController::class, 'index'])->middleware('can:viewDataQuality,App\Models\Incident')->name('quality.index');
@@ -57,6 +58,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
 
         Route::get('/reference', [ReferenceDataController::class, 'index'])->name('reference.index');
         Route::post('/reference/{type}', [ReferenceDataController::class, 'store'])->whereIn('type', ['categories', 'sub-counties', 'wards', 'stations'])->name('reference.store');

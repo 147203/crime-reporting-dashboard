@@ -86,3 +86,9 @@ Commands run, outputs, deviations, in order. Raw material for Chapter 5.2 and 5.
 - Deviation: performance target missed on first measurement (dashboard p95 3.5 s); fixed with a measured index, not by caching (D-21 kept).
 - Result: gate G6 automated items pass except duplicate precision at 100,000 records (0.775, target 0.90), reported and left for the author's decision (D-48). Usability results await real participants.
 - Requirement IDs: NFR-01, NFR-02, NFR-03 (kit), NFR-04, NFR-05, NFR-07.
+## 2026-10-03 Phase 6b Development completion
+- Built: account rules (D-50: generated temporary passwords shown once, no self reset or self role change from the Users page, last active administrator kept, unlock), show or hide button on every password field, Excel export (D-12), dashboard drill-down to the incident list (weekday, time-band and countable filters), `db:backup` and `db:restore` (NFR-06), V8 numbers check (D-48 b), preflight database server and built-assets checks, accessibility scan and fixes (NFR-08).
+- Dependencies: `openspout/openspout` (streams .xlsx with low memory), `@axe-core/playwright` (dev, accessibility scan).
+- Commands: `php artisan test`, `npx playwright test`, `php artisan db:backup`, `php artisan db:restore <file> --target=crime_dashboard_restore_e2e`, `php artisan sample:evaluate` at 1,000, 20,000 and 100,000 records, Pint, Larastan.
+- Deviation: duplicate recall after D-48 (b) is 0.890 and 0.883 at 20,000 and 100,000 records (target 0.90), reported, not tuned.
+- Requirement IDs: FR-03, FR-07, FR-10, FR-11, NFR-01, NFR-06, NFR-08.

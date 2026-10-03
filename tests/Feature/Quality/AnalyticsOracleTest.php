@@ -61,6 +61,11 @@ final class AnalyticsOracleTest extends TestCase
         foreach ($expected['cases'] as $case) {
             $actual = (new Analytics($admin, $this->filters($case['filters'])))->all();
             unset($actual['A8']['threshold'], $actual['A8']['min_incidents']);
+            // Row ids are database keys for links; the oracle works from names only.
+            $withoutId = fn (array $rows): array => array_map(fn (array $row): array => array_diff_key($row, ['id' => true]), $rows);
+            $actual['A7']['wards'] = $withoutId($actual['A7']['wards']);
+            $actual['A7']['sub_counties'] = $withoutId($actual['A7']['sub_counties']);
+            $actual['A8']['flagged'] = $withoutId($actual['A8']['flagged']);
 
             foreach ($case['metrics'] as $metric => $values) {
                 $compared += $this->assertMatches($values, $actual[$metric], "{$case['id']}.{$metric}");

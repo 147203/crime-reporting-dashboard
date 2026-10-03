@@ -1,5 +1,5 @@
 <x-layouts.app :title="'Edit '.$user->name">
-    <x-page-header :title="'Edit '.$user->name" subtitle="Changes are recorded in the audit log." />
+    <x-page-header :title="'Edit '.$user->name" :subtitle="$self ? 'Your own account. Changes are recorded in the audit log.' : 'Changes are recorded in the audit log.'" />
     <form method="POST" action="{{ route('admin.users.update', $user) }}" novalidate>
         @csrf
         @method('PUT')

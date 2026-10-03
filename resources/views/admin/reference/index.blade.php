@@ -2,13 +2,15 @@
 <x-layouts.app title="Reference data">
     <x-page-header title="Reference data" subtitle="Lists used by the incident form. Items are renamed or deactivated, never deleted, so old records keep their meaning." />
 
-    <ul class="nav nav-tabs mb-3" role="tablist">
+    <nav aria-label="Reference lists">
+    <ul class="nav nav-tabs mb-3">
         @foreach ($tabs as $key => $label)
-            <li class="nav-item" role="presentation">
+            <li class="nav-item">
                 <a @class(['nav-link', 'active' => $tab === $key]) href="{{ route('admin.reference.index', ['tab' => $key]) }}" @if ($tab === $key) aria-current="page" @endif>{{ $label }}</a>
             </li>
         @endforeach
     </ul>
+    </nav>
 
     @php($rows = match ($tab) { 'categories' => $categories, 'sub-counties' => $subCounties, 'wards' => $wards, 'stations' => $stations })
     @php($hasParent = in_array($tab, ['wards', 'stations'], true))

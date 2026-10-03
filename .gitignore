@@ -21,6 +21,7 @@ auth.json
 
 # Database dumps, exports, and generated reports (may contain sensitive or sample data)
 *.sql
+*.sql.gz
 *.sqlite
 *.dump
 /storage/app/exports/

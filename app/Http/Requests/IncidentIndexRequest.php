@@ -36,6 +36,9 @@ final class IncidentIndexRequest extends FormRequest
             'station_id' => ['nullable', 'integer', Rule::exists('stations', 'id')],
             'status' => ['nullable', Rule::enum(IncidentStatus::class)],
             'duplicate_status' => ['nullable', Rule::enum(DuplicateStatus::class)],
+            'weekday' => ['nullable', 'integer', 'between:1,7'],
+            'band' => ['nullable', 'integer', 'between:0,'.(count(config('analytics.time_bands')) - 1)],
+            'countable' => ['nullable', 'boolean'],
             'sort' => ['nullable', Rule::in(self::SORTABLE)],
             'direction' => ['nullable', Rule::in(['asc', 'desc'])],
         ];

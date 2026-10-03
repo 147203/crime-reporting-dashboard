@@ -14,7 +14,10 @@ use App\Services\ReportService;
 use App\Support\Filters;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use OpenSpout\Common\Entity\Cell\FormulaCell;
+use OpenSpout\Reader\XLSX\Reader;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 final class DashboardAndExportTest extends TestCase
@@ -109,6 +112,60 @@ final class DashboardAndExportTest extends TestCase
         $sorted = $dates;
         sort($sorted);
         $this->assertSame($sorted, $dates);
+    }
+
+    /** TC-AC-07: the Excel workbook has the same records as the CSV, with formulas kept as text. */
+    #[Test]
+    public function the_excel_export_matches_the_csv_and_keeps_formulas_as_text(): void
+    {
+        Incident::query()->firstOrFail()->forceFill(['description' => '=HYPERLINK("http://x","click")'])->save();
+        $admin = User::factory()->admin()->create();
+        $filters = ['from' => '2026-08-01', 'to' => '2026-08-31'];
+
+        $csvLines = array_values(array_filter(explode("\n", $this->actingAs($admin)->get(route('reports.csv', $filters))->streamedContent())));
+        $response = $this->get(route('reports.xlsx', $filters));
+        $response->assertOk()->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $download = $response->baseResponse;
+        $this->assertInstanceOf(BinaryFileResponse::class, $download);
+        $file = $download->getFile()->getPathname();
+        $reader = new Reader;
+        $reader->open($file);
+        $rows = [];
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rows[] = $row;
+            }
+        }
+        $reader->close();
+
+        $this->assertCount(count($csvLines), $rows);
+        $this->assertSame('reference_no', $rows[0]->cells[0]->getValue());
+        $cells = array_merge(...array_map(fn ($r) => $r->cells, $rows));
+        $this->assertSame([], array_filter($cells, fn ($cell) => $cell instanceof FormulaCell));
+        $this->assertSame(1, ReportExport::query()->where('type', 'xlsx')->count());
+    }
+
+    /** TC-AC-07: an officer's workbook holds only their station's records. */
+    #[Test]
+    public function an_officers_excel_export_holds_only_their_station(): void
+    {
+        $officer = User::factory()->officer($this->station)->create();
+
+        $response = $this->actingAs($officer)->get(route('reports.xlsx', ['from' => '2026-08-01', 'to' => '2026-08-31']))->assertOk();
+        $download = $response->baseResponse;
+        $this->assertInstanceOf(BinaryFileResponse::class, $download);
+        $reader = new Reader;
+        $reader->open($download->getFile()->getPathname());
+        $rows = 0;
+        foreach ($reader->getSheetIterator() as $sheet) {
+            foreach ($sheet->getRowIterator() as $row) {
+                $rows++;
+            }
+        }
+        $reader->close();
+
+        $this->assertSame(1 + 4, $rows);
     }
 
     /** TC-SE-16: cells a spreadsheet would run as formulas are neutralised. */

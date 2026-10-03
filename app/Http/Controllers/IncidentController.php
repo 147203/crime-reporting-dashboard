@@ -10,6 +10,7 @@ use App\Http\Requests\IncidentIndexRequest;
 use App\Http\Requests\IncidentRequest;
 use App\Models\Incident;
 use App\Models\User;
+use App\Services\Analytics\Analytics;
 use App\Services\IncidentService;
 use App\Support\Filters;
 use App\Support\ReferenceOptions;
@@ -32,6 +33,13 @@ final class IncidentController extends Controller
             ->apply(Incident::query()->visibleTo($user))
             ->with(['category:id,name', 'ward:id,name', 'station:id,name', 'duplicateOf' => fn ($q) => $q->withTrashed()->select(['id', 'station_id'])])
             ->when($user->role->isStationScoped() ? null : ($validated['duplicate_status'] ?? null), fn ($q, string $status) => $q->where('duplicate_status', $status))
+            // Drill-down from the dashboard: the same counting rule and time slices as the analytics.
+            ->when($validated['countable'] ?? false, fn ($q) => $q->countable())
+            ->when($validated['weekday'] ?? null, fn ($q, int|string $day) => $q->whereRaw(Analytics::WEEKDAY_SQL.' = ?', [(int) $day]))
+            ->when(isset($validated['band']), function ($q) use ($validated): void {
+                $band = config('analytics.time_bands')[(int) $validated['band']];
+                $q->whereRaw(Analytics::HOUR_SQL.' BETWEEN ? AND ?', [(int) $band['from'], (int) $band['to']]);
+            })
             ->when($validated['q'] ?? null, function ($q, string $term): void {
                 $like = '%'.addcslashes($term, '%_\\').'%';
                 $q->where(fn ($inner) => $inner->where('reference_no', 'like', $like)->orWhere('location_description', 'like', $like));
@@ -46,6 +54,11 @@ final class IncidentController extends Controller
             'statuses' => IncidentStatus::cases(),
             'duplicateStatuses' => DuplicateStatus::cases(),
             'stationScoped' => $user->role->isStationScoped(),
+            'drillDown' => array_filter([
+                isset($validated['weekday']) ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][(int) $validated['weekday'] - 1] : null,
+                isset($validated['band']) ? config('analytics.time_bands')[(int) $validated['band']]['label'] : null,
+                ($validated['countable'] ?? false) ? 'counted records only (no confirmed duplicates)' : null,
+            ]),
         ]);
     }
 

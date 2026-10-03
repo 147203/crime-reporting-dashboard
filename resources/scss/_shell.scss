@@ -34,6 +34,25 @@
         --bs-card-bg: var(--app-surface);
         --bs-card-border-color: var(--app-border);
     }
+    // The light-theme outline colours fall below 4.5:1 on the dark surfaces.
+    .btn-outline-secondary {
+        --bs-btn-color: #c3cede;
+        --bs-btn-border-color: #7d8ca3;
+        --bs-btn-hover-bg: #c3cede;
+        --bs-btn-hover-border-color: #c3cede;
+        --bs-btn-hover-color: #0d1422;
+        --bs-btn-active-bg: #c3cede;
+        --bs-btn-active-color: #0d1422;
+    }
+    .btn-outline-primary {
+        --bs-btn-color: #8ab4f8;
+        --bs-btn-border-color: #8ab4f8;
+        --bs-btn-hover-bg: #8ab4f8;
+        --bs-btn-hover-border-color: #8ab4f8;
+        --bs-btn-hover-color: #0d1422;
+        --bs-btn-active-bg: #8ab4f8;
+        --bs-btn-active-color: #0d1422;
+    }
 }
 
 .skip-link {

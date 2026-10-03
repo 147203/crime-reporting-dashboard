@@ -138,8 +138,9 @@
     td.heat-1 { --bs-table-bg: rgba(0, 114, 178, 0.12); }
     td.heat-2 { --bs-table-bg: rgba(0, 114, 178, 0.26); }
     td.heat-3 { --bs-table-bg: rgba(0, 114, 178, 0.42); }
-    td.heat-4 { --bs-table-bg: rgba(0, 114, 178, 0.62); --bs-table-color: #fff; color: #fff; }
-    td.heat-5 { --bs-table-bg: rgba(0, 114, 178, 0.85); --bs-table-color: #fff; color: #fff; }
+    // The two darkest steps are opaque so white text keeps 4.5:1 in both themes.
+    td.heat-4 { --bs-table-bg: #0072b2; --bs-table-color: #fff; color: #fff; }
+    td.heat-5 { --bs-table-bg: #00527f; --bs-table-color: #fff; color: #fff; }
     td.heat-0 { color: var(--app-muted); }
 }
 
@@ -157,13 +158,28 @@
         &.l1 { background: rgba(0, 114, 178, 0.12); }
         &.l2 { background: rgba(0, 114, 178, 0.26); }
         &.l3 { background: rgba(0, 114, 178, 0.42); }
-        &.l4 { background: rgba(0, 114, 178, 0.62); }
-        &.l5 { background: rgba(0, 114, 178, 0.85); }
+        &.l4 { background: #0072b2; }
+        &.l5 { background: #00527f; }
     }
 }
 
 .hotspot-row {
     background: var(--bs-danger-bg-subtle) !important;
+    a {
+        color: var(--bs-danger-text-emphasis);
+        text-decoration: underline;
+    }
+}
+
+// Bootstrap's pink code colour falls below 4.5:1 on tinted backgrounds.
+code {
+    color: var(--bs-emphasis-color);
+}
+
+// Scrollable tables are focusable so keyboard users can scroll them.
+.table-responsive:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
 }
 
 .detail-list {

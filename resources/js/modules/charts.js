@@ -69,6 +69,8 @@ function build(canvas, spec) {
     const categoryAxis = { stacked: spec.stacked === true, ticks: { color: text, autoSkip: !horizontal }, grid: { display: false } };
     const scales = isCircular ? {} : horizontal ? { x: valueAxis, y: categoryAxis } : { x: categoryAxis, y: valueAxis };
 
+    const links = Array.isArray(spec.links) ? spec.links : [];
+
     return new Chart(canvas, {
         type: isCircular ? 'doughnut' : 'bar',
         data: { labels: spec.labels, datasets },
@@ -83,6 +85,16 @@ function build(canvas, spec) {
             },
             scales,
             cutout: isCircular ? '62%' : undefined,
+            // Clicking a bar, slice or point opens the incident list behind it (drill-down).
+            onClick: (_event, elements) => {
+                const index = elements[0]?.index;
+                if (index !== undefined && links[index]) {
+                    window.location.assign(links[index]);
+                }
+            },
+            onHover: (event, elements) => {
+                event.native.target.style.cursor = elements.length && links.length ? 'pointer' : 'default';
+            },
         },
     });
 }
