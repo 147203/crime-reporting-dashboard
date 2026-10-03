@@ -46,7 +46,7 @@ The system follows the three-layer design in my proposal (presentation, applicat
 | 4. Prototype 2: data quality | Validation rules V1 to V8, a check that refuses phone and ID numbers in free text, duplicate detection with a review screen, CSV import with a check-first step, data-quality summary, sample-data generator that plants known errors, duplicates and hotspots | 252 tests; accuracy measured against the planted errors | Done |
 | 5. Prototype 3: analytics and reports | Analytics A1 to A10 computed in the database, dashboard with charts and matching tables, statistical hotspot table, sub-county by month grid, CSV and PDF exports | 272 tests; results compared with an independent calculation | Done |
 | 6. Hardening and evaluation (automated part) | Security fixes from an independent review, a database index that made the dashboard five times faster, browser tests of the eight usability tasks on laptop and phone screens, evaluation at 1,000, 20,000 and 100,000 records, usability session kit | 284 tests and 16 browser tests | Done |
-| 6b. Development completion | Closed gaps I found when using the system: an administrator can no longer change their own password, role or status from the user screen, the last administrator cannot be removed, new users get a generated temporary password shown once, locked accounts can be unlocked, and password fields have a show or hide button. Added the remaining items from my proposal: Excel export, charts that open the matching incidents when clicked, backup and restore, and an accessibility check. Applied the stricter duplicate rule (house or plot numbers must match) | 310 tests and 20 browser tests; backup restored into a separate database and compared table by table; accessibility scan of 13 pages in both themes on laptop and phone screens | Done |
+| 6b. Development completion | Closed gaps I found when using the system: an administrator can no longer change their own password, role or status from the user screen, the last administrator cannot be removed, new users get a generated temporary password shown once, locked accounts can be unlocked, and password fields have a show or hide button. Added the remaining items from my proposal: Excel export, charts that open the matching incidents when clicked, backup and restore, and an accessibility check. Applied the stricter duplicate rule (house or plot numbers must match) | 310 tests and 28 browser tests; backup restored into a separate database and compared table by table; accessibility scan of 13 pages in both themes on laptop and phone screens | Done |
 
 # 5. Key results
 
@@ -56,7 +56,7 @@ All results come from synthetic sample data, clearly labelled as such in the sys
 
 | Measure | Result | Target |
 |---|---|---|
-| Automated tests | 310 tests and 20 browser tests, all passing | All pass |
+| Automated tests | 310 tests and 28 browser tests, all passing | All pass |
 | Accuracy of analytics A1 to A10 | 5,387 of 5,387 values equal to an independent calculation written separately from the system | 100 percent match |
 | Access control | Every page tested for four kinds of user; an officer cannot open another station's records | All correct |
 | Bad records rejected | 100 percent for every rule at 1,000, 20,000 and 100,000 records; no valid record rejected | At least 95 percent |
@@ -68,7 +68,7 @@ All results come from synthetic sample data, clearly labelled as such in the sys
 | Accessibility (WCAG 2.1 AA, automated) | No serious or critical issue on any page, light and dark themes, laptop and phone width, after fixing the contrast and keyboard problems the first scan found | None |
 | Backup and restore | Restored copy matched the original in every table (the audit log differs by the backup's own entry) | Tested once |
 
-In the first evaluation duplicate precision fell to 0.775 at 100,000 records, because different incidents of the same type in the same ward within two hours often share a landmark in the sample data. I decided to also require any house or plot numbers in the two locations to match. Precision is now 0.998, but recall falls just below the target (0.890 and 0.883 at the larger sizes), because some planted copies retype the number. I have kept the target unchanged and report both results as measured.
+In the first evaluation duplicate precision fell to 0.775 at 100,000 records, because different incidents of the same type in the same ward within two hours often share a landmark in the sample data. I decided to also require any house or plot numbers in the two locations to match. Precision is now 0.998, but recall falls just below the target (0.890 and 0.883 at the larger sizes). I traced every missed pair: the system finds every pair the rule allows, and the misses have two causes in the way my test data retypes copies. About 8 percent of copies add or drop a whole word in a short location (for example "near the church 121" typed as "near church 121"), which falls just under the 0.8 similarity threshold; this was the case before the change too. About 3 to 4 percent have a typing error in the house number, which the new rule correctly treats as a different place. I have kept the target unchanged, reported both results as measured, and recorded an option (ignoring filler words such as "the") to test on new data if you advise it.
 
 # 6. What is yet to be done
 
@@ -99,7 +99,7 @@ In the first evaluation duplicate precision fell to 0.775 at 100,000 records, be
 - **Fieldwork:** whether ethics clearance or a research permit is needed, and which participant groups are acceptable.
 - **AI-use disclosure:** what the university requires.
 - **Demonstration and final submission dates.**
-- **Duplicate rule:** whether the small fall in recall (Section 5) is acceptable as a reported limitation.
+- **Duplicate rule:** whether the shortfall in recall (Section 5) is acceptable as a reported limitation, or whether I should test the filler-word option on new data.
 
 # 7. Next steps
 

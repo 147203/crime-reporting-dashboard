@@ -63,7 +63,7 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 |---|---|
 | FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`) |
 | FR-02 Role and station access | TC-SE-01a, 01b (`Security/RouteAccessMatrixTest`, every route x 4 actors), TC-SE-09 (`Security/StationScopeTest`), TC-FT-13, 14 (`Schema/IncidentScopeTest`) |
-| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19, 20 (`Admin/AccountManagementTest`: generated password shown once, no self reset, last administrator kept, unlock, eye toggle) |
+| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19, 20 (`Admin/AccountManagementTest`: generated password shown once, no self reset, last administrator kept, unlock, eye toggle), TC-BB-11, 12 (`tests/e2e/account-and-drilldown.spec.ts`) |
 | FR-04 Reference data | TC-FT-12 (`Schema/SchemaTest`), TC-FT-29 (`Admin/AdministrationTest`) |
 | FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`) |
 | FR-06 Records: filter, status, soft delete | TC-FT-03 to 05 (`Incidents/IncidentWorkflowTest`), TC-UT-12 (`Unit/IncidentStatusTest`) |
@@ -75,8 +75,8 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 | FR-07 Data quality (PII guard, duplicates, review) | TC-UT-13, 15, 18 (D-48 numbers), TC-FT-43, 48, 49, TC-AC-02, 03 (`Quality/*`) |
 | FR-08 CSV import | TC-FT-40 to 42, 45 to 47, 53, TC-SE-17, 18 (`Quality/ImportAndReviewTest`, `Quality/ReviewRegressionPhase4Test`) |
 | FR-09 Analytics A1 to A10 | TC-AC-01 (`Quality/AnalyticsOracleTest`, exact match with the independent oracle) |
-| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-FT-58 (`Quality/DrillDownTest`, every drill-down list total equals its chart value, for an administrator and a station officer, and with two wards of the same name), TC-BB-06 |
-| FR-11 Reports and exports | TC-AC-05, TC-AC-07 (Excel rows equal CSV rows, text cells only), TC-FT-51, TC-SE-16, TC-BB-07 |
+| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-FT-58 (`Quality/DrillDownTest`, every drill-down list total equals its chart value, for an administrator and a station officer, and with two wards of the same name), TC-BB-06, TC-BB-13 |
+| FR-11 Reports and exports | TC-AC-05, TC-AC-07 (Excel rows equal CSV rows, text cells only), TC-FT-51, TC-SE-16, TC-BB-07, TC-BB-14 |
 | FR-13 Data-quality summary | TC-FT-44 |
 | FR-14 Generator determinism | TC-AC-04 (pinned SHA-256) |
 | NFR-03 Usability | TC-US-01 to 08 (real participants, author; kit in `docs/usability/USABILITY_KIT.md`); TC-BB-01 to 09 automate the same tasks (`tests/e2e/usability-tasks.spec.ts`) |

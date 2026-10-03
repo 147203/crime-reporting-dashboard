@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\ImportBatch;
 use App\Models\Incident;
+use App\Services\DuplicateDetector;
 use Illuminate\Console\Command;
 
 /**
@@ -55,14 +56,17 @@ final class SampleEvaluateCommand extends Command
             $flagged[] = $rowOfId[$incident->id].'>'.($rowOfId[$incident->duplicate_of_id] ?? 'outside');
         }
         $true = [];
+        $truePairs = [];
         foreach ($this->csv("{$dir}/truth/duplicates.csv") as $pair) {
             if ($pair['kind'] === 'true') {
                 $true[] = $pair['row'].'>'.$pair['original_row'];
                 $true[] = $pair['original_row'].'>'.$pair['row'];
+                $truePairs[] = [(int) $pair['row'], (int) $pair['original_row']];
             }
         }
         $hits = count(array_intersect($flagged, $true));
         $pairs = count($true) / 2;
+        $misses = $this->missReasons($dir, $truePairs, array_flip($flagged));
 
         $this->table(['Measure', 'Result'], [
             ['Rows in file', number_format((int) $manifest['rows'])],
@@ -72,9 +76,41 @@ final class SampleEvaluateCommand extends Command
             ['Planted true pairs', number_format($pairs)],
             ['Duplicate precision', $flagged === [] ? 'n/a' : sprintf('%.3f', $hits / count($flagged))],
             ['Duplicate recall', sprintf('%.3f', $hits / max(1, $pairs))],
+            ...array_map(fn (string $reason, int $count): array => ["Missed pairs: {$reason}", number_format($count)], array_keys($misses), $misses),
         ]);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Why each planted pair that was not flagged was missed, judged with the detector's own normalisation, similarity
+     * and number rule (V8, D-48), so the recall figure can be explained rather than only reported.
+     *
+     * @param  list<array{0: int, 1: int}>  $pairs
+     * @param  array<string, int>  $flagged
+     * @return array<string, int>
+     */
+    private function missReasons(string $dir, array $pairs, array $flagged): array
+    {
+        $locations = array_column($this->csv("{$dir}/incidents.csv"), 'location_description');
+        $threshold = (float) config('analytics.duplicates.similarity');
+        $reasons = ['location similarity below the threshold' => 0, 'numbers in the location differ' => 0, 'other' => 0];
+
+        foreach ($pairs as [$row, $original]) {
+            if (isset($flagged["{$row}>{$original}"]) || isset($flagged["{$original}>{$row}"])) {
+                continue;
+            }
+            $a = DuplicateDetector::normalise($locations[$row - 1] ?? '');
+            $b = DuplicateDetector::normalise($locations[$original - 1] ?? '');
+            $reason = match (true) {
+                DuplicateDetector::similarity($a, $b) < $threshold => 'location similarity below the threshold',
+                DuplicateDetector::numbers($a) !== DuplicateDetector::numbers($b) => 'numbers in the location differ',
+                default => 'other',
+            };
+            $reasons[$reason]++;
+        }
+
+        return $reasons;
     }
 
     /**
