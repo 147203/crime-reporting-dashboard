@@ -110,6 +110,31 @@ final class PreflightCommandTest extends TestCase
         $this->assertStringContainsString('npm run build', Artisan::output());
     }
 
+    /** TC-FT-63: on a new machine the missing application database is reported as created by migrate, not a failure. */
+    #[Test]
+    public function a_missing_application_database_does_not_fail_preflight(): void
+    {
+        $this->useValidSecrets();
+        $connection = \Mockery::mock(Connection::class);
+        $calls = 0;
+        $connection->shouldReceive('scalar')->with('select version()')->twice()->andReturnUsing(function () use (&$calls): string {
+            if ($calls++ === 0) {
+                throw new \RuntimeException("SQLSTATE[HY000] [1049] Unknown database 'crime_dashboard'");
+            }
+
+            return '10.4.32-MariaDB';
+        });
+        DB::shouldReceive('connection')->with('mysql')->andReturn($connection);
+        DB::shouldReceive('purge')->with('mysql')->twice();
+
+        $exitCode = Artisan::call('app:preflight');
+        $output = Artisan::output();
+
+        $this->assertSame(0, $exitCode, $output);
+        $this->assertStringContainsString('php artisan migrate will create it', $output);
+        $this->assertSame('crime_dashboard', config('database.connections.mysql.database'));
+    }
+
     /** TC-FT-60: connection problems are explained with the fix, including the Ubuntu MySQL port clash. */
     #[Test]
     public function connection_errors_are_explained_with_a_fix(): void

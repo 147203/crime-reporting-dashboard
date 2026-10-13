@@ -32,13 +32,13 @@ Final-year project, BBIT, Strathmore University. A responsive web application wh
 
 | Role              | Can do                                                                                                                                                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Administrator     | Manage users (generated or typed temporary passwords, unlock, deactivate) and reference data (categories, sub-counties, wards, stations), import CSV, review duplicates, view the audit log and data-quality summary, see all dashboards, export reports, delete incidents |
+| Administrator     | Manage users (create, view activity, edit, generated or typed temporary passwords, unlock, deactivate, delete accounts never used) and reference data (categories, sub-counties, wards, stations), import CSV, review duplicates, view the audit log and data-quality summary, see all dashboards, export reports, delete incidents |
 | Reporting Officer | Report incidents for their own station, edit their own records while still "Reported", change status of their station's incidents, see their station's records and dashboard, export their station's data     |
 | Analyst           | County-wide dashboards and records (read-only), review duplicates, data-quality summary, export reports                                                                                                       |
 
 | Module                     | Features                                                                                                                                                                                                                            |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sign-in and access control | Login with lockout after 5 wrong passwords, forced password change at first login, no self-registration, three roles, officers limited to their own station, audit log of every important action; a show or hide (eye) button on every password field; accounts are deactivated, never deleted, and the last active administrator cannot be removed |
+| Sign-in and access control | Login with lockout after 5 wrong passwords, forced password change at first login, no self-registration, three roles, officers limited to their own station, audit log of every important action; a show or hide (eye) button on every password field; accounts with a history are deactivated, never deleted (only never-used accounts can be deleted), and the last active administrator cannot be removed |
 | Incidents                  | Structured form with validation, list with search, filters, sorting and pagination, detail page, status workflow (Reported, Under investigation, Closed), soft delete                                                               |
 | Data quality               | Validation rules V1 to V8, a guard that refuses phone and national ID numbers in free text, duplicate detection with a review queue, bulk CSV import with a dry run and per-row error report, data-quality summary                  |
 | Analytics                  | A1 to A10: totals, category mix, monthly trend with moving average, period comparison, day-of-week and time-of-day patterns, ward and sub-county ranking, statistical hotspot flag, sub-county by month grid, status and timeliness |
@@ -104,13 +104,9 @@ Pick your system below, install what is missing, then continue with [section 4](
    ```
 
 3. **Composer**: run `Composer-Setup.exe` from https://getcomposer.org/download/. When it asks for the PHP to use, choose `C:\php\php.exe`. Open a new PowerShell window and check `composer --version`.
-4. **XAMPP**: download XAMPP for Windows from https://www.apachefriends.org and install it to `C:\xampp` (the default; avoid `C:\Program Files`). Only the **MySQL** component is needed (it is MariaDB). Open the **XAMPP Control Panel** (`C:\xampp\xampp-control.exe`) and press **Start** next to **MySQL**; it turns green. Check:
+4. **XAMPP**: download XAMPP for Windows from https://www.apachefriends.org and install it to `C:\xampp` (the default; avoid `C:\Program Files`). Only the **MySQL** component is needed (it is MariaDB). Open the **XAMPP Control Panel** (`C:\xampp\xampp-control.exe`) and press **Start** next to **MySQL**; it turns green. You do not create any database by hand; `php artisan app:preflight` later checks that the server answering is MariaDB.
 
-   ```powershell
-   & C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect 10.4.x-MariaDB
-   ```
-
-   If this prints an access-denied error or a version without "MariaDB", another MySQL server (often the `MySQL80` Windows service) holds port 3306; see [Troubleshooting](#11-troubleshooting).
+   If MySQL will not start, or preflight reports another server, another MySQL server (often the `MySQL80` Windows service) holds port 3306; see [Troubleshooting](#11-troubleshooting).
 5. **Node.js**: install the LTS version from https://nodejs.org (Windows installer, defaults). Check `node -v` and `npm -v` in a new window. If PowerShell says *running scripts is disabled on this system*, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 6. **Git**: install from https://git-scm.com/download/win (defaults). Check `git --version`.
 
@@ -128,7 +124,6 @@ Install XAMPP for Linux from https://www.apachefriends.org (it installs to `/opt
 
 ```bash
 sudo /opt/lampp/lampp startmysql
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect 10.4.x-MariaDB
 ```
 
 If Ubuntu's own MySQL server is installed, it starts at boot and takes port 3306 first (error 1698). Turn it off for good: `sudo systemctl stop mysql && sudo systemctl disable mysql`, then start XAMPP's MariaDB again.
@@ -145,7 +140,6 @@ Install XAMPP for macOS (the native installer, not the "-VM" one) from https://w
 
 ```bash
 sudo /Applications/XAMPP/xamppfiles/xampp startmysql
-/Applications/XAMPP/xamppfiles/bin/mysql -h 127.0.0.1 -P 3306 -u root -N -e "select version()"   # expect x.x.x-MariaDB
 ```
 
 If Homebrew's MySQL is running it holds port 3306: `brew services stop mysql`.
@@ -158,25 +152,15 @@ If Homebrew's MySQL is running it holds port 3306: `brew services stop mysql`.
 
 Every command below runs from the project folder unless it says otherwise. Where Windows differs, the PowerShell line is shown after the bash line.
 
-### 4.1 Create the databases
+### 4.1 Start the database
 
-Make sure MariaDB is running (XAMPP Control Panel on Windows, `startmysql` on Linux and macOS), then create the three schemas:
+Make sure MariaDB is running: XAMPP Control Panel on Windows, `startmysql` on Linux and macOS (section 3). **No database is created by hand.** Laravel creates each one the first time it is needed:
 
-```bash
-# Linux (macOS: use /Applications/XAMPP/xamppfiles/bin/mysql)
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-```powershell
-# Windows
-& C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-| Schema | Used by | Note |
-| --- | --- | --- |
-| `crime_dashboard` | The application | Your working data |
-| `crime_dashboard_test` | `php artisan test` | Wiped on every test run; the name must end in `_test` |
-| `crime_dashboard_e2e` | `npx playwright test` | Wiped and rebuilt on every browser-test run; the name must end in `_e2e` |
+| Database | Created by | Used by | Note |
+| --- | --- | --- | --- |
+| `crime_dashboard` | `php artisan migrate`, on its first run | The application | Your working data |
+| `crime_dashboard_test` | `php artisan test`, on its first run | The test suite | Wiped on every test run; the name must end in `_test` |
+| `crime_dashboard_e2e` | `npx playwright test`, on its first run | The browser tests | Wiped and rebuilt on every run; the name must end in `_e2e` |
 
 ### 4.2 Get the code
 
@@ -235,9 +219,11 @@ php artisan app:preflight            # must end with "Preflight passed."
 ### 4.5 Create the tables, reference data and first administrator
 
 ```bash
-php artisan migrate                  # never add --force
+php artisan migrate                  # never add --force; answer "yes" when it offers to create the database
 php artisan db:seed                  # 17 sub-counties, 85 wards, sample stations, categories, and the administrator from .env
 ```
+
+On the first run `migrate` says *The database 'crime_dashboard' does not exist ... Would you like to create it?*; answer **yes** and it creates the database with the project's character set, then the tables.
 
 Keep `ADMIN_INITIAL_PASSWORD` in `.env`, because `app:preflight` checks it. It stops being a working password once the administrator chooses their own at first login, which the system forces.
 
@@ -419,7 +405,7 @@ Run `php artisan app:preflight` first: it names most problems and the fix for yo
 | XAMPP Control Panel: *Port 3306 in use* / MySQL will not start (Windows) | Same as above, or a second XAMPP | Find the owner: `netstat -ano \| findstr :3306`, then `tasklist /FI "PID eq <number>"`; stop that program or service |
 | `app:preflight` says the server is not XAMPP's MariaDB | A MySQL server answered on port 3306 | As the two rows above for your system |
 | `SQLSTATE[HY000] [2002] Connection refused` / *No connection could be made* | The database is not running (or still starting) | Windows: Start MySQL in the XAMPP Control Panel. Linux: `sudo /opt/lampp/lampp startmysql`, wait a few seconds |
-| `[1049] Unknown database 'crime_dashboard'` | The schemas were not created | [Section 4.1](#41-create-the-databases) |
+| `[1049] Unknown database 'crime_dashboard'` | The database has not been created yet | `php artisan migrate`, answer **yes** to create it |
 | `app:preflight` names `DB_USERNAME ... not root` or `DB_PASSWORD is not set` | The local shortcut is off | In `.env`: `DB_ALLOW_LOCAL_SHORTCUT=true`, `APP_ENV=local`, `APP_URL=http://127.0.0.1:8000` |
 
 **PHP, Composer and Node**
@@ -446,7 +432,7 @@ Run `php artisan app:preflight` first: it names most problems and the fix for yo
 | Login says the account is locked | 5 wrong passwords | Wait 15 minutes, or an administrator presses **Unlock** under Users |
 | `db:backup` says mysqldump was not found | XAMPP is not in its default folder (`/opt/lampp`, `C:\xampp`, `/Applications/XAMPP`) | Set `DB_DUMP_BINARY` and `DB_CLIENT_BINARY` in `.env` to the full paths |
 | `sample:generate --size=100000` stops with *Allowed memory size exhausted* | PHP memory limit (128 MB on Windows by default) | Set `memory_limit = 512M` in `php.ini` |
-| Tests refuse to run ("must use the mysql_testing connection and a *_test database") | Test schema missing or misnamed | Create `crime_dashboard_test` ([section 4.1](#41-create-the-databases)) and keep `DB_TEST_DATABASE` ending in `_test` |
+| Tests refuse to run ("must use the mysql_testing connection and a *_test database") | Test database misnamed | Keep `DB_TEST_DATABASE` ending in `_test` and different from `DB_DATABASE` (the suite creates it on first run) |
 | The dashboard's last month looks low | The default period ends today, so the current month is incomplete (the chart caption says so) | Use a preset ending on a complete month, or read the table view |
 
 ---
@@ -455,6 +441,7 @@ Run `php artisan app:preflight` first: it names most problems and the fix for yo
 
 | File                                                                        | Purpose                                                                                            |
 | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [docs/11_HOW_IT_WORKS.md](docs/11_HOW_IT_WORKS.md) | **Start here:** every setup command and what it does, where the data comes from, what happens on each screen |
 | [docs/reports/PROGRESS_REPORT.md](docs/reports/PROGRESS_REPORT.md)           | Supervisor progress report, updated at the end of every phase (Word copy:`Progress_Report.docx`) |
 | [docs/02_REQUIREMENTS_AND_SCOPE.md](docs/02_REQUIREMENTS_AND_SCOPE.md)       | Roles and access matrix, requirements, analytics definitions A1 to A10, validation rules           |
 | [docs/03_ARCHITECTURE_AND_DATA.md](docs/03_ARCHITECTURE_AND_DATA.md)         | Layers, schema, security architecture                                                              |

@@ -51,7 +51,17 @@ final class PreflightCommand extends Command
         try {
             $version = (string) DB::connection('mysql')->scalar('select version()');
         } catch (Throwable $exception) {
-            return [self::explainConnectionError($exception->getMessage())];
+            if (! str_contains($exception->getMessage(), '[1049]')) {
+                return [self::explainConnectionError($exception->getMessage())];
+            }
+
+            // A new machine has no application database yet; php artisan migrate creates it. The server is still
+            // checked, connected without a database.
+            $this->warn('The database '.config('database.connections.mysql.database').' does not exist yet. php artisan migrate will create it.');
+            $version = $this->serverVersionWithoutDatabase();
+            if ($version === null) {
+                return [self::explainConnectionError($exception->getMessage())];
+            }
         }
 
         if (! str_contains(strtolower($version), 'mariadb')) {
@@ -59,6 +69,22 @@ final class PreflightCommand extends Command
         }
 
         return [];
+    }
+
+    private function serverVersionWithoutDatabase(): ?string
+    {
+        $database = config('database.connections.mysql.database');
+        config(['database.connections.mysql.database' => null]);
+        DB::purge('mysql');
+
+        try {
+            return (string) DB::connection('mysql')->scalar('select version()');
+        } catch (Throwable) {
+            return null;
+        } finally {
+            config(['database.connections.mysql.database' => $database]);
+            DB::purge('mysql');
+        }
     }
 
     /**
@@ -74,7 +100,7 @@ final class PreflightCommand extends Command
         return match (true) {
             str_contains($message, '[1698]'), str_contains($message, '[1045]') => 'The database refused the account in DB_USERNAME (error '.(str_contains($message, '[1698]') ? '1698' : '1045').'). Usually another MySQL server is answering on port 3306 instead of XAMPP\'s MariaDB. '.self::fix('other-server', $os),
             str_contains($message, '[2002]') => 'The database is not running (connection refused). '.self::fix('start', $os),
-            str_contains($message, '[1049]') => 'The database named in DB_DATABASE does not exist. Create it (README, section 4, "Create the databases").',
+            str_contains($message, '[1049]') => 'The database named in DB_DATABASE does not exist. Run php artisan migrate, which creates it.',
             default => 'Cannot connect to the database: '.$message,
         };
     }

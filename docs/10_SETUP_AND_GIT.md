@@ -10,7 +10,7 @@ The full step-by-step guide for **Windows 10/11, Ubuntu/Debian and macOS** (inst
 |---|---|---|---|---|
 | PHP | 8.4 (D-22) with curl, fileinfo, mbstring, openssl, pdo_mysql, zip | Zip from windows.php.net in `C:\php` (XAMPP's own PHP 8.2 is too old), plus the Visual C++ Redistributable | `php8.4-*` packages | `php -v`, `php -m` |
 | Composer | 2.x | Composer-Setup.exe | getcomposer.org | `composer --version` |
-| MariaDB | XAMPP's MariaDB 10.4 on 127.0.0.1:3306, root with a blank password (D-04, D-25) | `C:\xampp`, started from the XAMPP Control Panel | `/opt/lampp`, `sudo /opt/lampp/lampp startmysql` | `select version()` ends in `-MariaDB` |
+| MariaDB | XAMPP's MariaDB 10.4 on 127.0.0.1:3306, root with a blank password (D-04, D-25) | `C:\xampp`, started from the XAMPP Control Panel | `/opt/lampp`, `sudo /opt/lampp/lampp startmysql` | `php artisan app:preflight` |
 | Node and npm | 20.19+ or 22.12+ | nodejs.org installer | nodejs.org or distribution | `node -v` |
 | Git | any recent | git-scm.com | `apt install git` | `git --version` |
 
@@ -18,17 +18,15 @@ A second MySQL server on port 3306 is the most common failure: Ubuntu's `mysql` 
 
 ## 2. Databases (three schemas on XAMPP MariaDB)
 
-```bash
-SQL="CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "$SQL"                 # Linux
-```
+No database is created by hand. Laravel creates each one on first use:
 
-```powershell
-$SQL = "CREATE DATABASE IF NOT EXISTS crime_dashboard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-& C:\xampp\mysql\bin\mysql.exe -h 127.0.0.1 -P 3306 -u root -e $SQL     # Windows
-```
+| Database | Created by | Used by | Note |
+| --- | --- | --- | --- |
+| `crime_dashboard` | `php artisan migrate`, on its first run | The application | Your working data |
+| `crime_dashboard_test` | `php artisan test`, on its first run | The test suite | Wiped on every test run; the name must end in `_test` |
+| `crime_dashboard_e2e` | `npx playwright test`, on its first run | The browser tests | Wiped and rebuilt on every run; the name must end in `_e2e` |
 
-The test schema must end in `_test` and the browser-test schema in `_e2e`; both are wiped on every run.
+`php artisan app:preflight` passes before the application database exists and says that `migrate` will create it. Each table is created with utf8mb4 and the `utf8mb4_unicode_ci` collation from `config/database.php`.
 
 Recommended (R-18): XAMPP's MariaDB listens on every network interface. Add `bind-address=127.0.0.1` under `[mysqld]` in `/opt/lampp/etc/my.cnf` (Windows: `C:\xampp\mysql\bin\my.ini`), then restart MySQL.
 
@@ -40,7 +38,7 @@ cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .en
                                 # then edit .env yourself: ADMIN_NAME, ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
 php artisan key:generate
 php artisan app:preflight       # must print "Preflight passed."
-php artisan migrate             # never with --force
+php artisan migrate             # never with --force; answer yes to create the database
 php artisan db:seed             # reference data and the first administrator from ADMIN_* in .env
 php artisan sample:generate --size=20000 --load   # optional demo data (run once)
 php artisan serve               # http://127.0.0.1:8000
@@ -54,7 +52,6 @@ php artisan test
 Playwright runs against a separate schema, `crime_dashboard_e2e`, which it wipes and rebuilds on every run (`php artisan e2e:prepare` refuses any database whose name does not end in `_e2e`). Test accounts get a random password generated for each run; nothing is stored.
 
 ```bash
-/opt/lampp/bin/mysql -h 127.0.0.1 -P 3306 -u root -e "CREATE DATABASE IF NOT EXISTS crime_dashboard_e2e CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 npx playwright install chromium    # once
 npm run build
 npx playwright test                # desktop (1366 px) and mobile (360 px) projects
