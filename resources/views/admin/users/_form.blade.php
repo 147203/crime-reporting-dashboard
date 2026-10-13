@@ -19,7 +19,7 @@
                         <x-form.select name="station_id" label="Station" :options="$stations" :value="$user->station_id" placeholder="None" help="Required for Reporting Officers only." />
                     </div>
                 </div>
-                <x-form.checkbox name="is_active" label="Account active" :checked="$user->exists ? $user->is_active : true" help="Inactive users cannot sign in. Accounts are deactivated, never deleted, so records keep who created them." />
+                <x-form.checkbox name="is_active" label="Account active" :checked="$user->exists ? $user->is_active : true" help="Inactive users cannot sign in. Deactivate an account that has a history; only an account never used can be deleted (from its detail page)." />
             @endif
         </x-card>
     </div>

@@ -10,7 +10,7 @@
             <div class="small mt-2">Give it to the user in person. It will not be shown again; they must choose their own password at first sign-in.</div>
         </div>
     @endif
-    <x-page-header title="Users" subtitle="Accounts are created here; there is no self-registration. Users are deactivated, never deleted, so records keep who created them.">
+    <x-page-header title="Users" subtitle="Accounts are created here; there is no self-registration. An account with a history is deactivated, never deleted, so records keep who did them; an account never used can be deleted.">
         <x-slot:actions><a href="{{ route('admin.users.create') }}" class="btn btn-primary"><i class="bi bi-person-plus" aria-hidden="true"></i> New user</a></x-slot:actions>
     </x-page-header>
     <x-card :flush="true">
@@ -21,7 +21,7 @@
                 <tbody>
                     @foreach ($users as $user)
                         <tr>
-                            <td class="ps-3"><div class="fw-semibold">{{ $user->name }}</div><div class="small text-body-secondary">{{ $user->email }}</div></td>
+                            <td class="ps-3"><a class="fw-semibold" href="{{ route('admin.users.show', $user) }}">{{ $user->name }}</a><div class="small text-body-secondary">{{ $user->email }}</div></td>
                             <td>{{ $user->role->label() }}</td>
                             <td class="d-none d-md-table-cell">{{ $user->station->name ?? '' }}</td>
                             <td>
@@ -38,6 +38,7 @@
                                         <button type="submit" class="btn btn-sm btn-outline-warning">Unlock</button>
                                     </form>
                                 @endif
+                                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.users.show', $user) }}">View<span class="visually-hidden"> {{ $user->name }}</span></a>
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.users.edit', $user) }}">{{ $user->is(auth()->user()) ? 'Edit (you)' : 'Edit' }}</a>
                             </td>
                         </tr>

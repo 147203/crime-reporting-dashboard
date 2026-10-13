@@ -7,11 +7,16 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserRequest;
+use App\Models\AuditLog;
+use App\Models\ImportBatch;
+use App\Models\Incident;
+use App\Models\ReportExport;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\SessionTerminator;
 use App\Support\PasswordGenerator;
 use App\Support\ReferenceOptions;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -61,6 +66,20 @@ final class UserController extends Controller
             ->with('status', "User {$user->name} was created. They must choose a new password at first login.");
     }
 
+    public function show(Request $request, User $user): View
+    {
+        $user->load('station:id,name');
+        $activity = $this->activity($user);
+
+        return view('admin.users.show', [
+            'user' => $user,
+            'activity' => $activity,
+            'recent' => AuditLog::query()->where('user_id', $user->id)->latest('created_at')->latest('id')->limit(10)->get(),
+            'self' => $user->is($request->user()),
+            'deletable' => array_sum($activity) === 0,
+        ]);
+    }
+
     public function edit(Request $request, User $user): View
     {
         return view('admin.users.edit', [
@@ -101,6 +120,39 @@ final class UserController extends Controller
         return $this->withPassword(redirect()->route('admin.users.index'), $user, $generated ? $password : null)->with('status', "User {$user->name} was updated.");
     }
 
+    /**
+     * Only an account that has never acted can be deleted (D-52): anything it did is referenced by incidents, imports,
+     * exports or the audit log, and those references must keep naming who did it (D-33). Used accounts are deactivated.
+     */
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        if ($user->is($request->user())) {
+            throw ValidationException::withMessages(['user' => 'You cannot delete your own account.']);
+        }
+
+        try {
+            DB::transaction(function () use ($user): void {
+                $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+                if (array_sum($this->activity($locked)) > 0) {
+                    throw ValidationException::withMessages(['user' => "{$locked->name} has a history in the system, so the account cannot be deleted. Deactivate it instead."]);
+                }
+                $this->assertNotLastActiveAdministrator($locked, 'user');
+
+                $this->sessions->endOtherSessions($locked);
+                $this->audit->record('user.deleted', $locked, ['role' => $locked->role->value]);
+                $locked->delete();
+            });
+        } catch (QueryException $exception) {
+            // The account acted between the check and the delete; the restricting foreign keys refused it.
+            if (($exception->errorInfo[1] ?? null) !== 1451) {
+                throw $exception;
+            }
+            throw ValidationException::withMessages(['user' => "{$user->name} has a history in the system, so the account cannot be deleted. Deactivate it instead."]);
+        }
+
+        return redirect()->route('admin.users.index')->with('status', "User {$user->name} was deleted.");
+    }
+
     public function unlock(User $user): RedirectResponse
     {
         $user->forceFill(['failed_attempts' => 0, 'locked_until' => null])->save();
@@ -137,10 +189,31 @@ final class UserController extends Controller
             return;
         }
 
+        $this->assertNotLastActiveAdministrator($user, 'role');
+    }
+
+    private function assertNotLastActiveAdministrator(User $user, string $field): void
+    {
         $activeAdmins = User::query()->where('role', Role::Admin->value)->where('is_active', true)->lockForUpdate()->pluck('id');
         if ($activeAdmins->contains($user->id) && $activeAdmins->count() === 1) {
-            throw ValidationException::withMessages(['role' => 'This is the last active administrator, so it cannot be deactivated or given another role.']);
+            throw ValidationException::withMessages([$field => 'This is the last active administrator, so it cannot be deactivated, deleted or given another role.']);
         }
+    }
+
+    /**
+     * Everything that records this account as the one who did something.
+     *
+     * @return array<string, int>
+     */
+    private function activity(User $user): array
+    {
+        return [
+            'Incidents recorded' => Incident::withTrashed()->where('created_by', $user->id)->count(),
+            'Incidents last updated' => Incident::withTrashed()->where('updated_by', $user->id)->count(),
+            'CSV imports' => ImportBatch::query()->where('user_id', $user->id)->count(),
+            'Report exports' => ReportExport::query()->where('user_id', $user->id)->count(),
+            'Audit log entries' => AuditLog::query()->where('user_id', $user->id)->count(),
+        ];
     }
 
     private function applyAdminFields(User $user, UserRequest $request): void

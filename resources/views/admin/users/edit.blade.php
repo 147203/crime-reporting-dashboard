@@ -4,6 +4,6 @@
         @csrf
         @method('PUT')
         @include('admin.users._form')
-        <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Save changes</button><a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Cancel</a></div>
+        <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" type="submit">Save changes</button><a href="{{ route('admin.users.show', $user) }}" class="btn btn-outline-secondary">Cancel</a></div>
     </form>
 </x-layouts.app>

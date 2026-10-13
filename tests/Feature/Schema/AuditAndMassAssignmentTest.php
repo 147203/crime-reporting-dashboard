@@ -55,7 +55,7 @@ final class AuditAndMassAssignmentTest extends TestCase
         $this->assertSame([], array_intersect_key($user->getAttributes(), array_flip(['role', 'station_id', 'is_active', 'must_change_password', 'failed_attempts'])));
     }
 
-    /** TC-FT-20: users are deactivated, never deleted, so provenance survives. */
+    /** TC-FT-20: the database refuses to delete a user who is referenced, so provenance survives (D-33, D-52). */
     #[Test]
     public function a_user_who_created_incidents_cannot_be_deleted(): void
     {

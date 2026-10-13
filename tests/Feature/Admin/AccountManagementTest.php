@@ -6,10 +6,12 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\Role;
 use App\Models\AuditLog;
+use App\Models\Incident;
 use App\Models\Station;
 use App\Models\User;
 use App\Support\PasswordGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -138,5 +140,71 @@ final class AccountManagementTest extends TestCase
         $admin = User::factory()->admin()->create();
         $this->actingAs($admin)->get(route('password.edit'))->assertSee('data-password-toggle="current_password"', false)->assertSee('data-password-toggle="password_confirmation"', false);
         $this->get(route('admin.users.create'))->assertSee('data-password-toggle="password"', false);
+    }
+
+    /** TC-FT-64: the user detail page shows the account and everything it has done. */
+    #[Test]
+    public function the_user_page_shows_the_account_and_its_activity(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $station = Station::factory()->create();
+        $officer = User::factory()->officer($station)->create(['name' => 'Detail Officer']);
+        Incident::factory()->atStation($station)->count(2)->create(['created_by' => $officer->id]);
+        AuditLog::query()->create(['user_id' => $officer->id, 'action' => 'incident.created']);
+
+        $this->actingAs($admin)->get(route('admin.users.show', $officer))
+            ->assertOk()
+            ->assertSee('Detail Officer')
+            ->assertSee($station->name)
+            ->assertSeeInOrder(['Incidents recorded', '2'])
+            ->assertSee('incident.created')
+            ->assertSee('cannot be deleted')
+            ->assertDontSee('data-confirm="Delete the account', false);
+    }
+
+    /** TC-FT-65: an account that has never been used can be deleted; the deletion is audited and its sessions end. */
+    #[Test]
+    public function an_unused_account_can_be_deleted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $mistake = User::factory()->analyst()->create(['name' => 'Created By Mistake']);
+        DB::table('sessions')->insert(['id' => 'mistake-session', 'user_id' => $mistake->id, 'payload' => '', 'last_activity' => time()]);
+
+        $this->actingAs($admin)->get(route('admin.users.show', $mistake))->assertSee('can be deleted')->assertSee('data-confirm="Delete the account', false);
+        $this->delete(route('admin.users.destroy', $mistake))->assertRedirect(route('admin.users.index'));
+
+        $this->assertModelMissing($mistake);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $mistake->id]);
+        $entry = AuditLog::query()->where('action', 'user.deleted')->sole();
+        $this->assertSame($admin->id, $entry->user_id);
+        $this->assertSame($mistake->id, $entry->entity_id);
+    }
+
+    /** TC-SE-21: accounts with a history, your own account and the last active administrator cannot be deleted. */
+    #[Test]
+    public function used_own_and_last_administrator_accounts_cannot_be_deleted(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $station = Station::factory()->create();
+        $used = User::factory()->officer($station)->create();
+        Incident::factory()->atStation($station)->create(['created_by' => $used->id]);
+        $exporter = User::factory()->analyst()->create();
+        AuditLog::query()->create(['user_id' => $exporter->id, 'action' => 'report.exported']);
+
+        $this->actingAs($admin);
+        foreach ([$used, $exporter] as $user) {
+            $this->delete(route('admin.users.destroy', $user))->assertSessionHasErrors('user');
+            $this->assertModelExists($user);
+        }
+        $this->delete(route('admin.users.destroy', $admin))->assertSessionHasErrors('user');
+        $this->assertModelExists($admin);
+
+        // The guard itself: an unused last active administrator, reached by an acting account that lost its rights
+        // during the request (simulated as in TC-SE-20).
+        $lastAdmin = User::factory()->admin()->create();
+        User::query()->whereKey($admin->id)->update(['is_active' => false]);
+        $this->delete(route('admin.users.destroy', $lastAdmin))->assertSessionHasErrors('user');
+        $this->assertModelExists($lastAdmin);
+        $this->assertSame(0, AuditLog::query()->where('action', 'user.deleted')->count());
     }
 }
