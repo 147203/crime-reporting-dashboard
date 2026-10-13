@@ -26,6 +26,10 @@ export function initConfirmations() {
     accept.addEventListener('click', () => {
         if (pending) {
             pending.dataset.confirmed = 'yes';
+            // Forms whose server action insists on confirmation carry a hidden "confirmed" field, set only here.
+            pending.querySelectorAll('input[name="confirmed"]').forEach((input) => {
+                input.value = '1';
+            });
             modal.hide();
             pending.requestSubmit();
         }

@@ -176,6 +176,12 @@ code {
     color: var(--bs-emphasis-color);
 }
 
+// Without a positioned ancestor, absolutely positioned content in a wide table (visually hidden labels) is placed
+// against the page instead of the scroll box, and a phone widens the whole page to fit it.
+.table-responsive {
+    position: relative;
+}
+
 // Scrollable tables are focusable so keyboard users can scroll them.
 .table-responsive:focus-visible {
     outline: 2px solid var(--bs-primary);

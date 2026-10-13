@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $locked_until
  * @property bool $must_change_password
  * @property Carbon|null $last_login_at
+ * @property-read int|null $has_history set only by the Users list query
  */
 class User extends Authenticatable
 {

@@ -170,8 +170,14 @@ final class AccountManagementTest extends TestCase
         $mistake = User::factory()->analyst()->create(['name' => 'Created By Mistake']);
         DB::table('sessions')->insert(['id' => 'mistake-session', 'user_id' => $mistake->id, 'payload' => '', 'last_activity' => time()]);
 
-        $this->actingAs($admin)->get(route('admin.users.show', $mistake))->assertSee('can be deleted')->assertSee('data-confirm="Delete the account', false);
-        $this->delete(route('admin.users.destroy', $mistake))->assertRedirect(route('admin.users.index'));
+        $this->actingAs($admin)->get(route('admin.users.show', $mistake))->assertSee('can be deleted from the Users list')->assertDontSee('data-confirm="Delete the account', false);
+        $this->get(route('admin.users.index'))->assertSee('data-confirm="Delete the account of Created By Mistake', false)->assertSee('name="confirmed" value="0"', false);
+
+        // Without the confirmation the dialog sets, nothing is deleted.
+        $this->delete(route('admin.users.destroy', $mistake))->assertSessionHasErrors(['user' => 'Deleting an account must be confirmed.']);
+        $this->assertModelExists($mistake);
+
+        $this->delete(route('admin.users.destroy', $mistake), ['confirmed' => '1'])->assertRedirect(route('admin.users.index'));
 
         $this->assertModelMissing($mistake);
         $this->assertDatabaseMissing('sessions', ['user_id' => $mistake->id]);
@@ -191,19 +197,19 @@ final class AccountManagementTest extends TestCase
         $exporter = User::factory()->analyst()->create();
         AuditLog::query()->create(['user_id' => $exporter->id, 'action' => 'report.exported']);
 
-        $this->actingAs($admin);
+        $this->actingAs($admin)->get(route('admin.users.index'))->assertSee('Delete (has a history: deactivate instead)')->assertSee('Delete (your own account)');
         foreach ([$used, $exporter] as $user) {
-            $this->delete(route('admin.users.destroy', $user))->assertSessionHasErrors('user');
+            $this->delete(route('admin.users.destroy', $user), ['confirmed' => '1'])->assertSessionHasErrors('user');
             $this->assertModelExists($user);
         }
-        $this->delete(route('admin.users.destroy', $admin))->assertSessionHasErrors('user');
+        $this->delete(route('admin.users.destroy', $admin), ['confirmed' => '1'])->assertSessionHasErrors(['user' => 'You cannot delete your own account.']);
         $this->assertModelExists($admin);
 
         // The guard itself: an unused last active administrator, reached by an acting account that lost its rights
         // during the request (simulated as in TC-SE-20).
         $lastAdmin = User::factory()->admin()->create();
         User::query()->whereKey($admin->id)->update(['is_active' => false]);
-        $this->delete(route('admin.users.destroy', $lastAdmin))->assertSessionHasErrors('user');
+        $this->delete(route('admin.users.destroy', $lastAdmin), ['confirmed' => '1'])->assertSessionHasErrors('user');
         $this->assertModelExists($lastAdmin);
         $this->assertSame(0, AuditLog::query()->where('action', 'user.deleted')->count());
     }

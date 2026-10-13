@@ -77,3 +77,43 @@ test('TC-BB-14 export the matching records as an Excel workbook', async ({ page 
     await page.getByRole('link', { name: /Excel workbook of the/ }).click();
     expect((await xlsx).suggestedFilename()).toMatch(/^incidents-\d{8}-to-\d{8}\.xlsx$/);
 });
+
+test('TC-BB-15 the Actions menu views and deletes an unused account, always after confirmation', async ({ page }, info) => {
+    const email = `delete-me-${info.project.name}@e2e.test`;
+    await login(page, 'admin');
+    await page.goto('/admin/users/create');
+    await page.getByLabel('Full name').fill('Delete Me');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Role').selectOption('analyst');
+    await page.getByRole('button', { name: 'Create user' }).click();
+
+    // View from the Actions menu: the detail page itself has no Delete button.
+    await page.getByRole('button', { name: 'Actions for Delete Me' }).click();
+    await page.getByRole('link', { name: 'View', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Delete Me', level: 1 })).toBeVisible();
+    await expect(page.getByText('This account has never been used')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete' })).toHaveCount(0);
+
+    // Delete from the Actions menu always asks first; cancelling keeps the account.
+    await page.goto('/admin/users');
+    await page.getByRole('button', { name: 'Actions for Delete Me' }).click();
+    await evidence(page, 'BB-15-user-actions-menu');
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(page.getByText('Delete the account of Delete Me? This cannot be undone.')).toBeVisible();
+    await expect(page.locator('#confirmModal')).toHaveClass(/show/);
+    await page.waitForTimeout(400); // let the dialog's fade-in finish before the evidence screenshot
+    await evidence(page, 'BB-15-user-delete-confirm');
+    await page.locator('#confirmModal').getByRole('button', { name: 'Cancel' }).click();
+    await expect(page.getByRole('link', { name: 'Delete Me', exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Actions for Delete Me' }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.locator('[data-confirm-accept]').click();
+    await expect(page).toHaveURL(/\/admin\/users$/);
+    await expect(page.getByText('User Delete Me was deleted.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Delete Me', exact: true })).toHaveCount(0);
+
+    // The signed-in administrator's own account: Delete is shown disabled with the reason.
+    await page.getByRole('button', { name: 'Actions for E2E Administrator' }).click();
+    await expect(page.getByText('Delete (your own account)')).toBeVisible();
+});

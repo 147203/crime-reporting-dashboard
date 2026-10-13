@@ -92,6 +92,13 @@ Every test run that matters, before and after fixes. Definitions and targets: `.
 - Duplicate rule after D-48 (b), `sample:evaluate`: see the accuracy table.
 - Static checks: Pint passed; Larastan level 8 no errors.
 
+## 2026-10-13 User CRUD (D-52): detail page, Actions menu, confirmed delete
+
+- `php artisan test` on `crime_dashboard_test`: 322 passed (11,311 assertions). New: TC-FT-64 (detail page and activity), TC-FT-65 (unused account deleted only with the confirmation field, audited, sessions ended), TC-SE-21 (used accounts, own account and last active administrator refused; disabled menu items show the reason); route matrix extended to `admin.users.show` and `admin.users.destroy`.
+- `npx playwright test`: 30 of 30 passed. TC-BB-15 (desktop and 360 px): View from the Actions menu (no Delete on the detail page), Delete opens the confirmation dialog, Cancel keeps the account, Confirm deletes it; own account shows Delete disabled. Evidence `docs/evidence/*-BB-15-user-actions-menu.png`, `*-BB-15-user-delete-confirm.png`.
+- Defect found and fixed during TC-BB-15 at 360 px: with a wide table, a visually hidden column label (absolutely positioned) was placed against the page instead of the table's scroll box, so the phone widened the whole page to 446 px and controls were mis-hit. Fixed for every table by giving `.table-responsive` `position: relative`; accessibility scan and all browser tests rerun green.
+- The first runs of the 2026-10-13 commits `4cb8181` and `383568f` were pushed before this run (MariaDB was stopped); this entry is their first full test run.
+
 ## Performance table (fill from TC-PF runs)
 
 | Page or action | Rows in database | Mean ms | p50 ms | p95 ms | Cache | Machine | Date |

@@ -8,13 +8,6 @@
                 </form>
             @endif
             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</a>
-            @if ($deletable && ! $self)
-                <form method="POST" action="{{ route('admin.users.destroy', $user) }}" data-confirm="Delete the account of {{ $user->name }}? This cannot be undone.">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash" aria-hidden="true"></i> Delete</button>
-                </form>
-            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -52,7 +45,7 @@
                     @if ($self)
                         You cannot delete your own account.
                     @elseif ($deletable)
-                        This account has never been used, so it can be deleted.
+                        This account has never been used, so it can be deleted from the Users list (Actions, Delete).
                     @else
                         This account has a history, so it cannot be deleted: records must keep naming who did them. Deactivate it from Edit instead.
                     @endif

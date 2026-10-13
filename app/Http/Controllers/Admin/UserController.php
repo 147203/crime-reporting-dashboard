@@ -33,10 +33,16 @@ final class UserController extends Controller
         private readonly PasswordGenerator $passwords,
     ) {}
 
+    /** True when any record names this user as the one who did something; the same tables as activity(). */
+    private const HAS_HISTORY_SQL = '(exists (select 1 from incidents where incidents.created_by = users.id or incidents.updated_by = users.id)'
+        .' or exists (select 1 from import_batches where import_batches.user_id = users.id)'
+        .' or exists (select 1 from report_exports where report_exports.user_id = users.id)'
+        .' or exists (select 1 from audit_logs where audit_logs.user_id = users.id))';
+
     public function index(Request $request): Response
     {
         $response = response()->view('admin.users.index', [
-            'users' => User::query()->with('station:id,name')->orderBy('name')->paginate(25),
+            'users' => User::query()->with('station:id,name')->select('users.*')->selectRaw(self::HAS_HISTORY_SQL.' as has_history')->orderBy('name')->paginate(25),
         ]);
 
         // The one-time password must not come back from the browser cache through the Back button.
@@ -126,6 +132,9 @@ final class UserController extends Controller
      */
     public function destroy(Request $request, User $user): RedirectResponse
     {
+        if ($request->input('confirmed') !== '1') {
+            throw ValidationException::withMessages(['user' => 'Deleting an account must be confirmed.']);
+        }
         if ($user->is($request->user())) {
             throw ValidationException::withMessages(['user' => 'You cannot delete your own account.']);
         }

@@ -63,7 +63,7 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 |---|---|
 | FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`) |
 | FR-02 Role and station access | TC-SE-01a, 01b (`Security/RouteAccessMatrixTest`, every route x 4 actors), TC-SE-09 (`Security/StationScopeTest`), TC-FT-13, 14 (`Schema/IncidentScopeTest`) |
-| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19 to 21, TC-FT-64, 65 (`Admin/AccountManagementTest`: user detail page, delete only unused accounts, generated password shown once, no self reset, last administrator kept, unlock, eye toggle), TC-BB-11, 12 (`tests/e2e/account-and-drilldown.spec.ts`) |
+| FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19 to 21, TC-FT-64, 65 (`Admin/AccountManagementTest`: user detail page, delete only unused accounts, generated password shown once, no self reset, last administrator kept, unlock, eye toggle), TC-BB-11, 12, 15 (`tests/e2e/account-and-drilldown.spec.ts`: Actions menu, delete always confirmed) |
 | FR-04 Reference data | TC-FT-12 (`Schema/SchemaTest`), TC-FT-29 (`Admin/AdministrationTest`) |
 | FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`) |
 | FR-06 Records: filter, status, soft delete | TC-FT-03 to 05 (`Incidents/IncidentWorkflowTest`), TC-UT-12 (`Unit/IncidentStatusTest`) |

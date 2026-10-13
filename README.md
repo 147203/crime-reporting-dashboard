@@ -312,7 +312,7 @@ Commands that set a variable for one run are written the Linux way in this READM
 2. Choose your own password when asked (at least 12 characters, letters and numbers).
 3. Go to **Administration, Users** and create a Reporting Officer (assign a station) and an Analyst to try the other roles. Leave **Generate a secure temporary password** selected: the password is shown once on the next page with a Copy button, and the user must choose their own at first login. Accounts can also be created from the terminal with `php artisan user:create`.
 4. Try the main tasks: report an incident, find it with the filters, open the dashboard and its presets, click a bar to drill down to the matching incidents, review a suspected duplicate, import a CSV, and download CSV, Excel and PDF reports.
-5. Your own account is not edited from the Users page: change your password from the account menu, **Change password** (it asks for the current one). A locked account is opened again with **Unlock** on the Users page.
+5. Your own account is not edited from the Users page: change your password from the account menu, **Change password** (it asks for the current one). A locked account is opened again with **Unlock** in its row's **Actions** menu on the Users page. The same menu has **View**, **Edit** and **Delete**; Delete works only for an account that has never been used and always asks you to confirm.
 
 CSV import format (header exactly as shown, dates as `YYYY-MM-DD HH:MM`, names as in Reference data, UTF-8, up to 5 MB and 10,000 rows):
 
@@ -429,7 +429,7 @@ Run `php artisan app:preflight` first: it names most problems and the fix for yo
 | Every page shows "The application is not configured" (503) | `APP_KEY` or database settings invalid | Run `php artisan app:preflight` and fix what it names |
 | `MissingAppKeyException` | No application key | `php artisan key:generate` |
 | `Failed to listen on 127.0.0.1:8000` | Another `artisan serve` is running | Close the other window (Linux: `pkill -f "artisan serve"`), or use the port it offers |
-| Login says the account is locked | 5 wrong passwords | Wait 15 minutes, or an administrator presses **Unlock** under Users |
+| Login says the account is locked | 5 wrong passwords | Wait 15 minutes, or an administrator chooses **Actions, Unlock** under Users |
 | `db:backup` says mysqldump was not found | XAMPP is not in its default folder (`/opt/lampp`, `C:\xampp`, `/Applications/XAMPP`) | Set `DB_DUMP_BINARY` and `DB_CLIENT_BINARY` in `.env` to the full paths |
 | `sample:generate --size=100000` stops with *Allowed memory size exhausted* | PHP memory limit (128 MB on Windows by default) | Set `memory_limit = 512M` in `php.ini` |
 | Tests refuse to run ("must use the mysql_testing connection and a *_test database") | Test database misnamed | Keep `DB_TEST_DATABASE` ending in `_test` and different from `DB_DATABASE` (the suite creates it on first run) |
