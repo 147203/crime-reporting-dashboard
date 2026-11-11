@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Http\Request;
 
 /**
  * Startup checks on secrets and credentials. Failures name the variable, never its value.
@@ -43,6 +44,31 @@ final class Preflight
     }
 
     /**
+     * D-54: one-click demo sign-in for this request. Besides the settings, the request itself must come from this computer
+     * to a loopback host: a server that also listens on a network address (XAMPP's Apache, `serve --host=0.0.0.0`)
+     * would otherwise hand password-less sign-in to anyone on the same network. No proxies are trusted, so ip() is the
+     * real peer address.
+     */
+    public function demoLoginAllowedFor(Request $request): bool
+    {
+        return $this->demoLoginActive()
+            && in_array($request->ip(), ['127.0.0.1', '::1'], true)
+            && in_array($request->getHost(), ['localhost', '127.0.0.1', '::1', '[::1]'], true);
+    }
+
+    /**
+     * The settings half of D-54: opted in, on a local or testing environment, configured with a loopback address.
+     */
+    public function demoLoginActive(): bool
+    {
+        $host = (string) parse_url($this->string('app.url'), PHP_URL_HOST);
+
+        return $this->config->get('demo.enabled') === true
+            && in_array($this->string('app.env'), ['local', 'testing'], true)
+            && in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true);
+    }
+
+    /**
      * @return list<string>
      */
     private function productionFailures(): array
@@ -55,6 +81,8 @@ final class Preflight
             $this->config->get('app.debug') === true ? 'APP_DEBUG must be false in production.' : null,
             $this->config->get('session.secure') !== true ? 'SESSION_SECURE_COOKIE must be true in production (serve over HTTPS).' : null,
             $this->string('session.driver') !== 'database' ? 'SESSION_DRIVER must be database in production, so sessions can be ended after a password change.' : null,
+            $this->config->get('demo.enabled') === true ? 'DEMO_LOGIN must be false in production: demo sign-in skips the password.' : null,
+            (int) $this->config->get('security.auth_actions_per_minute') > 20 ? 'AUTH_ACTIONS_PER_MINUTE must be at most 20 in production.' : null,
         ]));
     }
 

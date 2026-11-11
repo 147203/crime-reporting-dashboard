@@ -26,7 +26,8 @@
                     <li>Dates exactly as <code>YYYY-MM-DD HH:MM</code>, Nairobi time (other formats are rejected, because 01/08 could mean January or August).</li>
                     <li>Category, sub-county, ward and station by name, as in Reference data.</li>
                     <li><code>status</code> is reported, under_investigation or closed (blank means reported); <code>closed_at</code> only for closed records.</li>
-                    <li>Rows that break the same rules as the form (V1 to V6) are rejected and listed by row, column and rule. Cell values are never stored in the report.</li>
+                    <li>The last seven columns describe the victim and may be left out of the file, or left blank for "not recorded". Allowed values: <code>victim_type</code> individual, business, public_property; <code>victim_sex</code> male, female; <code>victim_age</code> 0 to 120 (sets the band); <code>victim_age_band</code> under_18, 18_24, 25_34, 35_44, 45_54, 55_64, 65_plus; <code>victim_injury</code> none, minor, serious, fatal; <code>offender_relationship</code> stranger, acquaintance, family_or_partner; <code>victim_count</code> 0 to 50. Never names, contacts or ID numbers.</li>
+                    <li>Rows that break the same rules as the form (V1 to V6, V9) are rejected and listed by row, column and rule. Cell values are never stored in the report.</li>
                     <li>Near-duplicates (V8) are imported but flagged for review.</li>
                 </ul>
             </x-card>

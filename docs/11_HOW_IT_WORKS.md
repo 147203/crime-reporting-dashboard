@@ -190,6 +190,8 @@ php artisan serve
 3. You are forced to the **Change password** page. Choose your own password (at least 12 characters, with letters and numbers). From now on the `.env` password no longer signs in.
 4. The dashboard opens.
 
+**Demo sign-in (presentations only).** With `DEMO_LOGIN=true` in `.env` (local machine only), the sign-in page also shows a yellow **Demo only** panel with one button per role. One click signs in as that role's demo account, and **Switch demo user** in the account menu returns to the panel. The demo accounts (`demo-admin@demo.invalid` and the others) are created on first use with a random password nobody knows, so they can only be entered through the button. It works only for a browser on the same computer opening the site at `127.0.0.1` or `localhost`; another computer on the network gets nothing. In real use the panel does not exist; preflight refuses `DEMO_LOGIN=true` in production (decision D-54).
+
 ### After a restart
 
 Only steps 1 and 10 are needed: start MariaDB, then `php artisan serve`.
@@ -256,6 +258,7 @@ An administrator can later add or deactivate categories, wards and stations unde
 | V4 wrong ward               | 200                   | A ward from a different sub-county                                                                                                                           | Rejected                                |
 | V5 text too long            | 200                   | Location over 150 or description over 1,000 characters                                                                                                       | Rejected                                |
 | V6 personal data            | 200                   | A phone number like "07xx xxx xxx" or "House of ID 2xxxxxxx"                                                                                                 | Rejected                                |
+| Victim profile (D-53) | every row | Type, number, sex, age or band, injury and relationship drawn per category from its own random stream (so nothing else changed) | Shown in A11 and the victim filters |
 | True duplicate              | 400                   | A copy of a real row 5 to 96 minutes later with the location retyped (upper case, a dropped or swapped letter, " gate" added, "the" removed, or a full stop) | Flagged as suspected duplicate          |
 | Near miss                   | 200                   | Same place but more than 2 hours later, or same time with a different landmark                                                                               | **Not** flagged                   |
 | Ward hotspots               | 3 wards               | Incident rate multiplied by 3                                                                                                                                | Flagged by the hotspot rule A8          |
@@ -289,7 +292,14 @@ The `truth/` files are never loaded into the application. They are the answer ke
 **Report incident** screen (Administrator, Reporting Officer).
 
 - The officer picks a category, sub-county, ward (filtered to that sub-county), station, dates, landmark and description.
-- The same rules V1 to V7 apply.
+- The **Victim** section describes the victim without identifying them (D-53):
+  - victim type (individual, business or organisation, public property);
+  - number of victims;
+  - the most serious injury;
+  - for an individual: sex, age in years (if known), age band and relationship to the suspect.
+
+  Typing an age sets the band automatically. Choosing business or public property greys out the person details, and the server clears them too. There is no field for a name, phone number, ID number or address.
+- The same rules V1 to V7 and V9 apply.
 - On save, the incident gets a reference number `NRB-<year>-<id>`, for example `NRB-2026-000123`, and is checked for duplicates (V8).
 - A Reporting Officer can only choose their own station.
 
@@ -308,6 +318,8 @@ Whichever way an incident arrives (generator, upload or form), it goes through t
    ├─ V5  length limits, HTML removed ............... else REJECT
    ├─ V6  no phone or national ID numbers ........... else REJECT
    ├─ V7  reference number unique ................... else REJECT
+   ├─ V9  victim details from the fixed lists, number 0 to 50, age 0 to 120 ... else REJECT
+   │      (age sets the band; person details cleared for business or public property)
    ├─ store in `incidents` (is_synthetic = true)
    ├─ V8  duplicate check: same category and ward, within 2 hours, location similarity ≥ 0.8
    │      and the same numbers in the location  ..... if matched: "Suspected duplicate", linked to the earlier record
@@ -337,7 +349,7 @@ The rule definitions, with exact limits, are in docs/02, section 5.
 | Screen                       | Who                    | What it does, and where its figures come from                                                                                                                                                                                                              |
 | ---------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Login**              | Everyone               | Checks the email and password hash. 5 wrong attempts lock the account for 15 minutes, and an administrator can unlock it early. A new or reset password must be changed at first sign-in. The session ends when the browser closes                         |
-| **Dashboard**          | All roles              | Computes the ten measures A1 to A10**live in the database on every visit**, from the counted incidents matching the filters. The default period is the last 12 months up to today (the current month is incomplete). Officers see only their station |
+| **Dashboard**          | All roles              | Computes the eleven measures A1 to A11 **live in the database on every visit**, from the counted incidents matching the filters. The default period is the last 12 months up to today (the current month is incomplete). Officers see only their station |
 | **Incidents**          | All roles              | Searchable, filterable, sortable list (20 per page), plus a detail page and status changes. Opening it from a dashboard click adds that chart's filter, and the list total equals the chart value                                                          |
 | **Report incident**    | Administrator, Officer | The form in section 3.4                                                                                                                                                                                                                                    |
 | **Duplicate review**   | Administrator, Analyst | Suspected pairs side by side; confirm or dismiss                                                                                                                                                                                                           |
@@ -349,7 +361,7 @@ The rule definitions, with exact limits, are in docs/02, section 5.
 | **Audit log**          | Administrator          | Read-only history of who did what and when                                                                                                                                                                                                                 |
 | **Change password**    | Everyone               | Needs the current password; ends your other sessions                                                                                                                                                                                                       |
 
-### The ten measures (A1 to A10)
+### The eleven measures (A1 to A11)
 
 All are computed with SQL over the counted incidents for the chosen period and filters. Every chart has a table view and shows its period, filters and n.
 
@@ -365,8 +377,9 @@ All are computed with SQL over the counted incidents for the chosen period and f
 | A8      | **Hotspot flag:** a ward is flagged when its z-score is at least 1.5 **and** it has at least 10 incidents (z = (ward count minus the mean over all wards) divided by the standard deviation) |
 | A9      | Sub-county by month grid, shaded by quintile                                                                                                                                                             |
 | A10     | Count per status, closure rate, and median and 90th-percentile reporting delay and time to close                                                                                                         |
+| A11 | **Victim profile:** count per victim type and per injury over all n; for incidents with an individual victim: count per sex, per age band, sex by age band, per relationship to the suspect, and the median exact age |
 
-Exact formulas and denominators are in docs/02, section 4. An independent script (`scripts/oracle.php`), written without looking at the application code, computes the same measures, and a test proves all 5,387 values match exactly.
+Exact formulas and denominators are in docs/02, section 4. An independent script (`scripts/oracle.php`), written without looking at the application code, computes the same measures, and a test proves all 5,795 values match exactly.
 
 ---
 

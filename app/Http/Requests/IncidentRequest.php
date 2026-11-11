@@ -26,6 +26,7 @@ final class IncidentRequest extends FormRequest
         $this->merge([
             'location_description' => IncidentRules::clean($this->string('location_description')->toString()),
             'description' => IncidentRules::clean($this->string('description')->toString()),
+            ...IncidentRules::normaliseVictim($this->all()),
         ]);
 
         if ($user instanceof User && $user->role->isStationScoped()) {

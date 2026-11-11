@@ -30,7 +30,12 @@ use SplFileObject;
  */
 final class ImportService
 {
-    public const HEADER = ['category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'location_description', 'description', 'status', 'closed_at'];
+    public const HEADER = [...self::BASE_HEADER, ...self::VICTIM_COLUMNS];
+
+    /** Files made before the victim profile (D-53) have only these columns; their victims read as not recorded. */
+    public const BASE_HEADER = ['category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'location_description', 'description', 'status', 'closed_at'];
+
+    public const VICTIM_COLUMNS = ['victim_type', 'victim_count', 'victim_sex', 'victim_age', 'victim_age_band', 'victim_injury', 'offender_relationship'];
 
     // Measured: about 3 ms per row for check and insert together (TEST_LOG), so 10,000 rows stay well inside a web request.
     public const MAX_ROWS = 10000;
@@ -203,8 +208,8 @@ final class ImportService
 
             if ($header === null) {
                 $header = array_map(fn (string $h): string => strtolower(trim($h, " \t\u{FEFF}")), $fields);
-                if ($header !== self::HEADER) {
-                    throw new ImportFileException('The header must be exactly: '.implode(',', self::HEADER).'.');
+                if ($header !== self::HEADER && $header !== self::BASE_HEADER) {
+                    throw new ImportFileException('The header must be exactly: '.implode(',', self::HEADER).' (the last '.count(self::VICTIM_COLUMNS).' victim columns may be left out).');
                 }
 
                 continue;
@@ -214,13 +219,13 @@ final class ImportService
             if ($rowNumber > $maxRows) {
                 throw new ImportFileException('The file has more than '.number_format($maxRows).' rows; split it into smaller files.');
             }
-            if (count($fields) !== count(self::HEADER)) {
+            if (count($fields) !== count($header)) {
                 yield $rowNumber => ['__malformed' => '1'];
 
                 continue;
             }
 
-            yield $rowNumber => array_combine(self::HEADER, $fields);
+            yield $rowNumber => array_combine($header, $fields);
         }
 
         if ($header === null) {
@@ -293,6 +298,7 @@ final class ImportService
             'description' => IncidentRules::clean($row['description']),
             'status' => trim($row['status']) === '' ? IncidentStatus::Reported->value : strtolower(trim($row['status'])),
             'closed_at' => trim($row['closed_at']) === '' ? null : trim($row['closed_at']),
+            ...IncidentRules::normaliseVictim($row),
         ];
 
         // Reference columns were resolved above; the remaining rules are the form's own (V2, V3, V5, V6) plus status.
@@ -397,6 +403,7 @@ final class ImportService
             $field === 'occurred_at' => 'V2',
             $field === 'reported_at' => 'V3',
             in_array($field, ['status', 'closed_at'], true) => 'status',
+            in_array($field, self::VICTIM_COLUMNS, true) => 'V9',
             default => 'format',
         };
     }

@@ -9,6 +9,12 @@
     $wards = $vm->topWards();
     $statuses = $vm->statuses();
     $grid = $vm->heatGrid();
+    $a11 = $vm->metrics['A11'];
+    $victimAges = $vm->victimAgeSex();
+    $victimTypes = $vm->victimBreakdown('type', App\Enums\VictimType::class, 'victim_type', 'Victim type');
+    $injuries = $vm->victimBreakdown('injury', App\Enums\InjuryLevel::class, 'victim_injury', 'Injury');
+    $relationships = $vm->victimBreakdown('relationship', App\Enums\OffenderRelationship::class, 'offender_relationship', 'Relationship to the suspect');
+    $injured = $a11['injury']['minor'] + $a11['injury']['serious'] + $a11['injury']['fatal'];
 @endphp
 <x-layouts.app title="Dashboard">
     <x-page-header title="Dashboard" :subtitle="($stationScoped ? 'Your station. ' : 'County-wide. ').$vm->periodLabel().'.'">
@@ -86,6 +92,37 @@
                     </span>
                 </x-slot:footer>
             </x-card>
+        </div>
+    </div>
+
+    <h2 class="h5 mt-4 mb-1" id="victims">Victims (A11)</h2>
+    <p class="small text-body-secondary mb-3">Descriptive profile of victims; no names, contacts or ID numbers are recorded. {{ $vm->caption() }}</p>
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-xl-3">
+            <x-kpi label="Individual victims" :value="number_format($a11['individuals'])" icon="person" :meta="'Of n = '.number_format($vm->n()).' incidents'" />
+        </div>
+        <div class="col-6 col-xl-3">
+            <x-kpi label="Median victim age" :value="$a11['age']['median'] === null ? 'n/a' : $a11['age']['median'].' years'" icon="hourglass-split" :meta="number_format($a11['age']['recorded']).' with an exact age recorded'" />
+        </div>
+        <div class="col-6 col-xl-3">
+            <x-kpi label="Female victims" :value="$a11['individuals'] > 0 ? number_format(round(100 * $a11['sex']['female'] / $a11['individuals'], 2), 2).' %' : 'n/a'" icon="gender-female" :meta="number_format($a11['sex']['female']).' of '.number_format($a11['individuals']).' individuals'" />
+        </div>
+        <div class="col-6 col-xl-3">
+            <x-kpi label="Someone injured" :value="$vm->n() > 0 ? number_format(round(100 * $injured / $vm->n(), 2), 2).' %' : 'n/a'" icon="bandaid" :meta="number_format($injured).' of n = '.number_format($vm->n()).' (minor, serious or fatal)'" />
+        </div>
+    </div>
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-7">
+            <x-chart :links="$victimAges['links']" id="chart-victim-ages" title="Victims by age band and sex (A11)" :caption="'Incidents with an individual victim, n = '.number_format($a11['individuals']).'.'" :spec="$victimAges['spec']" :headers="$victimAges['headers']" :rows="$a11['individuals'] > 0 ? $victimAges['rows'] : []" />
+        </div>
+        <div class="col-12 col-md-6 col-xl-5">
+            <x-chart :links="$injuries['links']" id="chart-injuries" title="Injury (A11)" :caption="'Most serious injury; share of n = '.number_format($vm->n()).'.'" :spec="$injuries['spec']" :headers="$injuries['headers']" :rows="$vm->n() > 0 ? $injuries['rows'] : []" :small="true" />
+        </div>
+        <div class="col-12 col-md-6 col-xl-6">
+            <x-chart :links="$victimTypes['links']" id="chart-victim-types" title="Victim type (A11)" :caption="'Share of n = '.number_format($vm->n()).'.'" :spec="$victimTypes['spec']" :headers="$victimTypes['headers']" :rows="$vm->n() > 0 ? $victimTypes['rows'] : []" :small="true" />
+        </div>
+        <div class="col-12 col-xl-6">
+            <x-chart :links="$relationships['links']" id="chart-relationships" title="Relationship to the suspect (A11)" :caption="'Individual victims, n = '.number_format($a11['individuals']).'.'" :spec="$relationships['spec']" :headers="$relationships['headers']" :rows="$a11['individuals'] > 0 ? $relationships['rows'] : []" :small="true" />
         </div>
     </div>
 

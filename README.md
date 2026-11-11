@@ -39,9 +39,9 @@ Final-year project, BBIT, Strathmore University. A responsive web application wh
 | Module                     | Features                                                                                                                                                                                                                            |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign-in and access control | Login with lockout after 5 wrong passwords, forced password change at first login, no self-registration, three roles, officers limited to their own station, audit log of every important action; a show or hide (eye) button on every password field; accounts with a history are deactivated, never deleted (only never-used accounts can be deleted), and the last active administrator cannot be removed |
-| Incidents                  | Structured form with validation, list with search, filters, sorting and pagination, detail page, status workflow (Reported, Under investigation, Closed), soft delete                                                               |
+| Incidents                  | Structured form with validation and a victim profile (type, number, sex, age or age band, injury, relationship to the suspect; never names or contacts), list with search, filters, sorting and pagination, detail page, status workflow (Reported, Under investigation, Closed), soft delete                                                               |
 | Data quality               | Validation rules V1 to V8, a guard that refuses phone and national ID numbers in free text, duplicate detection with a review queue, bulk CSV import with a dry run and per-row error report, data-quality summary                  |
-| Analytics                  | A1 to A10: totals, category mix, monthly trend with moving average, period comparison, day-of-week and time-of-day patterns, ward and sub-county ranking, statistical hotspot flag, sub-county by month grid, status and timeliness |
+| Analytics                  | A1 to A11: totals, category mix, monthly trend with moving average, period comparison, day-of-week and time-of-day patterns, ward and sub-county ranking, statistical hotspot flag, sub-county by month grid, status and timeliness, victim profile (A11) |
 | Backup                     | `db:backup` writes a compressed copy of the database; `db:restore` loads it into a named schema (local use) |
 | Dashboard                  | KPI cards, charts with a table view for every chart, period presets and filters, light and dark themes, usable from 360 px phone width; click a bar, slice or table row to open the matching incidents |
 | Reports                    | CSV and Excel (.xlsx) export of the matching records and a PDF summary, both limited to what the user may see and recorded in the audit log                                                                                                           |
@@ -275,6 +275,7 @@ Leave this window open while you use the application; `Ctrl+C` stops it.
 | `SESSION_SECURE_COOKIE`                                        | `false`                                 | Set`true` whenever the site is served over HTTPS                                                                   |
 | `HOTSPOT_Z_THRESHOLD`, `HOTSPOT_MIN_INCIDENTS`               | `1.5`, `10`                           | Hotspot rule A8 (decision D-11)                                                                                      |
 | `DUPLICATE_WINDOW_MINUTES`, `DUPLICATE_SIMILARITY`           | `120`, `0.8`                          | Duplicate rule V8                                                                                                    |
+| `DEMO_LOGIN`                                                   | `false`                                 | One-click demo sign-in per role on a local machine (decision D-54); refused in production |
 | `SAMPLE_DATA_SEED`                                             | `20260924`                              | Seed for the sample-data generator (same seed, same data)                                                            |
 
 `php artisan app:preflight` checks the key, database settings, test-schema separation and admin password, and names any problem without printing the value. The web application itself refuses every request (HTTP 503) while the key or database settings are invalid.
@@ -314,12 +315,16 @@ Commands that set a variable for one run are written the Linux way in this READM
 4. Try the main tasks: report an incident, find it with the filters, open the dashboard and its presets, click a bar to drill down to the matching incidents, review a suspected duplicate, import a CSV, and download CSV, Excel and PDF reports.
 5. Your own account is not edited from the Users page: change your password from the account menu, **Change password** (it asks for the current one). A locked account is opened again with **Unlock** in its row's **Actions** menu on the Users page. The same menu has **View**, **Edit** and **Delete**; Delete works only for an account that has never been used and always asks you to confirm.
 
-CSV import format (header exactly as shown, dates as `YYYY-MM-DD HH:MM`, names as in Reference data, UTF-8, up to 5 MB and 10,000 rows):
+CSV import format (header exactly as shown, dates as `YYYY-MM-DD HH:MM`, names as in Reference data, UTF-8, up to 5 MB and 10,000 rows). The last seven columns describe the victim; they may be blank (not recorded) or left out of the file altogether. The allowed values are listed on the import page.
 
 ```
-category,occurred_at,reported_at,sub_county,ward,station,location_description,description,status,closed_at
-Theft,2026-08-01 10:00,2026-08-01 11:00,Kibra,Makina,Kibra Sample Station,Near the market 5,Phone taken.,reported,
+category,occurred_at,reported_at,sub_county,ward,station,location_description,description,status,closed_at,victim_type,victim_count,victim_sex,victim_age,victim_age_band,victim_injury,offender_relationship
+Assault,2026-08-01 21:00,2026-08-01 22:00,Kibra,Makina,Kibra Sample Station,Near the market 5,Victim attacked on the way home.,reported,,individual,1,female,29,,minor,acquaintance
 ```
+
+### Demo sign-in (presentations only)
+
+Set `DEMO_LOGIN=true` in `.env` on your own computer (it works only with `APP_ENV=local` (or `testing`), an `APP_URL` of `127.0.0.1` or `localhost`, and only for a browser on the same computer opening the site at that address). The sign-in page then shows a yellow **Demo only** panel: one click signs in as Administrator, Reporting Officer or Analyst. In the account menu, **Switch demo user** signs out and returns to that panel, so you can show each role in turn. A badge at the top says **Demo: <role>** while you use a demo account. In real use the panel does not exist: every person signs in with their own email and password, and `php artisan app:preflight` refuses `DEMO_LOGIN=true` in production.
 
 ---
 
@@ -336,7 +341,7 @@ Theft,2026-08-01 10:00,2026-08-01 11:00,Kibra,Makina,Kibra Sample Station,Near t
 | `php artisan sample:clear`                                                                       | Removes all synthetic incidents (asks first; local or testing only)                                                              |
 | `php artisan imports:prune`                                                                      | Closes CSV dry runs older than 24 hours and deletes their files (also scheduled hourly with`php artisan schedule:work`)        |
 | `php artisan e2e:prepare`                                                                        | Rebuilds the`*_e2e` schema for browser tests (Playwright runs it automatically)                                                |
-| `php scripts/oracle.php --input <dir> --filters tests/Fixtures/oracle/filters.json --out <file>` | Independent calculation of A1 to A10 used to prove accuracy (see`scripts/ORACLE.md`)                                           |
+| `php scripts/oracle.php --input <dir> --filters tests/Fixtures/oracle/filters.json --out <file>` | Independent calculation of A1 to A11 used to prove accuracy (see`scripts/ORACLE.md`)                                           |
 | `PERF_PASSWORD=... php scripts/perf.php --base=URL --email=EMAIL`                                | Measures page response times (mean, p50, p95)                                                                                    |
 | `node scripts/progress-report.cjs`                                                               | Rebuilds the Word copy of the progress report from`docs/reports/PROGRESS_REPORT.md`                                            |
 
@@ -356,7 +361,7 @@ vendor/bin/phpstan analyse --memory-limit=1G   # static analysis, level 8
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Unit                 | PII guard patterns, preflight rules, status workflow, duplicate similarity                                                                                      |
 | Feature and security | Every route tried as guest, administrator, officer and analyst; lockout; CSRF; station isolation; SQL-injection strings in filters; stored XSS escaped; headers |
-| Accuracy             | A1 to A10 compared with the independent oracle on a seeded 1,000-record dataset; rejection and duplicate rates against planted ground truth                     |
+| Accuracy             | A1 to A11 compared with the independent oracle on a seeded 1,000-record dataset; rejection and duplicate rates against planted ground truth                     |
 | Browser (black-box)  | The eight usability tasks, plus an officer refused administration pages; screenshots in `docs/evidence/`                                                       |
 | Accessibility        | Automated WCAG 2.1 AA scan (axe) of every main page in light and dark themes at 1366 px and 360 px; any serious or critical issue fails the test |
 
@@ -376,7 +381,7 @@ app/
   Http/Requests/         validation of every form and filter
   Models/                Incident, User, Ward, SubCounty, Station, CrimeCategory, ImportBatch, AuditLog, ReportExport
   Policies/              IncidentPolicy (who may do what)
-  Services/              incidents, PII guard, duplicates, import, analytics (A1 to A10), reports, audit, sample data
+  Services/              incidents, PII guard, duplicates, import, analytics (A1 to A11), reports, audit, sample data
   Support/               preflight, filters, option lists
 config/analytics.php     hotspot and duplicate parameters
 config/sample_data.php   sample-data assumptions
@@ -443,7 +448,7 @@ Run `php artisan app:preflight` first: it names most problems and the fix for yo
 | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | [docs/11_HOW_IT_WORKS.md](docs/11_HOW_IT_WORKS.md) | **Start here:** every setup command and what it does, where the data comes from, what happens on each screen |
 | [docs/reports/PROGRESS_REPORT.md](docs/reports/PROGRESS_REPORT.md)           | Supervisor progress report, updated at the end of every phase (Word copy:`Progress_Report.docx`) |
-| [docs/02_REQUIREMENTS_AND_SCOPE.md](docs/02_REQUIREMENTS_AND_SCOPE.md)       | Roles and access matrix, requirements, analytics definitions A1 to A10, validation rules           |
+| [docs/02_REQUIREMENTS_AND_SCOPE.md](docs/02_REQUIREMENTS_AND_SCOPE.md)       | Roles and access matrix, requirements, analytics definitions A1 to A11, validation rules           |
 | [docs/03_ARCHITECTURE_AND_DATA.md](docs/03_ARCHITECTURE_AND_DATA.md)         | Layers, schema, security architecture                                                              |
 | [docs/04_SAMPLE_DATA.md](docs/04_SAMPLE_DATA.md)                             | Synthetic data generator and the oracle                                                            |
 | [docs/05_FIELDWORK_AND_INSTRUMENTS.md](docs/05_FIELDWORK_AND_INSTRUMENTS.md) | Interviews, questionnaire, usability study                                                         |

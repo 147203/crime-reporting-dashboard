@@ -78,6 +78,11 @@ class User extends Authenticatable
         return in_array($this->role, $roles, true);
     }
 
+    public function isDemoAccount(): bool
+    {
+        return in_array(mb_strtolower($this->email), array_column((array) config('demo.accounts'), 'email'), true);
+    }
+
     public function isLocked(): bool
     {
         return $this->locked_until !== null && $this->locked_until->isFuture();

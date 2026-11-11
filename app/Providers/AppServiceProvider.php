@@ -77,6 +77,6 @@ class AppServiceProvider extends ServiceProvider
         // Counts submissions only: many people behind one office address may open the login page at the same time.
         RateLimiter::for('auth-actions', fn (Request $request): Limit => $request->isMethod('GET')
             ? Limit::none()
-            : Limit::perMinute(20)->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
+            : Limit::perMinute((int) config('security.auth_actions_per_minute'))->by((string) ($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

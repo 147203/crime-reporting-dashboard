@@ -21,7 +21,7 @@ final class DataQualityAccuracyTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const PINNED_SHA256 = '467810bbdbe3ec061d39f2369213761a75a014c037e0a962499c2b010729300c';
+    private const PINNED_SHA256 = '45eb08901c407293dad774156daf5309f5b14d52885c1fdb7345ae31d1ee171d';
 
     private string $directory;
 

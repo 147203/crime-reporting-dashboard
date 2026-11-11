@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Enums\AgeBand;
 use App\Enums\DuplicateStatus;
 use App\Enums\IncidentStatus;
+use App\Enums\InjuryLevel;
+use App\Enums\OffenderRelationship;
+use App\Enums\VictimSex;
+use App\Enums\VictimType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -36,6 +41,11 @@ final class IncidentIndexRequest extends FormRequest
             'station_id' => ['nullable', 'integer', Rule::exists('stations', 'id')],
             'status' => ['nullable', Rule::enum(IncidentStatus::class)],
             'duplicate_status' => ['nullable', Rule::enum(DuplicateStatus::class)],
+            'victim_type' => ['nullable', Rule::enum(VictimType::class)],
+            'victim_sex' => ['nullable', Rule::enum(VictimSex::class)],
+            'victim_age_band' => ['nullable', Rule::enum(AgeBand::class)],
+            'victim_injury' => ['nullable', Rule::enum(InjuryLevel::class)],
+            'offender_relationship' => ['nullable', Rule::enum(OffenderRelationship::class)],
             'weekday' => ['nullable', 'integer', 'between:1,7'],
             'band' => ['nullable', 'integer', 'between:0,'.(count(config('analytics.time_bands')) - 1)],
             'countable' => ['nullable', 'boolean'],

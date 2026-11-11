@@ -30,6 +30,18 @@
                     <div class="col-sm-6"><dt>Data</dt><dd>{{ $incident->is_synthetic ? 'Sample data' : 'Real record' }}</dd></div>
                 </dl>
             </x-card>
+            <x-card title="Victim" subtitle="Descriptive details only; no names, contacts or ID numbers are recorded." class="mt-3">
+                <dl class="row detail-list mb-0">
+                    <div class="col-sm-6 col-xl-4"><dt>Victim type</dt><dd>{{ $incident->victim_type->label() }}</dd></div>
+                    <div class="col-sm-6 col-xl-4"><dt>Number of victims</dt><dd>{{ $incident->victim_count ?? 'Not recorded' }}</dd></div>
+                    <div class="col-sm-6 col-xl-4"><dt>Injury</dt><dd>{{ $incident->victim_injury->label() }}</dd></div>
+                    @if ($incident->victim_type === App\Enums\VictimType::Individual || $incident->victim_type === App\Enums\VictimType::NotRecorded)
+                        <div class="col-sm-6 col-xl-4"><dt>Sex</dt><dd>{{ $incident->victim_sex->label() }}</dd></div>
+                        <div class="col-sm-6 col-xl-4"><dt>Age</dt><dd>{{ $incident->victim_age !== null ? $incident->victim_age.' years ('.$incident->victim_age_band->label().')' : $incident->victim_age_band->label() }}</dd></div>
+                        <div class="col-sm-6 col-xl-4"><dt>Relationship to the suspect</dt><dd>{{ $incident->offender_relationship->label() }}</dd></div>
+                    @endif
+                </dl>
+            </x-card>
         </div>
         <div class="col-12 col-lg-4">
             <x-card title="Status">

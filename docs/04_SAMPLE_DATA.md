@@ -23,6 +23,7 @@ Real police records are confidential (proposal limitation 1.7.1), so the system 
 | Planted hotspots | A chosen list of wards and category pairs receive a documented multiplier over documented months (for example three wards x 1.8 for theft). Saved to `truth/hotspots.json` |
 | Planted trend | One category with a documented upward drift, saved in the oracle, to test A3 and A4 |
 | Seeded bad records | A known number of rows violating each rule V1 to V6 (future dates, ward-subcounty mismatch, over-length text, phone number or ID pattern in text). Saved to `truth/bad_records.csv` with the rule each violates |
+| Victim profile (D-53) | Victim type, number, sex, exact age or band only, injury and relationship drawn per category from `config/sample_data.php` (`victims`; for example assaults: mostly individuals, more injuries, more acquaintances and family members). Drawn from a separate random stream (seed + 7919), so every other generated value, the answer keys and all earlier evaluation results are byte-identical to the files before the profile existed (checked on 2026-11-11). Copies and near misses keep their original's profile. Assumptions for demonstration only |
 | Seeded duplicates | Near-duplicate pairs (same category and ward, within the window, location retyped: typo, swapped letters, upper case, an extra or a dropped word, so some fall below the similarity threshold on purpose) and near misses that must not be flagged (outside the window, or same place and time with a different landmark). Saved to `truth/duplicates.csv` |
 
 ## 3. Files and the independent oracle (as built)
@@ -31,7 +32,7 @@ Real police records are confidential (proposal limitation 1.7.1), so the system 
 
 | File | Content |
 |---|---|
-| `incidents.csv` | The import format: `category,occurred_at,reported_at,sub_county,ward,station,location_description,description,status,closed_at` |
+| `incidents.csv` | The import format: `category,occurred_at,reported_at,sub_county,ward,station,location_description,description,status,closed_at,victim_type,victim_count,victim_sex,victim_age,victim_age_band,victim_injury,offender_relationship` |
 | `truth/bad_records.csv` | `row,rule`: rows seeded to break V1 to V6 (1 percent of N per rule, at least 5) |
 | `truth/duplicates.csv` | `row,original_row,kind`: `true` near-duplicates (2 percent of N) and `near_miss` rows outside the time window (1 percent) |
 | `truth/hotspots.json`, `truth/trend.json` | Planted ward hotspots (3 wards x 3.0), planted Theft hotspots (2 wards x 3.0), planted Burglary growth (+60 percent over 24 months) |

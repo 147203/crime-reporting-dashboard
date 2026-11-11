@@ -38,7 +38,7 @@ final class CreateUserCommand extends Command
 
         $validator = Validator::make($data, [
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email:rfc', 'max:190', Rule::unique('users', 'email')],
+            'email' => ['required', 'email:rfc', 'max:190', 'not_regex:/@demo\.invalid$/i', Rule::unique('users', 'email')],
             'role' => ['required', Rule::enum(Role::class)],
             'station_id' => ['nullable', 'required_if:role,officer', 'integer', Rule::exists('stations', 'id')],
             'password' => ['required', 'confirmed', Password::min((int) config('security.password_min_length'))->letters()->numbers()],

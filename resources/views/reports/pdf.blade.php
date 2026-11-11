@@ -94,5 +94,29 @@
         </tr>
     </table>
     <p class="small">Percentiles use the nearest-rank method; the median of an even count is the lower middle value.</p>
+
+    <h2>Victim profile (A11)</h2>
+    @php($a11 = $m['A11'])
+    @php($share = fn (int $count, int $whole) => $whole > 0 ? number_format(round(100 * $count / $whole, 2), 2) : '0.00')
+    <p>Individual victims: {{ number_format($a11['individuals']) }} of n = {{ number_format($vm->n()) }}. Median age {{ $a11['age']['median'] === null ? 'n/a' : $a11['age']['median'].' years' }} ({{ number_format($a11['age']['recorded']) }} with an exact age). No names, contacts or ID numbers are recorded.</p>
+    <table><tr><th>Age band</th>@foreach (App\Enums\VictimSex::cases() as $sex)<th class="num">{{ $sex->label() }}</th>@endforeach<th class="num">Total</th><th class="num">Share of individuals (%)</th></tr>
+        @foreach (App\Enums\AgeBand::cases() as $band)
+            <tr><td>{{ $band->label() }}</td>@foreach (App\Enums\VictimSex::cases() as $sex)<td class="num">{{ number_format($a11['sex_by_age_band'][$band->value][$sex->value]) }}</td>@endforeach<td class="num">{{ number_format($a11['age_band'][$band->value]) }}</td><td class="num">{{ $share($a11['age_band'][$band->value], $a11['individuals']) }}</td></tr>
+        @endforeach
+    </table>
+    <table>
+        <tr><th>Victim type</th><th class="num">Incidents</th><th class="num">Share of n (%)</th><th>Injury</th><th class="num">Incidents</th><th class="num">Share of n (%)</th></tr>
+        @php($types = App\Enums\VictimType::cases())
+        @php($injuries = App\Enums\InjuryLevel::cases())
+        @for ($i = 0; $i < max(count($types), count($injuries)); $i++)
+            <tr>
+                @if (isset($types[$i]))<td>{{ $types[$i]->label() }}</td><td class="num">{{ number_format($a11['type'][$types[$i]->value]) }}</td><td class="num">{{ $share($a11['type'][$types[$i]->value], $vm->n()) }}</td>@else<td></td><td></td><td></td>@endif
+                @if (isset($injuries[$i]))<td>{{ $injuries[$i]->label() }}</td><td class="num">{{ number_format($a11['injury'][$injuries[$i]->value]) }}</td><td class="num">{{ $share($a11['injury'][$injuries[$i]->value], $vm->n()) }}</td>@else<td></td><td></td><td></td>@endif
+            </tr>
+        @endfor
+    </table>
+    <table><tr><th>Relationship to the suspect</th><th class="num">Incidents</th><th class="num">Share of individuals (%)</th></tr>
+        @foreach (App\Enums\OffenderRelationship::cases() as $relationship)<tr><td>{{ $relationship->label() }}</td><td class="num">{{ number_format($a11['relationship'][$relationship->value]) }}</td><td class="num">{{ $share($a11['relationship'][$relationship->value], $a11['individuals']) }}</td></tr>@endforeach
+    </table>
 </body>
 </html>
