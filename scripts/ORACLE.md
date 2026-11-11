@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Evidence for NFR-05 (accuracy). The script recomputes analytics A1 to A10 from the raw sample CSV with plain PHP arrays and writes the expected values to JSON. Feature tests load the same CSV into MySQL through the application and assert that the application's numbers equal the oracle's. Two separate implementations agreeing on the same data is the accuracy claim.
+Evidence for NFR-05 (accuracy). The script recomputes analytics A1 to A11 from the raw sample CSV with plain PHP arrays and writes the expected values to JSON. Feature tests load the same CSV into MySQL through the application and assert that the application's numbers equal the oracle's. Two separate implementations agreeing on the same data is the accuracy claim.
 
 ## Independence
 
@@ -13,6 +13,8 @@ Evidence for NFR-05 (accuracy). The script recomputes analytics A1 to A10 from t
 | `database/seeders/data/wards.csv` (85 wards, 17 sub-counties, so zero-count areas are listed) | `tests/Feature/` and the application's analytics code |
 | `tests/Fixtures/oracle/filters.json` (filter cases) | `.env` |
 | `docs/02_REQUIREMENTS_AND_SCOPE.md` section 4 (the metric contract, used by the author of the script) | |
+
+A11 (victim profile) was added on 2026-11-11 from the docs/02 section 4 row A11 definition alone, without reading the application's victim-profile code.
 
 Plain PHP 8.4, no Composer, no framework, no SQL. Hotspot parameters (z at least 1.5, count at least 10) are constants in the script, taken from the documented defaults, not read from the app's config.
 
@@ -42,6 +44,7 @@ Output is deterministic: two runs on the same input are byte-identical (checked 
 | A8 | universe = all wards (restricted by the sub-county filter only; the ward filter is ignored), zeros included; population standard deviation (divide by N); thresholds compared before rounding; mu, sigma and z rounded to 4 dp in output |
 | A10 percentiles | nearest rank: sort ascending, take the element at 1-based position ceil(p x count), computed in integer arithmetic; the median of an even count is the lower middle value |
 | A10 units | report delay in hours (minutes / 60), closure time in days (minutes / 1440), both 2 dp; closure only over closed incidents |
+| A11 victim profile | over the same filtered rows as A1: `type` and `injury` over all of them; `individuals` = rows with type `individual`; `sex`, `age_band`, `sex_by_age_band` (keyed by age band, then sex), `relationship` and `age` over individual-victim rows only. Every list value is output, 0 when absent, in the docs/02 order. Blank list fields read as `not_recorded` (relationship: `not_known`), per V9. `age.recorded` = individual rows with a non-blank `victim_age`; `age.median` = nearest rank (lower middle for an even count), integer, `null` when none. Accepted rows must hold only listed values, victim count 0 to 50, age 0 to 120 matching its band, and cleared person fields for business or public property victims, or the script fails |
 | Name ordering | byte order (`strcmp`), not locale collation |
 
 ## Sanity checks (dataset of 1000, seed 20260924)
@@ -50,4 +53,5 @@ Output is deterministic: two runs on the same input are byte-identical (checked 
 2. Case `all` covers the whole generated period, so A1 = 1030 = `rows_accepted` (no accepted row falls outside it), and A4 `previous` is 0, so `change_pct` is `null`.
 3. For every case, the counts in A2, A3, A5, A6, A10 status, A7 sub-counties and A9 each sum to A1. Without a ward filter the A7 ward counts also sum to A1.
 4. Case `closed` has A1 = 511, which equals the `closed` status count in case `all`; closure rate in `all` is 100 x 511 / 1030 = 49.61.
-5. Case `all` A8 flags all three planted ward hotspots in `truth/hotspots.json`: Laini Saba (58, z 5.9079), Kwa Njenga (36, z 3.0751) and Woodley/Kenyatta Golf Course (24, z 1.53, just above the 1.5 threshold). These figures are for the dataset regenerated on 2026-09-24 after the generator's duplicate copies were made more realistic; rerun the oracle whenever the generator's pinned hash changes.
+5. Case `all` A11 type counts and injury counts each sum to A1 (1030); sex, age_band, relationship and all `sex_by_age_band` cells each sum to `individuals` (860); `age.recorded` is 628 with median 36. The same sums hold in every case.
+6. Case `all` A8 flags all three planted ward hotspots in `truth/hotspots.json`: Laini Saba (58, z 5.9079), Kwa Njenga (36, z 3.0751) and Woodley/Kenyatta Golf Course (24, z 1.53, just above the 1.5 threshold). These figures are for the dataset regenerated on 2026-09-24 after the generator's duplicate copies were made more realistic; rerun the oracle whenever the generator's pinned hash changes.

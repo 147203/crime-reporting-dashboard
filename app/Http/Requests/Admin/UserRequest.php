@@ -59,7 +59,8 @@ final class UserRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email:rfc', 'max:190', Rule::unique('users', 'email')->ignore($user instanceof User ? $user->id : null)],
+            // @demo.invalid is reserved for the demo accounts (D-54), so no real account can share one.
+            'email' => ['required', 'email:rfc', 'max:190', 'not_regex:/@demo\.invalid$/i', Rule::unique('users', 'email')->ignore($user instanceof User ? $user->id : null)],
             'role' => ['required', Rule::enum(Role::class)],
             'station_id' => ['nullable', 'required_if:role,'.Role::Officer->value, 'integer', Rule::exists('stations', 'id')->where('is_active', true)],
             'is_active' => ['sometimes', 'boolean'],
@@ -80,6 +81,7 @@ final class UserRequest extends FormRequest
         return [
             'station_id.required_if' => 'A Reporting Officer must be assigned to a station.',
             'password.required_if' => 'Type a password, or choose to generate one.',
+            'email.not_regex' => 'Addresses ending in @demo.invalid are reserved for the demo accounts, which only the demo sign-in buttons manage.',
         ];
     }
 

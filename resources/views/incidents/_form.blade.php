@@ -34,4 +34,38 @@
             @endif
         </x-card>
     </div>
+    <div class="col-12">
+        @php($options = fn (string $enum) => collect($enum::cases())->mapWithKeys(fn ($case) => [$case->value => $case->label()])->all())
+        <x-card title="Victim" subtitle="Describe the victim without identifying them: never record names, phone numbers, ID numbers or home addresses." data-victim-form>
+            <div class="row">
+                <div class="col-12 col-md-6 col-xl-4">
+                    <x-form.select name="victim_type" label="Victim type" :options="$options(\App\Enums\VictimType::class)" :value="$incident->victim_type?->value ?? 'not_recorded'" placeholder="Not recorded" />
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <x-form.input name="victim_count" type="number" label="Number of victims" :value="$incident->victim_count" min="0" max="50" inputmode="numeric" help="Leave empty if not known." />
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <x-form.select name="victim_injury" label="Injury" :options="$options(\App\Enums\InjuryLevel::class)" :value="$incident->victim_injury?->value ?? 'not_recorded'" placeholder="Not recorded" help="The most serious injury to any victim." />
+                </div>
+            </div>
+            <fieldset class="border rounded-3 p-3" data-person-fields>
+                <legend class="float-none w-auto px-2 fs-6 fw-semibold mb-0">Main victim (individuals only)</legend>
+                <p class="small text-body-secondary mb-3" data-person-note hidden>These details apply only when the victim is an individual person.</p>
+                <div class="row">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <x-form.select name="victim_sex" label="Sex" :options="$options(\App\Enums\VictimSex::class)" :value="$incident->victim_sex?->value ?? 'not_recorded'" placeholder="Not recorded" />
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <x-form.input name="victim_age" type="number" label="Age in years" :value="$incident->victim_age" min="0" max="120" inputmode="numeric" help="If known. The age band is then set from it." />
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <x-form.select name="victim_age_band" label="Age band" :options="$options(\App\Enums\AgeBand::class)" :value="$incident->victim_age_band?->value ?? 'not_recorded'" placeholder="Not recorded" help="Use when only an approximate age is known." />
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <x-form.select name="offender_relationship" label="Relationship to the suspect" :options="$options(\App\Enums\OffenderRelationship::class)" :value="$incident->offender_relationship?->value ?? 'not_known'" placeholder="Not known" />
+                    </div>
+                </div>
+            </fieldset>
+        </x-card>
+    </div>
 </div>

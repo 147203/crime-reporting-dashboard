@@ -237,3 +237,30 @@ code {
         animation: none !important;
     }
 }
+
+// Demo sign-in panel (D-54): set apart from the real sign-in form so nobody mistakes it for normal use.
+.demo-login {
+    border: 1px dashed var(--bs-warning-border-subtle);
+    background: var(--bs-warning-bg-subtle);
+    border-radius: var(--bs-border-radius);
+    padding: 1rem;
+
+    // Solid buttons on the tinted panel keep text at 4.5:1 in both themes.
+    .btn {
+        --bs-btn-bg: var(--bs-body-bg);
+        --bs-btn-color: var(--bs-body-color);
+        --bs-btn-border-color: var(--bs-border-color);
+        --bs-btn-hover-bg: var(--bs-tertiary-bg);
+        --bs-btn-hover-color: var(--bs-body-color);
+        --bs-btn-hover-border-color: var(--bs-primary);
+        --bs-btn-active-bg: var(--bs-tertiary-bg);
+        --bs-btn-active-color: var(--bs-body-color);
+    }
+}
+
+// Links inside running text are underlined so they are not told apart by colour alone (WCAG 1.4.1).
+p a:not(.btn),
+.alert a:not(.btn),
+.form-text a {
+    text-decoration: underline;
+}

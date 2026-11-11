@@ -35,16 +35,26 @@ final class SchemaTest extends TestCase
         $this->assertSame([], $offending);
     }
 
-    /** TC-FT-16: D-08, no personal identifiers of victims, suspects or witnesses. */
+    /** TC-FT-16: D-08 and D-53, no personal identifiers of victims, suspects or witnesses; only the approved descriptive victim profile. */
     #[Test]
     public function the_incident_schema_has_no_personal_identifier_columns(): void
     {
-        $offending = collect(Schema::getColumnListing('incidents'))
-            ->filter(fn (string $column): bool => (bool) preg_match('/victim|suspect|witness|complainant|phone|mobile|national_id|id_number|id_no|passport|dob|birth|gender|first_name|last_name|full_name/', $column))
+        // D-53 allows a descriptive victim profile and nothing else about people: these exact columns, from fixed lists.
+        $profile = ['victim_type', 'victim_count', 'victim_sex', 'victim_age', 'victim_age_band', 'victim_injury', 'offender_relationship'];
+        $columns = Schema::getColumnListing('incidents');
+
+        $identifiers = collect($columns)
+            ->filter(fn (string $column): bool => (bool) preg_match('/name|address|phone|mobile|email|contact|national_id|id_number|id_no|passport|dob|birth|suspect|witness|complainant/', $column))
+            ->values()
+            ->all();
+        $unapprovedPeopleColumns = collect($columns)
+            ->filter(fn (string $column): bool => (bool) preg_match('/victim|offender|gender|sex|age/', $column) && ! in_array($column, $profile, true))
             ->values()
             ->all();
 
-        $this->assertSame([], $offending);
+        $this->assertSame([], $identifiers);
+        $this->assertSame([], $unapprovedPeopleColumns);
+        $this->assertSame($profile, array_values(array_intersect($columns, $profile)));
     }
 
     /** TC-FT-17: V4 is also enforced by the database (composite key). */

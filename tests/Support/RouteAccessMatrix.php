@@ -19,6 +19,9 @@ final class RouteAccessMatrix
 
     public const FORBIDDEN = 'forbidden';
 
+    /** The route exists but does nothing here, such as demo sign-in when it is switched off (the default). */
+    public const NOT_FOUND = 'not-found';
+
     public const ACTORS = ['guest', 'admin', 'officer', 'analyst'];
 
     /**
@@ -38,6 +41,7 @@ final class RouteAccessMatrix
             'GET login' => ['guest' => self::ALLOW, ...$guestOnly],
             'POST login.store' => ['guest' => self::ALLOW, ...$guestOnly],
             'POST logout' => self::signedIn($everyone),
+            'POST demo.login' => ['guest' => self::NOT_FOUND, ...$guestOnly],
             'GET password.confirm' => self::signedIn($everyone),
             'POST password.confirm.store' => self::signedIn($everyone),
             'GET password.confirmation' => self::signedIn($everyone),
@@ -104,6 +108,7 @@ final class RouteAccessMatrix
             'imports.show', 'imports.commit', 'imports.discard', 'imports.errors' => ['batch' => $fixture->batch->id],
             'admin.users.show', 'admin.users.edit', 'admin.users.update', 'admin.users.unlock', 'admin.users.destroy' => ['user' => $fixture->officer->id],
             'admin.reference.store' => ['type' => 'categories'],
+            'demo.login' => ['role' => 'admin'],
             'admin.reference.update' => ['type' => 'categories', 'item' => $fixture->incident->category_id],
             default => [],
         };

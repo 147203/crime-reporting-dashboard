@@ -12,7 +12,7 @@ Implements proposal 3.6 (unit, integration, system, black-box, usability, perfor
 | Black-box end to end (BB) | Playwright | Real browser, inputs and visible outputs only | TC-BB-01 login, report, see in list; TC-BB-02 apply filter, chart and table update |
 | Security (SE) | PHPUnit and manual checklist | Auth, roles, injection, XSS, CSRF, headers, throttling | TC-SE-01 every route x role matrix; TC-SE-02 SQL injection strings in filters do not change results; TC-SE-03 lockout after five failures |
 | Performance (PF) | Timed feature tests, `k6` or `ab` | Response times at 100,000 rows | TC-PF-01 dashboard p95; TC-PF-02 import 10,000 rows |
-| Accuracy (AC) | PHPUnit against oracle files | A1 to A10 equal the oracle; data-quality rates | TC-AC-01 all metrics for the fixed filter list; TC-AC-02 rejection recall |
+| Accuracy (AC) | PHPUnit against oracle files | A1 to A11 equal the oracle; data-quality rates | TC-AC-01 all metrics for the fixed filter list; TC-AC-02 rejection recall |
 | Usability (US) | Sessions with real participants | Task success and SUS | TC-US-01 to TC-US-08 tasks from doc 05 |
 
 ## 2. Rules
@@ -33,7 +33,7 @@ Login, logout, lockout, role redirects; user management; reference data; inciden
 
 | Measure | Method | Target (PROVISIONAL) |
 |---|---|---|
-| Analytics correctness | Compare A1 to A10 with the independent oracle on the seeded dataset and a fixed filter list | 100 percent exact match |
+| Analytics correctness | Compare A1 to A11 with the independent oracle on the seeded dataset and a fixed filter list | 100 percent exact match |
 | Validation accuracy | Seeded bad records: rejection recall per rule; valid records: false rejection rate | At least 95 percent recall; report false rejections |
 | Duplicate detection | Precision and recall on seeded pairs | At least 90 percent each |
 | Hotspot recovery | Planted hotspots flagged; unplanted flagged | Report recall and precision, plus the sensitivity table |
@@ -61,22 +61,22 @@ Checklist (each item has a test or a documented manual check): no unauthenticate
 
 | Requirement | Test cases (file) |
 |---|---|
-| FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`) |
+| FR-01 Authentication, lockout, password change | TC-FT-03 to 07 (`Auth/LoginTest`), TC-SE-03, TC-FT-21 to 25 (`Auth/AccountSecurityTest`), TC-SE-06, 07 (`Security/CsrfAndThrottleTest`), TC-FT-66, 67, TC-SE-22 to 24 (`Auth/DemoLoginTest`: demo sign-in off by default, local only, refused in production, no known password), TC-BB-20 (demo sign-in and switch in the browser) |
 | FR-02 Role and station access | TC-SE-01a, 01b (`Security/RouteAccessMatrixTest`, every route x 4 actors), TC-SE-09 (`Security/StationScopeTest`), TC-FT-13, 14 (`Schema/IncidentScopeTest`) |
 | FR-03 User management | TC-FT-26 to 28, 30, 31 (`Admin/AdministrationTest`), TC-UT-17, TC-FT-55 to 57, TC-SE-19 to 21, TC-FT-64, 65 (`Admin/AccountManagementTest`: user detail page, delete only unused accounts, generated password shown once, no self reset, last administrator kept, unlock, eye toggle), TC-BB-11, 12, 15 (`tests/e2e/account-and-drilldown.spec.ts`: Actions menu, delete always confirmed) |
 | FR-04 Reference data | TC-FT-12 (`Schema/SchemaTest`), TC-FT-29 (`Admin/AdministrationTest`) |
-| FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`) |
+| FR-05 Incident form and validation V1 to V7 | TC-FT-01, 02 (`Incidents/IncidentWorkflowTest`), TC-FT-17, 18 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-68 to 72, TC-SE-25 (`Incidents/VictimProfileTest`: victim profile V9, normalisation, edit, list filters, import columns), TC-BB-17, 18 (report and edit with a victim profile in the browser) |
 | FR-06 Records: filter, status, soft delete | TC-FT-03 to 05 (`Incidents/IncidentWorkflowTest`), TC-UT-12 (`Unit/IncidentStatusTest`) |
 | FR-12 Audit log | TC-FT-19 (`Schema/AuditAndMassAssignmentTest`), TC-FT-25, 28, 29 |
 | NFR-01 Security | TC-SE-01 to 11, TC-FT-01, 02, 60 to 62 (preflight, database server and built-assets checks), TC-UT-01 to 11 (`Unit/PreflightTest`) |
-| NFR-02 Privacy | TC-FT-10, 16 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-25, 28 (no secrets in audit) |
+| NFR-02 Privacy | TC-FT-10, 16 (`Schema/SchemaTest`), TC-UT-01 (`Unit/PiiGuardTest`), TC-FT-25, 28 (no secrets in audit), TC-FT-16 (only the approved descriptive victim columns, D-53), TC-SE-25 (no free text in the victim profile) |
 | NFR-06 Reliability (reversible migrations, backup) | Rollback and re-migrate logged in TEST_LOG (Phase 2 gate); TC-FT-59 (`BackupCommandsTest`, guards); backup and restore procedure run once and compared table by table (TEST_LOG, Phase 6b) |
-| NFR-08 Accessibility | TC-BB-10 (`tests/e2e/accessibility.spec.ts`, axe WCAG 2.1 A and AA, 13 pages, light and dark, 1366 px and 360 px), TC-FT-57 (eye toggle labelled) |
+| NFR-08 Accessibility | TC-BB-10 (`tests/e2e/accessibility.spec.ts`, axe WCAG 2.1 A and AA, 13 pages, light and dark, 1366 px and 360 px), TC-FT-57 (eye toggle labelled), TC-BB-16 (every page for every role, including detail and edit pages, scanned at 1366 px and 360 px) |
 | FR-07 Data quality (PII guard, duplicates, review) | TC-UT-13, 15, 18 (D-48 numbers), TC-FT-43, 48, 49, TC-AC-02, 03 (`Quality/*`) |
 | FR-08 CSV import | TC-FT-40 to 42, 45 to 47, 53, TC-SE-17, 18 (`Quality/ImportAndReviewTest`, `Quality/ReviewRegressionPhase4Test`) |
-| FR-09 Analytics A1 to A10 | TC-AC-01 (`Quality/AnalyticsOracleTest`, exact match with the independent oracle) |
-| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-FT-58 (`Quality/DrillDownTest`, every drill-down list total equals its chart value, for an administrator and a station officer, and with two wards of the same name), TC-BB-06, TC-BB-13 |
-| FR-11 Reports and exports | TC-AC-05, TC-AC-07 (Excel rows equal CSV rows, text cells only), TC-FT-51, TC-SE-16, TC-BB-07, TC-BB-14 |
+| FR-09 Analytics A1 to A11 | TC-AC-01 (`Quality/AnalyticsOracleTest`, exact match with the independent oracle); A11 added 2026-11-11, oracle extended from the docs/02 definition only, 5,795 values equal |
+| FR-10 Dashboards | TC-FT-50, 52, TC-SE-15 (`Quality/DashboardAndExportTest`), TC-FT-58 (`Quality/DrillDownTest`, every drill-down list total equals its chart value, for an administrator and a station officer, and with two wards of the same name), TC-BB-06, TC-BB-13, TC-FT-58 extended to the A11 links |
+| FR-11 Reports and exports | TC-AC-05, TC-AC-07 (Excel rows equal CSV rows, text cells only), TC-FT-51, TC-SE-16, TC-BB-07, TC-BB-14, TC-AC-08 (victim columns in CSV and Excel) |
 | FR-13 Data-quality summary | TC-FT-44 |
 | FR-14 Generator determinism | TC-AC-04 (pinned SHA-256) |
 | NFR-03 Usability | TC-US-01 to 08 (real participants, author; kit in `docs/usability/USABILITY_KIT.md`); TC-BB-01 to 09 automate the same tasks (`tests/e2e/usability-tasks.spec.ts`) |

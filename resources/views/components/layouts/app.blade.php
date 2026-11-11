@@ -60,6 +60,9 @@
                 <button class="btn btn-outline-secondary btn-sm d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Open menu">
                     <i class="bi bi-list"></i>
                 </button>
+                @if ($user?->isDemoAccount())
+                    <span class="badge rounded-pill text-bg-warning ms-2" title="Signed in with a demo account; for presentations only">Demo: {{ $user->role->label() }}</span>
+                @endif
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-theme-toggle aria-pressed="false" aria-label="Switch theme"><i class="bi bi-moon-stars"></i></button>
                     <div class="dropdown">
@@ -75,7 +78,16 @@
                                 @endif
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ route('password.edit') }}"><i class="bi bi-key me-2" aria-hidden="true"></i>Change password</a></li>
+                            @if ($user?->isDemoAccount())
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-arrow-left-right me-2" aria-hidden="true"></i>Switch demo user</button>
+                                    </form>
+                                </li>
+                            @else
+                                <li><a class="dropdown-item" href="{{ route('password.edit') }}"><i class="bi bi-key me-2" aria-hidden="true"></i>Change password</a></li>
+                            @endif
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

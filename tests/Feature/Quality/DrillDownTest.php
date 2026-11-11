@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\Quality;
 
 use App\Enums\DuplicateStatus;
+use App\Enums\InjuryLevel;
+use App\Enums\OffenderRelationship;
+use App\Enums\VictimType;
 use App\Models\Incident;
 use App\Models\Station;
 use App\Models\User;
@@ -68,6 +71,15 @@ final class DrillDownTest extends TestCase
             Incident::factory()->atStation($station)->create(['occurred_at' => $at, 'reported_at' => $at]);
         }
 
+        // Victim profiles across the A11 lists, including one at the officer's station.
+        $profiles = [
+            ['victim_type' => 'individual', 'victim_sex' => 'female', 'victim_age' => 29, 'victim_age_band' => '25_34', 'victim_injury' => 'minor', 'offender_relationship' => 'family_or_partner'],
+            ['victim_type' => 'individual', 'victim_sex' => 'male', 'victim_age_band' => '65_plus', 'victim_injury' => 'serious', 'offender_relationship' => 'stranger'],
+            ['victim_type' => 'business', 'victim_injury' => 'none'],
+        ];
+        Incident::query()->orderBy('id')->limit(3)->get()->each(fn (Incident $incident, int $i) => $incident->forceFill($profiles[$i])->save());
+        Incident::query()->where('station_id', $station->id)->firstOrFail()->forceFill($profiles[0])->save();
+
         return $station;
     }
 
@@ -84,6 +96,10 @@ final class DrillDownTest extends TestCase
             'month' => [$vm->trend()['links'], array_column($vm->metrics['A3'], 'count')],
             'status' => [$vm->statuses()['links'], array_values($vm->metrics['A10']['status'])],
             'ward' => [$vm->topWards()['links'], array_column(array_slice($vm->metrics['A7']['wards'], 0, 10), 'count')],
+            'victim age band' => [$vm->victimAgeSex()['links'], array_values($vm->metrics['A11']['age_band'])],
+            'victim type' => [$vm->victimBreakdown('type', VictimType::class, 'victim_type', 'Type')['links'], array_values($vm->metrics['A11']['type'])],
+            'injury' => [$vm->victimBreakdown('injury', InjuryLevel::class, 'victim_injury', 'Injury')['links'], array_values($vm->metrics['A11']['injury'])],
+            'relationship' => [$vm->victimBreakdown('relationship', OffenderRelationship::class, 'offender_relationship', 'Relationship')['links'], array_values($vm->metrics['A11']['relationship'])],
         ];
 
         $compared = 0;

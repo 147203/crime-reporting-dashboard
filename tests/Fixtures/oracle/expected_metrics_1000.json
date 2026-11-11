@@ -1429,6 +1429,89 @@
                     "closure_days": {
                         "median": 29.52
                     }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 860,
+                        "business": 106,
+                        "public_property": 20,
+                        "not_recorded": 44
+                    },
+                    "injury": {
+                        "none": 700,
+                        "minor": 200,
+                        "serious": 69,
+                        "fatal": 6,
+                        "not_recorded": 55
+                    },
+                    "individuals": 860,
+                    "sex": {
+                        "male": 471,
+                        "female": 358,
+                        "not_recorded": 31
+                    },
+                    "age_band": {
+                        "under_18": 145,
+                        "18_24": 110,
+                        "25_34": 133,
+                        "35_44": 115,
+                        "45_54": 80,
+                        "55_64": 68,
+                        "65_plus": 125,
+                        "not_recorded": 84
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 71,
+                            "female": 66,
+                            "not_recorded": 8
+                        },
+                        "18_24": {
+                            "male": 67,
+                            "female": 40,
+                            "not_recorded": 3
+                        },
+                        "25_34": {
+                            "male": 66,
+                            "female": 62,
+                            "not_recorded": 5
+                        },
+                        "35_44": {
+                            "male": 59,
+                            "female": 52,
+                            "not_recorded": 4
+                        },
+                        "45_54": {
+                            "male": 50,
+                            "female": 27,
+                            "not_recorded": 3
+                        },
+                        "55_64": {
+                            "male": 39,
+                            "female": 27,
+                            "not_recorded": 2
+                        },
+                        "65_plus": {
+                            "male": 68,
+                            "female": 54,
+                            "not_recorded": 3
+                        },
+                        "not_recorded": {
+                            "male": 51,
+                            "female": 30,
+                            "not_recorded": 3
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 495,
+                        "acquaintance": 158,
+                        "family_or_partner": 80,
+                        "not_known": 127
+                    },
+                    "age": {
+                        "recorded": 628,
+                        "median": 36
+                    }
                 }
             }
         },
@@ -2335,6 +2418,89 @@
                     },
                     "closure_days": {
                         "median": 29.37
+                    }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 118,
+                        "business": 16,
+                        "public_property": 3,
+                        "not_recorded": 9
+                    },
+                    "injury": {
+                        "none": 107,
+                        "minor": 23,
+                        "serious": 8,
+                        "fatal": 0,
+                        "not_recorded": 8
+                    },
+                    "individuals": 118,
+                    "sex": {
+                        "male": 61,
+                        "female": 54,
+                        "not_recorded": 3
+                    },
+                    "age_band": {
+                        "under_18": 21,
+                        "18_24": 12,
+                        "25_34": 16,
+                        "35_44": 18,
+                        "45_54": 13,
+                        "55_64": 9,
+                        "65_plus": 19,
+                        "not_recorded": 10
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 9,
+                            "female": 11,
+                            "not_recorded": 1
+                        },
+                        "18_24": {
+                            "male": 8,
+                            "female": 4,
+                            "not_recorded": 0
+                        },
+                        "25_34": {
+                            "male": 6,
+                            "female": 10,
+                            "not_recorded": 0
+                        },
+                        "35_44": {
+                            "male": 6,
+                            "female": 11,
+                            "not_recorded": 1
+                        },
+                        "45_54": {
+                            "male": 9,
+                            "female": 4,
+                            "not_recorded": 0
+                        },
+                        "55_64": {
+                            "male": 6,
+                            "female": 3,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 10,
+                            "female": 9,
+                            "not_recorded": 0
+                        },
+                        "not_recorded": {
+                            "male": 7,
+                            "female": 2,
+                            "not_recorded": 1
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 66,
+                        "acquaintance": 17,
+                        "family_or_partner": 12,
+                        "not_known": 23
+                    },
+                    "age": {
+                        "recorded": 79,
+                        "median": 37
                     }
                 }
             }
@@ -3749,6 +3915,89 @@
                     "closure_days": {
                         "median": 30.84
                     }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 375,
+                        "business": 32,
+                        "public_property": 5,
+                        "not_recorded": 19
+                    },
+                    "injury": {
+                        "none": 374,
+                        "minor": 35,
+                        "serious": 4,
+                        "fatal": 0,
+                        "not_recorded": 18
+                    },
+                    "individuals": 375,
+                    "sex": {
+                        "male": 199,
+                        "female": 160,
+                        "not_recorded": 16
+                    },
+                    "age_band": {
+                        "under_18": 64,
+                        "18_24": 48,
+                        "25_34": 68,
+                        "35_44": 39,
+                        "45_54": 32,
+                        "55_64": 32,
+                        "65_plus": 61,
+                        "not_recorded": 31
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 32,
+                            "female": 27,
+                            "not_recorded": 5
+                        },
+                        "18_24": {
+                            "male": 29,
+                            "female": 17,
+                            "not_recorded": 2
+                        },
+                        "25_34": {
+                            "male": 32,
+                            "female": 34,
+                            "not_recorded": 2
+                        },
+                        "35_44": {
+                            "male": 19,
+                            "female": 18,
+                            "not_recorded": 2
+                        },
+                        "45_54": {
+                            "male": 19,
+                            "female": 11,
+                            "not_recorded": 2
+                        },
+                        "55_64": {
+                            "male": 19,
+                            "female": 13,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 30,
+                            "female": 29,
+                            "not_recorded": 2
+                        },
+                        "not_recorded": {
+                            "male": 19,
+                            "female": 11,
+                            "not_recorded": 1
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 254,
+                        "acquaintance": 40,
+                        "family_or_partner": 17,
+                        "not_known": 64
+                    },
+                    "age": {
+                        "recorded": 281,
+                        "median": 34
+                    }
                 }
             }
         },
@@ -4126,6 +4375,89 @@
                     },
                     "closure_days": {
                         "median": 20.38
+                    }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 105,
+                        "business": 11,
+                        "public_property": 2,
+                        "not_recorded": 4
+                    },
+                    "injury": {
+                        "none": 84,
+                        "minor": 25,
+                        "serious": 11,
+                        "fatal": 0,
+                        "not_recorded": 2
+                    },
+                    "individuals": 105,
+                    "sex": {
+                        "male": 52,
+                        "female": 50,
+                        "not_recorded": 3
+                    },
+                    "age_band": {
+                        "under_18": 13,
+                        "18_24": 15,
+                        "25_34": 15,
+                        "35_44": 13,
+                        "45_54": 11,
+                        "55_64": 11,
+                        "65_plus": 18,
+                        "not_recorded": 9
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 5,
+                            "female": 8,
+                            "not_recorded": 0
+                        },
+                        "18_24": {
+                            "male": 8,
+                            "female": 6,
+                            "not_recorded": 1
+                        },
+                        "25_34": {
+                            "male": 9,
+                            "female": 5,
+                            "not_recorded": 1
+                        },
+                        "35_44": {
+                            "male": 4,
+                            "female": 9,
+                            "not_recorded": 0
+                        },
+                        "45_54": {
+                            "male": 6,
+                            "female": 5,
+                            "not_recorded": 0
+                        },
+                        "55_64": {
+                            "male": 5,
+                            "female": 6,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 10,
+                            "female": 8,
+                            "not_recorded": 0
+                        },
+                        "not_recorded": {
+                            "male": 5,
+                            "female": 3,
+                            "not_recorded": 1
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 66,
+                        "acquaintance": 13,
+                        "family_or_partner": 6,
+                        "not_known": 20
+                    },
+                    "age": {
+                        "recorded": 73,
+                        "median": 42
                     }
                 }
             }
@@ -5565,6 +5897,89 @@
                     "closure_days": {
                         "median": 29.52
                     }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 428,
+                        "business": 50,
+                        "public_property": 14,
+                        "not_recorded": 19
+                    },
+                    "injury": {
+                        "none": 345,
+                        "minor": 100,
+                        "serious": 31,
+                        "fatal": 4,
+                        "not_recorded": 31
+                    },
+                    "individuals": 428,
+                    "sex": {
+                        "male": 241,
+                        "female": 170,
+                        "not_recorded": 17
+                    },
+                    "age_band": {
+                        "under_18": 72,
+                        "18_24": 56,
+                        "25_34": 70,
+                        "35_44": 56,
+                        "45_54": 31,
+                        "55_64": 36,
+                        "65_plus": 63,
+                        "not_recorded": 44
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 37,
+                            "female": 29,
+                            "not_recorded": 6
+                        },
+                        "18_24": {
+                            "male": 33,
+                            "female": 22,
+                            "not_recorded": 1
+                        },
+                        "25_34": {
+                            "male": 34,
+                            "female": 34,
+                            "not_recorded": 2
+                        },
+                        "35_44": {
+                            "male": 30,
+                            "female": 24,
+                            "not_recorded": 2
+                        },
+                        "45_54": {
+                            "male": 20,
+                            "female": 9,
+                            "not_recorded": 2
+                        },
+                        "55_64": {
+                            "male": 24,
+                            "female": 11,
+                            "not_recorded": 1
+                        },
+                        "65_plus": {
+                            "male": 38,
+                            "female": 24,
+                            "not_recorded": 1
+                        },
+                        "not_recorded": {
+                            "male": 25,
+                            "female": 17,
+                            "not_recorded": 2
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 244,
+                        "acquaintance": 79,
+                        "family_or_partner": 38,
+                        "not_known": 67
+                    },
+                    "age": {
+                        "recorded": 308,
+                        "median": 34
+                    }
                 }
             }
         },
@@ -6998,6 +7413,89 @@
                     "closure_days": {
                         "median": 28.27
                     }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 44,
+                        "business": 8,
+                        "public_property": 1,
+                        "not_recorded": 2
+                    },
+                    "injury": {
+                        "none": 38,
+                        "minor": 9,
+                        "serious": 5,
+                        "fatal": 1,
+                        "not_recorded": 2
+                    },
+                    "individuals": 44,
+                    "sex": {
+                        "male": 22,
+                        "female": 21,
+                        "not_recorded": 1
+                    },
+                    "age_band": {
+                        "under_18": 9,
+                        "18_24": 3,
+                        "25_34": 7,
+                        "35_44": 7,
+                        "45_54": 4,
+                        "55_64": 4,
+                        "65_plus": 4,
+                        "not_recorded": 6
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 4,
+                            "female": 5,
+                            "not_recorded": 0
+                        },
+                        "18_24": {
+                            "male": 1,
+                            "female": 2,
+                            "not_recorded": 0
+                        },
+                        "25_34": {
+                            "male": 5,
+                            "female": 2,
+                            "not_recorded": 0
+                        },
+                        "35_44": {
+                            "male": 4,
+                            "female": 2,
+                            "not_recorded": 1
+                        },
+                        "45_54": {
+                            "male": 1,
+                            "female": 3,
+                            "not_recorded": 0
+                        },
+                        "55_64": {
+                            "male": 2,
+                            "female": 2,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 2,
+                            "female": 2,
+                            "not_recorded": 0
+                        },
+                        "not_recorded": {
+                            "male": 3,
+                            "female": 3,
+                            "not_recorded": 0
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 26,
+                        "acquaintance": 7,
+                        "family_or_partner": 7,
+                        "not_known": 4
+                    },
+                    "age": {
+                        "recorded": 27,
+                        "median": 41
+                    }
                 }
             }
         },
@@ -7533,6 +8031,89 @@
                     "closure_days": {
                         "median": 35.77
                     }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 4,
+                        "business": 2,
+                        "public_property": 0,
+                        "not_recorded": 0
+                    },
+                    "injury": {
+                        "none": 5,
+                        "minor": 1,
+                        "serious": 0,
+                        "fatal": 0,
+                        "not_recorded": 0
+                    },
+                    "individuals": 4,
+                    "sex": {
+                        "male": 1,
+                        "female": 3,
+                        "not_recorded": 0
+                    },
+                    "age_band": {
+                        "under_18": 0,
+                        "18_24": 1,
+                        "25_34": 0,
+                        "35_44": 2,
+                        "45_54": 0,
+                        "55_64": 0,
+                        "65_plus": 0,
+                        "not_recorded": 1
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "18_24": {
+                            "male": 0,
+                            "female": 1,
+                            "not_recorded": 0
+                        },
+                        "25_34": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "35_44": {
+                            "male": 1,
+                            "female": 1,
+                            "not_recorded": 0
+                        },
+                        "45_54": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "55_64": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "not_recorded": {
+                            "male": 0,
+                            "female": 1,
+                            "not_recorded": 0
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 2,
+                        "acquaintance": 2,
+                        "family_or_partner": 0,
+                        "not_known": 0
+                    },
+                    "age": {
+                        "recorded": 3,
+                        "median": 38
+                    }
                 }
             }
         },
@@ -7789,6 +8370,89 @@
                     },
                     "closure_days": {
                         "median": 19.09
+                    }
+                },
+                "A11": {
+                    "type": {
+                        "individual": 4,
+                        "business": 0,
+                        "public_property": 0,
+                        "not_recorded": 0
+                    },
+                    "injury": {
+                        "none": 2,
+                        "minor": 0,
+                        "serious": 1,
+                        "fatal": 0,
+                        "not_recorded": 1
+                    },
+                    "individuals": 4,
+                    "sex": {
+                        "male": 3,
+                        "female": 0,
+                        "not_recorded": 1
+                    },
+                    "age_band": {
+                        "under_18": 0,
+                        "18_24": 1,
+                        "25_34": 1,
+                        "35_44": 0,
+                        "45_54": 1,
+                        "55_64": 1,
+                        "65_plus": 0,
+                        "not_recorded": 0
+                    },
+                    "sex_by_age_band": {
+                        "under_18": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "18_24": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 1
+                        },
+                        "25_34": {
+                            "male": 1,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "35_44": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "45_54": {
+                            "male": 1,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "55_64": {
+                            "male": 1,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "65_plus": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        },
+                        "not_recorded": {
+                            "male": 0,
+                            "female": 0,
+                            "not_recorded": 0
+                        }
+                    },
+                    "relationship": {
+                        "stranger": 0,
+                        "acquaintance": 3,
+                        "family_or_partner": 1,
+                        "not_known": 0
+                    },
+                    "age": {
+                        "recorded": 3,
+                        "median": 53
                     }
                 }
             }

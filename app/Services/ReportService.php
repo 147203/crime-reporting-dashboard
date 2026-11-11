@@ -25,7 +25,7 @@ use Throwable;
  */
 final class ReportService
 {
-    public const CSV_COLUMNS = ['reference_no', 'category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'status', 'closed_at', 'duplicate_status', 'location_description', 'description', 'is_synthetic'];
+    public const CSV_COLUMNS = ['reference_no', 'category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'status', 'closed_at', 'duplicate_status', 'location_description', 'description', 'victim_type', 'victim_count', 'victim_sex', 'victim_age', 'victim_age_band', 'victim_injury', 'offender_relationship', 'is_synthetic'];
 
     public function __construct(private readonly AuditLogger $audit) {}
 
@@ -108,6 +108,13 @@ final class ReportService
             $incident->duplicate_status->value,
             $incident->location_description,
             $incident->description,
+            $incident->victim_type->value,
+            $incident->victim_count,
+            $incident->victim_sex->value,
+            $incident->victim_age,
+            $incident->victim_age_band->value,
+            $incident->victim_injury->value,
+            $incident->offender_relationship->value,
             $incident->is_synthetic ? 'sample' : 'real',
         ]);
     }

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Independent accuracy oracle for analytics A1 to A10.
+ * Independent accuracy oracle for analytics A1 to A11.
  *
  * Reads the generated sample CSV, the ward reference list and the filter
  * cases, and recomputes every metric with plain PHP arrays. It never loads
@@ -16,8 +16,18 @@ declare(strict_types=1);
 const INCIDENT_HEADER = [
     'category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station',
     'location_description', 'description', 'status', 'closed_at',
+    'victim_type', 'victim_count', 'victim_sex', 'victim_age', 'victim_age_band',
+    'victim_injury', 'offender_relationship',
 ];
 const STATUSES = ['reported', 'under_investigation', 'closed'];
+// A11 value lists, in the order docs/02 section 4 lists them; output keeps this order.
+const VICTIM_TYPES = ['individual', 'business', 'public_property', 'not_recorded'];
+const INJURY_LEVELS = ['none', 'minor', 'serious', 'fatal', 'not_recorded'];
+const VICTIM_SEXES = ['male', 'female', 'not_recorded'];
+const AGE_BANDS = ['under_18', '18_24', '25_34', '35_44', '45_54', '55_64', '65_plus', 'not_recorded'];
+const RELATIONSHIPS = ['stranger', 'acquaintance', 'family_or_partner', 'not_known'];
+// Lower age bound of each band (V9); a band runs up to the next band's lower bound minus one.
+const AGE_BAND_FROM = ['under_18' => 0, '18_24' => 18, '25_34' => 25, '35_44' => 35, '45_54' => 45, '55_64' => 55, '65_plus' => 65];
 const BANDS = [
     ['00:00 to 05:59', 0, 5],
     ['06:00 to 11:59', 6, 11],
@@ -202,6 +212,66 @@ function ranking(array $universe, array $counts, int $n): array
     return $result;
 }
 
+function ageBand(int $age): string
+{
+    $band = 'under_18';
+    foreach (AGE_BAND_FROM as $name => $from) {
+        if ($age >= $from) {
+            $band = $name;
+        }
+    }
+
+    return $band;
+}
+
+/** V9 says blank means not recorded; the relationship list's equivalent is not_known. */
+function victimValue(array $r, string $key, array $allowed, string $blank, int $rowNumber): string
+{
+    $value = $r[$key] === '' ? $blank : $r[$key];
+    if (! in_array($value, $allowed, true)) {
+        fail("accepted data row {$rowNumber} has unknown {$key} {$r[$key]}");
+    }
+
+    return $value;
+}
+
+function a11(array $pop): array
+{
+    $type = array_fill_keys(VICTIM_TYPES, 0);
+    $injury = array_fill_keys(INJURY_LEVELS, 0);
+    $sex = array_fill_keys(VICTIM_SEXES, 0);
+    $band = array_fill_keys(AGE_BANDS, 0);
+    $sexByBand = array_fill_keys(AGE_BANDS, array_fill_keys(VICTIM_SEXES, 0));
+    $relationship = array_fill_keys(RELATIONSHIPS, 0);
+    $ages = [];
+    foreach ($pop as $r) {
+        $type[$r['victim_type']]++;
+        $injury[$r['victim_injury']]++;
+        if ($r['victim_type'] !== 'individual') {
+            continue;
+        }
+        $sex[$r['victim_sex']]++;
+        $band[$r['victim_age_band']]++;
+        $sexByBand[$r['victim_age_band']][$r['victim_sex']]++;
+        $relationship[$r['offender_relationship']]++;
+        if ($r['victim_age'] !== '') {
+            $ages[] = (int) $r['victim_age'];
+        }
+    }
+    sort($ages);
+
+    return [
+        'type' => $type,
+        'injury' => $injury,
+        'individuals' => $type['individual'],
+        'sex' => $sex,
+        'age_band' => $band,
+        'sex_by_age_band' => $sexByBand,
+        'relationship' => $relationship,
+        'age' => ['recorded' => count($ages), 'median' => nearestRank($ages, 1, 2)],
+    ];
+}
+
 function metrics(array $rows, array $filters, array $wardToSub): array
 {
     $pop = select($rows, $filters);
@@ -361,6 +431,7 @@ function metrics(array $rows, array $filters, array $wardToSub): array
         'A1' => ['n' => $n],
         'A2' => $a2, 'A3' => $a3, 'A4' => $a4, 'A5' => $a5,
         'A6' => $a6, 'A7' => $a7, 'A8' => $a8, 'A9' => $a9, 'A10' => $a10,
+        'A11' => a11($pop),
     ];
 }
 
@@ -395,6 +466,28 @@ foreach ($raw as $i => $fields) {
         fail('accepted data row '.($i + 1).' has closed_at inconsistent with status');
     }
     toMinutes($r['occurred_at']);
+    $rowNumber = $i + 1;
+    $r['victim_type'] = victimValue($r, 'victim_type', VICTIM_TYPES, 'not_recorded', $rowNumber);
+    $r['victim_injury'] = victimValue($r, 'victim_injury', INJURY_LEVELS, 'not_recorded', $rowNumber);
+    $r['victim_sex'] = victimValue($r, 'victim_sex', VICTIM_SEXES, 'not_recorded', $rowNumber);
+    $r['victim_age_band'] = victimValue($r, 'victim_age_band', AGE_BANDS, 'not_recorded', $rowNumber);
+    $r['offender_relationship'] = victimValue($r, 'offender_relationship', RELATIONSHIPS, 'not_known', $rowNumber);
+    if ($r['victim_count'] !== '' && (! ctype_digit($r['victim_count']) || (int) $r['victim_count'] > 50)) {
+        fail("accepted data row {$rowNumber} has victim_count outside 0 to 50: {$r['victim_count']}");
+    }
+    if ($r['victim_age'] !== '') {
+        if (! ctype_digit($r['victim_age']) || (int) $r['victim_age'] > 120) {
+            fail("accepted data row {$rowNumber} has victim_age outside 0 to 120: {$r['victim_age']}");
+        }
+        if (ageBand((int) $r['victim_age']) !== $r['victim_age_band']) {
+            fail("accepted data row {$rowNumber} has victim_age_band inconsistent with victim_age");
+        }
+    }
+    // V9 clears the person fields when the victim is not a person.
+    if (in_array($r['victim_type'], ['business', 'public_property'], true)
+        && ($r['victim_sex'] !== 'not_recorded' || $r['victim_age'] !== '' || $r['victim_age_band'] !== 'not_recorded' || $r['offender_relationship'] !== 'not_known')) {
+        fail("accepted data row {$rowNumber} has person fields set for a {$r['victim_type']} victim");
+    }
     $rows[] = $r;
 }
 

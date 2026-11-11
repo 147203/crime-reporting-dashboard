@@ -79,6 +79,7 @@ final class RouteAccessMatrixTest extends TestCase
             RouteAccessMatrix::LOGIN => $response->assertRedirect(route('login'))->assertSessionHasNoErrors(),
             RouteAccessMatrix::HOME => $response->assertRedirect(route('home')),
             RouteAccessMatrix::FORBIDDEN => $response->assertForbidden(),
+            RouteAccessMatrix::NOT_FOUND => $response->assertNotFound(),
             RouteAccessMatrix::ALLOW => $this->assertReachedTheAction($response),
             default => $this->fail("Unknown expectation {$expected}."),
         };

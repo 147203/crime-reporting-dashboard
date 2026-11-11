@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Analytics;
 
+use App\Enums\AgeBand;
 use App\Enums\IncidentStatus;
+use App\Enums\InjuryLevel;
+use App\Enums\OffenderRelationship;
+use App\Enums\VictimSex;
+use App\Enums\VictimType;
 use App\Models\CrimeCategory;
 use App\Models\Incident;
 use App\Models\SubCounty;
@@ -55,6 +60,7 @@ final class Analytics
             'A8' => $this->a8(),
             'A9' => $this->a9(),
             'A10' => $this->a10($n),
+            'A11' => $this->a11(),
         ];
     }
 
@@ -289,6 +295,64 @@ final class Analytics
             ],
             'closure_days' => ['median' => self::minutesTo($closure->p50 ?? null, 1440)],
         ];
+    }
+
+    /**
+     * A11 victim profile (D-53, docs/02 section 4). Type and injury are over all counted incidents; sex, age band,
+     * sex by age band, relationship and age are over incidents whose victim is an individual. Counts only, every list
+     * value present (zeros included) in the order the lists define. Median age by nearest rank (lower middle).
+     *
+     * @return array{type: array<string, int>, injury: array<string, int>, individuals: int, sex: array<string, int>, age_band: array<string, int>, sex_by_age_band: array<string, array<string, int>>, relationship: array<string, int>, age: array{recorded: int, median: int|null}}
+     */
+    public function a11(): array
+    {
+        $zeros = fn (string $enum): array => array_fill_keys(array_map(fn ($case): string => $case->value, $enum::cases()), 0);
+        $result = [
+            'type' => $zeros(VictimType::class),
+            'injury' => $zeros(InjuryLevel::class),
+            'individuals' => 0,
+            'sex' => $zeros(VictimSex::class),
+            'age_band' => $zeros(AgeBand::class),
+            'sex_by_age_band' => array_map(fn (): array => $zeros(VictimSex::class), $zeros(AgeBand::class)),
+            'relationship' => $zeros(OffenderRelationship::class),
+            'age' => ['recorded' => 0, 'median' => null],
+        ];
+
+        $groups = $this->base()->toBase()
+            ->selectRaw('incidents.victim_type as type, incidents.victim_injury as injury, incidents.victim_sex as sex, incidents.victim_age_band as band, incidents.offender_relationship as relationship, count(*) as n')
+            ->groupBy('incidents.victim_type', 'incidents.victim_injury', 'incidents.victim_sex', 'incidents.victim_age_band', 'incidents.offender_relationship')
+            ->get();
+
+        // Values outside the lists cannot be entered (V9), but one written directly into the database must not break the
+        // dashboard: it is counted as not recorded.
+        $known = fn (array $list, mixed $value, string $fallback): string => is_string($value) && array_key_exists($value, $list) ? $value : $fallback;
+        foreach ($groups as $group) {
+            $group->type = $known($result['type'], $group->type, VictimType::NotRecorded->value);
+            $group->injury = $known($result['injury'], $group->injury, InjuryLevel::NotRecorded->value);
+            $group->sex = $known($result['sex'], $group->sex, VictimSex::NotRecorded->value);
+            $group->band = $known($result['age_band'], $group->band, AgeBand::NotRecorded->value);
+            $group->relationship = $known($result['relationship'], $group->relationship, OffenderRelationship::NotKnown->value);
+            $count = (int) $group->n;
+            $result['type'][$group->type] += $count;
+            $result['injury'][$group->injury] += $count;
+            if ($group->type !== VictimType::Individual->value) {
+                continue;
+            }
+            $result['individuals'] += $count;
+            $result['sex'][$group->sex] += $count;
+            $result['age_band'][$group->band] += $count;
+            $result['sex_by_age_band'][$group->band][$group->sex] += $count;
+            $result['relationship'][$group->relationship] += $count;
+        }
+
+        $ages = $this->base()->where('incidents.victim_type', VictimType::Individual->value)->whereNotNull('incidents.victim_age');
+        $result['age']['recorded'] = (clone $ages)->count();
+        if ($result['age']['recorded'] > 0) {
+            $median = $ages->toBase()->selectRaw('PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY incidents.victim_age) OVER () as p50')->limit(1)->value('p50');
+            $result['age']['median'] = $median === null ? null : (int) $median;
+        }
+
+        return $result;
     }
 
     /**

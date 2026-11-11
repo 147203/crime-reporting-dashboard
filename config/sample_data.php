@@ -44,6 +44,38 @@ return [
     'planted_category_hotspots' => ['category' => 'Theft', 'count' => 2, 'multiplier' => 3.0],
     'planted_trend' => ['category' => 'Burglary', 'growth' => 0.6],
 
+    // Victim profile (D-53): weights per category, falling back to 'default'. Count 'blank' means not recorded. Ages
+    // are drawn between age_range with age_skew > 1 favouring younger adults; age_known says whether the exact age,
+    // only its band, or nothing is recorded. ASSUMPTIONS for demonstration, not claims about real victims.
+    'victims' => [
+        'type' => [
+            'default' => ['individual' => 0.85, 'business' => 0.08, 'public_property' => 0.02, 'not_recorded' => 0.05],
+            'Burglary' => ['individual' => 0.55, 'business' => 0.35, 'public_property' => 0.03, 'not_recorded' => 0.07],
+            'Assault' => ['individual' => 0.97, 'not_recorded' => 0.03],
+            'Other' => ['individual' => 0.60, 'business' => 0.15, 'public_property' => 0.15, 'not_recorded' => 0.10],
+        ],
+        'count' => [
+            'default' => ['1' => 0.82, '2' => 0.11, '3' => 0.04, 'blank' => 0.03],
+        ],
+        'sex' => [
+            'default' => ['male' => 0.56, 'female' => 0.41, 'not_recorded' => 0.03],
+        ],
+        'age_known' => [
+            'default' => ['exact' => 0.75, 'band' => 0.15, 'not_recorded' => 0.10],
+        ],
+        'age_range' => [12, 85],
+        'age_skew' => 1.6,
+        'injury' => [
+            'default' => ['none' => 0.85, 'minor' => 0.08, 'serious' => 0.02, 'not_recorded' => 0.05],
+            'Robbery' => ['none' => 0.55, 'minor' => 0.30, 'serious' => 0.08, 'fatal' => 0.01, 'not_recorded' => 0.06],
+            'Assault' => ['none' => 0.15, 'minor' => 0.50, 'serious' => 0.25, 'fatal' => 0.03, 'not_recorded' => 0.07],
+        ],
+        'relationship' => [
+            'default' => ['stranger' => 0.70, 'acquaintance' => 0.12, 'family_or_partner' => 0.03, 'not_known' => 0.15],
+            'Assault' => ['stranger' => 0.35, 'acquaintance' => 0.30, 'family_or_partner' => 0.25, 'not_known' => 0.10],
+        ],
+    ],
+
     // Seeded data-quality problems, as a share of the base size (minimum 5 per rule).
     'bad_share_per_rule' => 0.01,
     'duplicate_share' => 0.02,

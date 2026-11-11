@@ -14,6 +14,10 @@ const env = {
     E2E_PASSWORD: process.env.E2E_PASSWORD,
     SESSION_SECURE_COOKIE: 'false',
     LOGIN_MAX_ATTEMPTS: '50',
+    // The suite signs in and out many times a minute from one address; the default limit stays at 20 elsewhere.
+    AUTH_ACTIONS_PER_MINUTE: '200',
+    // D-54: the demo sign-in panel is tested end to end; it only ever works on this local loopback server.
+    DEMO_LOGIN: 'true',
 } as Record<string, string>;
 
 export default defineConfig({

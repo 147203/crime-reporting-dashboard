@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\ReferenceDataController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DuplicateController;
 use App\Http\Controllers\ImportController;
@@ -14,6 +15,10 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\QualityController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+
+// D-54: one-click demo sign-in for presentations. The controller answers 404 unless demo sign-in is active (DEMO_LOGIN on a
+// local, loopback machine); preflight refuses DEMO_LOGIN in production.
+Route::post('/demo-login/{role}', DemoLoginController::class)->middleware(['guest', 'throttle:auth-actions'])->whereIn('role', ['admin', 'officer', 'analyst'])->name('demo.login');
 
 // Every route below requires an authenticated, active account; each also carries its own authorization (project rule).
 Route::middleware('auth')->group(function (): void {

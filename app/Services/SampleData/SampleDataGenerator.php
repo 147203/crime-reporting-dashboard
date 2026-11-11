@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\SampleData;
 
+use App\Enums\AgeBand;
 use Carbon\CarbonImmutable;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
@@ -24,7 +25,11 @@ use RuntimeException;
  */
 final class SampleDataGenerator
 {
-    public const HEADER = ['category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'location_description', 'description', 'status', 'closed_at'];
+    public const HEADER = ['category', 'occurred_at', 'reported_at', 'sub_county', 'ward', 'station', 'location_description', 'description', 'status', 'closed_at', 'victim_type', 'victim_count', 'victim_sex', 'victim_age', 'victim_age_band', 'victim_injury', 'offender_relationship'];
+
+    // A fixed offset gives the victim profile its own random stream, so adding it left every other generated value
+    // (and so every earlier evaluation result) exactly as before.
+    private const VICTIM_SEED_OFFSET = 7919;
 
     private const LANDMARKS = ['Near the market', 'Opposite the bus stage', 'Behind the petrol station', 'Next to the primary school', 'Near the church', 'Outside the supermarket', 'At the junction', 'Near the health centre', 'Along the main road', 'Near the footbridge', 'By the matatu terminus', 'Outside the chemist'];
 
@@ -37,6 +42,8 @@ final class SampleDataGenerator
     ];
 
     private Randomizer $random;
+
+    private Randomizer $victimRandom;
 
     /** @var array<string, list<string>> */
     private array $wardsBySubCounty = [];
@@ -57,6 +64,7 @@ final class SampleDataGenerator
         }
 
         $this->random = new Randomizer(new Mt19937($seed));
+        $this->victimRandom = new Randomizer(new Mt19937($seed + self::VICTIM_SEED_OFFSET));
         $this->loadReferenceData();
 
         $end = CarbonImmutable::createFromFormat('!Y-m', $endMonth)?->endOfMonth()->startOfMinute() ?? throw new RuntimeException('End month must be YYYY-MM.');
@@ -222,6 +230,48 @@ final class SampleDataGenerator
             'description' => self::DESCRIPTIONS[$category][$this->random->getInt(0, count(self::DESCRIPTIONS[$category]) - 1)],
             'status' => $status,
             'closed_at' => $closed,
+            ...$this->victim($category),
+        ];
+    }
+
+    /**
+     * Victim profile from config('sample_data.victims'), drawn from its own random stream.
+     *
+     * @return array<string, string>
+     */
+    private function victim(string $category): array
+    {
+        $config = config('sample_data.victims');
+        $pick = fn (string $key): string => (string) $this->weightedPick($config[$key][$category] ?? $config[$key]['default'], $this->victimRandom);
+
+        $type = $pick('type');
+        $count = $pick('count');
+        $injury = $pick('injury');
+        if ($type !== 'individual') {
+            return [
+                'victim_type' => $type,
+                'victim_count' => $count === 'blank' ? '' : $count,
+                'victim_sex' => 'not_recorded',
+                'victim_age' => '',
+                'victim_age_band' => 'not_recorded',
+                'victim_injury' => $type === 'not_recorded' ? $injury : 'none',
+                'offender_relationship' => 'not_known',
+            ];
+        }
+
+        $sex = $pick('sex');
+        $ageKnown = $pick('age_known');
+        [$youngest, $oldest] = $config['age_range'];
+        $age = $youngest + (int) floor($this->victimRandom->nextFloat() ** $config['age_skew'] * ($oldest - $youngest + 1));
+
+        return [
+            'victim_type' => 'individual',
+            'victim_count' => $count === 'blank' ? '' : $count,
+            'victim_sex' => $sex,
+            'victim_age' => $ageKnown === 'exact' ? (string) $age : '',
+            'victim_age_band' => $ageKnown === 'not_recorded' ? 'not_recorded' : AgeBand::fromAge($age)->value,
+            'victim_injury' => $injury,
+            'offender_relationship' => $pick('relationship'),
         ];
     }
 
@@ -379,10 +429,10 @@ final class SampleDataGenerator
     /**
      * @param  array<int|string, float|int>  $weights
      */
-    private function weightedPick(array $weights): int|string
+    private function weightedPick(array $weights, ?Randomizer $random = null): int|string
     {
         $total = array_sum($weights);
-        $target = $this->random->nextFloat() * $total;
+        $target = ($random ?? $this->random)->nextFloat() * $total;
         $running = 0.0;
         foreach ($weights as $key => $weight) {
             $running += $weight;

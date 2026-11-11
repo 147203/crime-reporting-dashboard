@@ -6,14 +6,14 @@
 |---|---|
 | Student | Mathai, Margaret Elsie Wairimu, BBIT 4D, admission number 147203 |
 | Supervisor | Mr Nicodemus Maingi |
-| Report date | 3 October 2026 (updated at the end of every phase) |
+| Report date | 11 November 2026 (updated at the end of every phase) |
 | Period covered | Development from 24 September 2026 to date |
 | Method | Object-oriented analysis and design (OOAD), prototyping development |
 | Repository | Private GitHub repository under my own account (147203) |
 
 # 1. Summary
 
-The development of the platform is well advanced. I have built and tested a working prototype that covers every module in my revised scope: secure sign-in with three roles, incident reporting with validation, bulk CSV import, duplicate detection and review, a data-quality summary, ten descriptive analytics measures on an interactive dashboard, CSV, Excel and PDF reports, and a tested backup and restore procedure. Following the panel decision there is **no GIS component**: location is recorded as sub-county, ward and a free-text landmark, and a "hotspot" is a statistical flag on a ward shown in tables and charts.
+The development of the platform is well advanced. I have built and tested a working prototype that covers every module in my revised scope: secure sign-in with three roles, incident reporting with validation, bulk CSV import, duplicate detection and review, a data-quality summary, eleven descriptive analytics measures (including a victim profile) on an interactive dashboard, CSV, Excel and PDF reports, and a tested backup and restore procedure. Following the panel decision there is **no GIS component**: location is recorded as sub-county, ward and a free-text landmark, and a "hotspot" is a statistical flag on a ward shown in tables and charts.
 
 The prototype is covered by 305 automated tests and 20 browser tests, all passing. Every module promised in my proposal, apart from the GIS component the panel removed, is now built. What remains is the **corrected proposal**, the **fieldwork** with real participants, the development changes that will come out of the fieldwork and usability sessions (Section 6), the **writing of Chapters 4 to 6**, and the **demonstration**.
 
@@ -46,7 +46,8 @@ The system follows the three-layer design in my proposal (presentation, applicat
 | 4. Prototype 2: data quality | Validation rules V1 to V8, a check that refuses phone and ID numbers in free text, duplicate detection with a review screen, CSV import with a check-first step, data-quality summary, sample-data generator that plants known errors, duplicates and hotspots | 252 tests; accuracy measured against the planted errors | Done |
 | 5. Prototype 3: analytics and reports | Analytics A1 to A10 computed in the database, dashboard with charts and matching tables, statistical hotspot table, sub-county by month grid, CSV and PDF exports | 272 tests; results compared with an independent calculation | Done |
 | 6. Hardening and evaluation (automated part) | Security fixes from an independent review, a database index that made the dashboard five times faster, browser tests of the eight usability tasks on laptop and phone screens, evaluation at 1,000, 20,000 and 100,000 records, usability session kit | 284 tests and 16 browser tests | Done |
-| 6b. Development completion | Closed gaps I found when using the system: an administrator can no longer change their own password, role or status from the user screen, the last administrator cannot be removed, new users get a generated temporary password shown once, locked accounts can be unlocked, and password fields have a show or hide button. Added the remaining items from my proposal: Excel export, charts that open the matching incidents when clicked, backup and restore, and an accessibility check. Applied the stricter duplicate rule (house or plot numbers must match) | 310 tests and 28 browser tests; backup restored into a separate database and compared table by table; accessibility scan of 13 pages in both themes on laptop and phone screens | Done |
+| 6b. Development completion | Closed gaps I found when using the system: an administrator can no longer change their own password, role or status from the user screen, the last administrator cannot be removed, new users get a generated temporary password shown once, locked accounts can be unlocked, and password fields have a show or hide button. Added the remaining items from my proposal: Excel export, charts that open the matching incidents when clicked, backup and restore, and an accessibility check. Applied the stricter duplicate rule (house or plot numbers must match) | 340 tests and 44 browser tests; backup restored into a separate database and compared table by table; accessibility scan of 13 pages in both themes on laptop and phone screens | Done |
+| 7. Feedback from the presentation | Following your suggestions at the presentation: a victim section on every incident (victim type, number of victims, sex, age or age band, injury and relationship to the suspect, with no names, contacts or ID numbers), used in the incident list filters, imports, exports and a new dashboard section (A11); and, for demonstrations only, sign-in buttons for each role so that after logging out a different role can be chosen with one click. In real use every person still signs in with their own email and password | 340 tests and 44 browser tests, including every page and edit page for each role; the new victim figures match an independent calculation exactly | Done |
 
 # 5. Key results
 
@@ -56,8 +57,8 @@ All results come from synthetic sample data, clearly labelled as such in the sys
 
 | Measure | Result | Target |
 |---|---|---|
-| Automated tests | 310 tests and 28 browser tests, all passing | All pass |
-| Accuracy of analytics A1 to A10 | 5,387 of 5,387 values equal to an independent calculation written separately from the system | 100 percent match |
+| Automated tests | 340 tests and 44 browser tests, all passing | All pass |
+| Accuracy of analytics A1 to A11 | 5,795 of 5,795 values equal to an independent calculation written separately from the system | 100 percent match |
 | Access control | Every page tested for four kinds of user; an officer cannot open another station's records | All correct |
 | Bad records rejected | 100 percent for every rule at 1,000, 20,000 and 100,000 records; no valid record rejected | At least 95 percent |
 | Duplicate detection after the stricter rule (precision / recall) | 1.000 / 1.000 at 1,000 records; 1.000 / 0.890 at 20,000; 0.998 / 0.883 at 100,000 (before: 0.943 / 0.915 and 0.775 / 0.920) | At least 0.90 each |
@@ -123,3 +124,4 @@ I would be grateful for a short meeting this week to agree the title, the resubm
 |---|---|
 | 28 September 2026 | First report: development phases 0 and 2 to 6 complete; open development items, proposal correction, fieldwork, usability, chapters and demonstration pending |
 | 3 October 2026 | Phase 6b complete: account rules, Excel export, clickable dashboard, backup and restore, accessibility check and the stricter duplicate rule; development items now limited to fieldwork and usability changes, ward-list check, keyboard walk-through and final diagrams |
+| 11 November 2026 | Phase 7 complete: victim section and victim analytics (A11), demonstration sign-in per role, every page and edit page tested in the browser with screenshots |

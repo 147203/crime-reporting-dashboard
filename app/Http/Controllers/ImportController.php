@@ -26,6 +26,7 @@ final class ImportController extends Controller
         'V4' => 'Sub-county unknown or ward not in the sub-county',
         'V5' => 'Text longer than allowed',
         'V6' => 'Phone number or ID number in free text',
+        'V9' => 'Victim details not from the allowed lists, or number or age out of range',
         'station' => 'Station unknown or inactive',
         'status' => 'Status or closing date invalid',
         'format' => 'Row format (wrong number of columns, or a date not written as YYYY-MM-DD HH:MM)',

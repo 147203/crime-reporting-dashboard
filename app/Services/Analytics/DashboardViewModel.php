@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Analytics;
 
+use App\Enums\AgeBand;
+use App\Enums\InjuryLevel;
+use App\Enums\OffenderRelationship;
+use App\Enums\VictimSex;
+use App\Enums\VictimType;
 use App\Models\CrimeCategory;
 use App\Models\Station;
 use App\Models\SubCounty;
@@ -185,6 +190,58 @@ final class DashboardViewModel
             'spec' => ['type' => 'doughnut', 'links' => $links, 'labels' => array_values($labels), 'datasets' => [['label' => 'Incidents', 'data' => array_values($status)]]],
             'headers' => ['Status', 'Incidents', 'Share of n (%)'],
             'rows' => array_map(fn (string $key): array => [$labels[$key], number_format($status[$key]), $this->n() > 0 ? number_format(round(100 * $status[$key] / $this->n(), 2), 2) : '0.00'], array_keys($labels)),
+        ];
+    }
+
+    /**
+     * A11 victims of individual-victim incidents by age band, stacked by sex. Each bar opens that age band's records.
+     *
+     * @return array<string, mixed>
+     */
+    public function victimAgeSex(): array
+    {
+        $a11 = $this->metrics['A11'];
+        $bands = AgeBand::cases();
+        $sexes = VictimSex::cases();
+        $links = array_map(fn (AgeBand $band): string => $this->listUrl(['victim_type' => VictimType::Individual->value, 'victim_age_band' => $band->value]), $bands);
+        $individuals = (int) $a11['individuals'];
+
+        return [
+            'links' => $links,
+            'spec' => [
+                'type' => 'bar', 'stacked' => true, 'links' => $links,
+                'labels' => array_map(fn (AgeBand $band): string => $band->label(), $bands),
+                'datasets' => array_map(fn (VictimSex $sex, int $i): array => ['label' => $sex->label(), 'data' => array_map(fn (AgeBand $band): int => $a11['sex_by_age_band'][$band->value][$sex->value], $bands), 'colour' => [0, 5, 7][$i]], $sexes, array_keys($sexes)),
+            ],
+            'headers' => ['Age band', ...array_map(fn (VictimSex $sex): string => $sex->label(), $sexes), 'Total', 'Share of individuals (%)'],
+            'rows' => array_map(fn (AgeBand $band): array => [
+                $band->label(),
+                ...array_map(fn (VictimSex $sex): string => number_format($a11['sex_by_age_band'][$band->value][$sex->value]), $sexes),
+                number_format($a11['age_band'][$band->value]),
+                $individuals > 0 ? number_format(round(100 * $a11['age_band'][$band->value] / $individuals, 2), 2) : '0.00',
+            ], $bands),
+        ];
+    }
+
+    /**
+     * A11 count per value of one victim list (type or injury over n, relationship over individuals).
+     *
+     * @param  class-string<VictimType|InjuryLevel|OffenderRelationship>  $enum
+     * @return array<string, mixed>
+     */
+    public function victimBreakdown(string $key, string $enum, string $filter, string $heading): array
+    {
+        $counts = $this->metrics['A11'][$key];
+        $denominator = $key === 'relationship' ? (int) $this->metrics['A11']['individuals'] : $this->n();
+        $cases = $enum::cases();
+        $extra = $key === 'relationship' ? ['victim_type' => VictimType::Individual->value] : [];
+        $links = array_map(fn ($case): string => $this->listUrl([...$extra, $filter => $case->value]), $cases);
+
+        return [
+            'links' => $links,
+            'spec' => ['type' => 'bar', 'horizontal' => true, 'links' => $links, 'labels' => array_map(fn ($case): string => $case->label(), $cases), 'datasets' => [['label' => 'Incidents', 'data' => array_map(fn ($case): int => $counts[$case->value], $cases), 'colour' => 3]]],
+            'headers' => [$heading, 'Incidents', $key === 'relationship' ? 'Share of individuals (%)' : 'Share of n (%)'],
+            'rows' => array_map(fn ($case): array => [$case->label(), number_format($counts[$case->value]), $denominator > 0 ? number_format(round(100 * $counts[$case->value] / $denominator, 2), 2) : '0.00'], $cases),
         ];
     }
 

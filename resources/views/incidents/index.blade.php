@@ -67,6 +67,21 @@
                 </select>
             </div>
             @endunless
+            @foreach ([
+                'victim_type' => ['Victim type', App\Enums\VictimType::cases()],
+                'victim_sex' => ['Victim sex', App\Enums\VictimSex::cases()],
+                'victim_age_band' => ['Victim age band', App\Enums\AgeBand::cases()],
+                'victim_injury' => ['Injury', App\Enums\InjuryLevel::cases()],
+                'offender_relationship' => ['Relationship to suspect', App\Enums\OffenderRelationship::cases()],
+            ] as $field => [$label, $cases])
+                <div class="col-6 col-md-4 col-xl-3">
+                    <label class="form-label" for="{{ $field }}">{{ $label }}</label>
+                    <select class="form-select" id="{{ $field }}" name="{{ $field }}">
+                        <option value="">Any</option>
+                        @foreach ($cases as $case)<option value="{{ $case->value }}" @selected(($filters[$field] ?? '') === $case->value)>{{ $case->label() }}</option>@endforeach
+                    </select>
+                </div>
+            @endforeach
             <div class="col-12 col-xl d-flex gap-2 justify-content-xl-end">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Apply</button>
                 <a href="{{ route('incidents.index') }}" class="btn btn-outline-secondary">Reset</a>

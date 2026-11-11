@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\AgeBand;
 use App\Enums\DuplicateStatus;
 use App\Enums\IncidentStatus;
+use App\Enums\InjuryLevel;
+use App\Enums\OffenderRelationship;
+use App\Enums\VictimSex;
+use App\Enums\VictimType;
 use Database\Factories\IncidentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,6 +30,13 @@ use Illuminate\Support\Carbon;
  * @property int $station_id
  * @property string|null $location_description
  * @property string|null $description
+ * @property VictimType $victim_type
+ * @property int|null $victim_count
+ * @property VictimSex $victim_sex
+ * @property int|null $victim_age
+ * @property AgeBand $victim_age_band
+ * @property InjuryLevel $victim_injury
+ * @property OffenderRelationship $offender_relationship
  * @property IncidentStatus $status
  * @property Carbon|null $closed_at
  * @property DuplicateStatus $duplicate_status
@@ -51,6 +63,26 @@ class Incident extends Model
         'ward_id',
         'location_description',
         'description',
+        'victim_type',
+        'victim_count',
+        'victim_sex',
+        'victim_age',
+        'victim_age_band',
+        'victim_injury',
+        'offender_relationship',
+    ];
+
+    /**
+     * The same defaults as the migration, so a new, unsaved incident reads as "not recorded" too.
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'victim_type' => 'not_recorded',
+        'victim_sex' => 'not_recorded',
+        'victim_age_band' => 'not_recorded',
+        'victim_injury' => 'not_recorded',
+        'offender_relationship' => 'not_known',
     ];
 
     protected function casts(): array
@@ -62,6 +94,13 @@ class Incident extends Model
             'status' => IncidentStatus::class,
             'duplicate_status' => DuplicateStatus::class,
             'is_synthetic' => 'boolean',
+            'victim_type' => VictimType::class,
+            'victim_count' => 'integer',
+            'victim_sex' => VictimSex::class,
+            'victim_age' => 'integer',
+            'victim_age_band' => AgeBand::class,
+            'victim_injury' => InjuryLevel::class,
+            'offender_relationship' => OffenderRelationship::class,
         ];
     }
 

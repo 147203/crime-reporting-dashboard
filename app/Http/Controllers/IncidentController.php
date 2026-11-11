@@ -35,6 +35,11 @@ final class IncidentController extends Controller
             ->when($user->role->isStationScoped() ? null : ($validated['duplicate_status'] ?? null), fn ($q, string $status) => $q->where('duplicate_status', $status))
             // Drill-down from the dashboard: the same counting rule and time slices as the analytics.
             ->when($validated['countable'] ?? false, fn ($q) => $q->countable())
+            ->when($validated['victim_type'] ?? null, fn ($q, string $value) => $q->where('victim_type', $value))
+            ->when($validated['victim_sex'] ?? null, fn ($q, string $value) => $q->where('victim_sex', $value))
+            ->when($validated['victim_age_band'] ?? null, fn ($q, string $value) => $q->where('victim_age_band', $value))
+            ->when($validated['victim_injury'] ?? null, fn ($q, string $value) => $q->where('victim_injury', $value))
+            ->when($validated['offender_relationship'] ?? null, fn ($q, string $value) => $q->where('offender_relationship', $value))
             ->when($validated['weekday'] ?? null, fn ($q, int|string $day) => $q->whereRaw(Analytics::WEEKDAY_SQL.' = ?', [(int) $day]))
             ->when(isset($validated['band']), function ($q) use ($validated): void {
                 $band = config('analytics.time_bands')[(int) $validated['band']];
